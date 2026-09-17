@@ -232,13 +232,6 @@ input[type="range"]{
   accent-color:#e98d84;
 }
 
-.alignmentNote{
-  color:#89919b;
-  font-size:11px;
-  line-height:1.5;
-  margin-bottom:10px;
-}
-
 /* =========================
    SEARCH
 ========================= */
@@ -559,57 +552,6 @@ input[type="range"]{
 
       <button id="resetJoints" class="fullButton">
         Reset joints｜關節歸零
-      </button>
-
-    </div>
-
-    <div class="section" id="skinAlignmentSection">
-
-      <div class="sectionTitle">
-        SKIN ALIGNMENT｜皮膚校準
-      </div>
-
-      <div class="alignmentNote">
-        測試用：開啟 Skin 後調整位置、大小及方向。數值會即時顯示。
-      </div>
-
-      <div class="sliderRow">
-        <div class="sliderLabel"><span>Scale｜大小</span><span class="sliderValue" id="skinScaleValue">1.000</span></div>
-        <input id="skinScale" type="range" min="0.05" max="20" step="0.01" value="1">
-      </div>
-
-      <div class="sliderRow">
-        <div class="sliderLabel"><span>Position X</span><span class="sliderValue" id="skinXValue">0.000</span></div>
-        <input id="skinX" type="range" min="-5" max="5" step="0.01" value="0">
-      </div>
-
-      <div class="sliderRow">
-        <div class="sliderLabel"><span>Position Y</span><span class="sliderValue" id="skinYValue">0.000</span></div>
-        <input id="skinY" type="range" min="-5" max="5" step="0.01" value="0">
-      </div>
-
-      <div class="sliderRow">
-        <div class="sliderLabel"><span>Position Z</span><span class="sliderValue" id="skinZValue">0.000</span></div>
-        <input id="skinZ" type="range" min="-5" max="5" step="0.01" value="0">
-      </div>
-
-      <div class="sliderRow">
-        <div class="sliderLabel"><span>Rotation X</span><span class="sliderValue" id="skinRXValue">0°</span></div>
-        <input id="skinRX" type="range" min="-180" max="180" step="1" value="0">
-      </div>
-
-      <div class="sliderRow">
-        <div class="sliderLabel"><span>Rotation Y</span><span class="sliderValue" id="skinRYValue">0°</span></div>
-        <input id="skinRY" type="range" min="-180" max="180" step="1" value="0">
-      </div>
-
-      <div class="sliderRow">
-        <div class="sliderLabel"><span>Rotation Z</span><span class="sliderValue" id="skinRZValue">0°</span></div>
-        <input id="skinRZ" type="range" min="-180" max="180" step="1" value="0">
-      </div>
-
-      <button id="resetSkinAlignment" class="fullButton">
-        Reset skin alignment｜皮膚校準歸零
       </button>
 
     </div>
@@ -1003,6 +945,80 @@ async function loadOptionalLayer(key,label){
 }
 
 /* =========================================================
+   SKIN PREPARATION + AUTOMATIC ALIGNMENT
+========================================================= */
+
+function prepareSkin(model){
+
+  // Give the outer body a translucent skin-like material so
+  // bones/muscles can still be studied through it.
+  model.traverse(o=>{
+    if(!o.isMesh) return;
+
+    o.material = new THREE.MeshPhysicalMaterial({
+      color: 0xd8a184,
+      roughness: 0.72,
+      metalness: 0.0,
+      transparent: true,
+      opacity: 0.34,
+      depthWrite: false,
+      side: THREE.DoubleSide
+    });
+
+    o.castShadow = false;
+    o.receiveShadow = false;
+  });
+
+  alignSkinToSkeleton(model);
+}
+
+function alignSkinToSkeleton(skin){
+
+  const skeleton = layers.skeleton;
+  if(!skin || !skeleton) return;
+
+  scene.updateMatrixWorld(true);
+
+  // Measure the two real models instead of hard-coding a scale.
+  const skBox = new THREE.Box3().setFromObject(skeleton);
+  const skSize = new THREE.Vector3();
+  const skCenter = new THREE.Vector3();
+  skBox.getSize(skSize);
+  skBox.getCenter(skCenter);
+
+  const skinBox0 = new THREE.Box3().setFromObject(skin);
+  const skinSize0 = new THREE.Vector3();
+  skinBox0.getSize(skinSize0);
+
+  if(skinSize0.y > 0 && skSize.y > 0){
+    const scale = skSize.y / skinSize0.y;
+    skin.scale.multiplyScalar(scale);
+  }
+
+  scene.updateMatrixWorld(true);
+
+  // Match centres after scaling.
+  const skinBox1 = new THREE.Box3().setFromObject(skin);
+  const skinCenter1 = new THREE.Vector3();
+  skinBox1.getCenter(skinCenter1);
+
+  const deltaWorld = skCenter.clone().sub(skinCenter1);
+
+  // skin and skeleton share the same parent (human), so this world-space
+  // delta can be applied directly to the skin's local position.
+  skin.position.add(deltaWorld);
+
+  scene.updateMatrixWorld(true);
+
+  console.log("Skin auto-aligned", {
+    skeletonSize: skSize.toArray(),
+    originalSkinSize: skinSize0.toArray(),
+    skinScale: skin.scale.x,
+    offset: skin.position.toArray()
+  });
+}
+
+/* =========================================================
    MODEL TAGGING
 ========================================================= */
 
@@ -1180,28 +1196,6 @@ function prepareMuscles(root){
 
   });
 
-}
-
-/* =========================================================
-   SKIN
-========================================================= */
-
-function prepareSkin(root){
-  root.traverse(obj=>{
-    if(!obj.isMesh) return;
-
-    const mats=Array.isArray(obj.material) ? obj.material : [obj.material];
-    const output=mats.map(mat=>{
-      if(!mat) return mat;
-      const m=mat.clone();
-      if("roughness" in m) m.roughness=.82;
-      if("metalness" in m) m.metalness=0;
-      m.side=THREE.DoubleSide;
-      return m;
-    });
-
-    obj.material=Array.isArray(obj.material) ? output : output[0];
-  });
 }
 
 /* =========================================================
@@ -1871,7 +1865,7 @@ function registerSoftTissueLayer(key){
     Viscera are deliberately NOT rigged to the arm.
   */
 
-  if(key==="visceral" || key==="skin"){
+  if(key==="visceral"){
     return;
   }
 
@@ -3082,52 +3076,6 @@ document.getElementById(
 );
 
 /* =========================================================
-   SKIN ALIGNMENT TEST CONTROLS
-========================================================= */
-
-const skinControlIds=["skinScale","skinX","skinY","skinZ","skinRX","skinRY","skinRZ"];
-
-function applySkinAlignment(){
-  const skin=layers.skin;
-  if(!skin) return;
-
-  const scale=Number(document.getElementById("skinScale").value);
-  const x=Number(document.getElementById("skinX").value);
-  const y=Number(document.getElementById("skinY").value);
-  const z=Number(document.getElementById("skinZ").value);
-  const rx=Number(document.getElementById("skinRX").value);
-  const ry=Number(document.getElementById("skinRY").value);
-  const rz=Number(document.getElementById("skinRZ").value);
-
-  skin.scale.setScalar(scale);
-  skin.position.set(x,y,z);
-  skin.rotation.set(deg(rx),deg(ry),deg(rz));
-
-  document.getElementById("skinScaleValue").textContent=scale.toFixed(3);
-  document.getElementById("skinXValue").textContent=x.toFixed(3);
-  document.getElementById("skinYValue").textContent=y.toFixed(3);
-  document.getElementById("skinZValue").textContent=z.toFixed(3);
-  document.getElementById("skinRXValue").textContent=rx.toFixed(0)+"°";
-  document.getElementById("skinRYValue").textContent=ry.toFixed(0)+"°";
-  document.getElementById("skinRZValue").textContent=rz.toFixed(0)+"°";
-}
-
-skinControlIds.forEach(id=>{
-  document.getElementById(id).addEventListener("input",applySkinAlignment);
-});
-
-document.getElementById("resetSkinAlignment").addEventListener("click",()=>{
-  document.getElementById("skinScale").value="1";
-  document.getElementById("skinX").value="0";
-  document.getElementById("skinY").value="0";
-  document.getElementById("skinZ").value="0";
-  document.getElementById("skinRX").value="0";
-  document.getElementById("skinRY").value="0";
-  document.getElementById("skinRZ").value="0";
-  applySkinAlignment();
-});
-
-/* =========================================================
    INITIAL LOADING
 ========================================================= */
 
@@ -3261,18 +3209,14 @@ async function init(){
 
     /*
       7. SKIN
-      Loaded as an independent alignment-test layer.
-      It is intentionally NOT attached to the arm rig.
+      Loaded last and automatically aligned to the skeleton.
+      It starts hidden and can be toggled with Skin｜皮膚.
     */
-    try{
-      setStatus("Loading skin...");
-      await loadOne("skin");
-      applySkinAlignment();
-      updateSystemButtons();
-    }catch(err){
-      console.error("skin",err);
-      showError("Skin failed to load. Core anatomy remains available.");
-    }
+
+    await loadOptionalLayer(
+      "skin",
+      "skin"
+    );
 
     setStatus(
       "Anatomy loaded",
