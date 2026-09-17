@@ -12,18 +12,15 @@
   <title>MJ Anatomy 3D</title>
 
   <style>
-
     * {
       box-sizing: border-box;
     }
 
-    html,
-    body {
+    html, body {
       margin: 0;
       width: 100%;
       height: 100%;
       overflow: hidden;
-
       background: #08090b;
       color: white;
 
@@ -42,75 +39,59 @@
     }
 
 
-    /* =========================
-       MAIN PANEL
-    ========================= */
+    /* ==============================
+       LEFT PANEL
+    ============================== */
 
     #panel {
       position: fixed;
-
-      top: 20px;
-      left: 20px;
-
-      z-index: 20;
+      top: 18px;
+      left: 18px;
 
       width: 285px;
-      max-height: calc(100vh - 40px);
+      max-height: calc(100vh - 36px);
 
       overflow-y: auto;
 
+      z-index: 20;
+
       padding: 18px;
 
-      background: rgba(17, 19, 23, 0.90);
+      background: rgba(17,19,23,.92);
 
       border:
-        1px solid rgba(255,255,255,0.12);
+        1px solid rgba(255,255,255,.12);
 
       border-radius: 18px;
 
       backdrop-filter: blur(18px);
       -webkit-backdrop-filter: blur(18px);
-
-      box-shadow:
-        0 12px 40px rgba(0,0,0,0.35);
     }
-
 
     #panel h1 {
       margin: 0;
-
       font-size: 21px;
-      font-weight: 700;
     }
-
 
     #subtitle {
       margin-top: 5px;
-
       color: #969da7;
-
       font-size: 13px;
     }
 
-
     #status {
       margin-top: 12px;
-
       color: #f0c36a;
-
       font-size: 12px;
     }
 
-
     .divider {
       height: 1px;
-
       margin: 16px 0;
 
       background:
-        rgba(255,255,255,0.10);
+        rgba(255,255,255,.10);
     }
-
 
     .section-title {
       margin-bottom: 10px;
@@ -121,18 +102,15 @@
       font-weight: 700;
 
       letter-spacing: 1px;
-
-      text-transform: uppercase;
     }
 
 
-    /* =========================
+    /* ==============================
        LAYER BUTTONS
-    ========================= */
+    ============================== */
 
     .layer {
       display: flex;
-
       align-items: center;
 
       width: 100%;
@@ -142,7 +120,7 @@
       padding: 11px 12px;
 
       border:
-        1px solid rgba(255,255,255,0.10);
+        1px solid rgba(255,255,255,.10);
 
       border-radius: 11px;
 
@@ -153,19 +131,14 @@
       font-size: 14px;
 
       cursor: pointer;
-
-      -webkit-tap-highlight-color:
-        transparent;
     }
-
 
     .layer.active {
       background: #303741;
 
       border-color:
-        rgba(255,255,255,0.25);
+        rgba(255,255,255,.25);
     }
-
 
     .dot {
       width: 10px;
@@ -175,7 +148,6 @@
 
       border-radius: 50%;
     }
-
 
     .bone-dot {
       background: #e8dfca;
@@ -190,52 +162,263 @@
     }
 
     .cardio-dot {
-      background: #c84f58;
+      background: #d65360;
     }
 
     .viscera-dot {
-      background: #b98678;
+      background: #c68c7c;
     }
-
 
     .layer-state {
       margin-left: auto;
 
-      color: #8f97a1;
+      color: #9da5af;
 
       font-size: 11px;
     }
 
 
-    /* =========================
-       INFO
-    ========================= */
+    /* ==============================
+       MUSCLE PLACEHOLDER
+    ============================== */
 
-    #info {
-      color: #8e959e;
+    .muscle-control {
+      display: flex;
+      gap: 8px;
+    }
 
-      font-size: 12px;
+    .muscle-button {
+      flex: 1;
 
-      line-height: 1.5;
+      padding: 10px;
+
+      border:
+        1px solid rgba(255,255,255,.12);
+
+      border-radius: 10px;
+
+      background: #24272d;
+
+      color: white;
+
+      font-size: 13px;
+    }
+
+    .muscle-button:disabled {
+      opacity: .4;
+    }
+
+    #muscle-note {
+      margin-top: 8px;
+
+      color: #7f8791;
+
+      font-size: 11px;
+
+      line-height: 1.4;
     }
 
 
-    /* =========================
+    /* ==============================
+       INSPECT BUTTON
+    ============================== */
+
+    #inspectButton {
+      width: 100%;
+
+      padding: 11px;
+
+      border: 1px solid #4c78a8;
+
+      border-radius: 11px;
+
+      background: #26384c;
+
+      color: #d9eaff;
+
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+
+    /* ==============================
+       INSPECTOR
+    ============================== */
+
+    #inspector {
+      position: fixed;
+
+      top: 18px;
+      right: 18px;
+
+      width: 390px;
+
+      height: calc(100vh - 36px);
+
+      z-index: 30;
+
+      display: none;
+
+      flex-direction: column;
+
+      background: rgba(14,16,19,.97);
+
+      border:
+        1px solid rgba(255,255,255,.14);
+
+      border-radius: 18px;
+
+      overflow: hidden;
+
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+
+    #inspectorHeader {
+      padding: 16px;
+
+      border-bottom:
+        1px solid rgba(255,255,255,.10);
+    }
+
+    #inspectorTitle {
+      font-size: 17px;
+      font-weight: 700;
+    }
+
+    #inspectorSubtitle {
+      margin-top: 4px;
+
+      color: #8e969f;
+
+      font-size: 11px;
+    }
+
+    #inspectorControls {
+      display: flex;
+
+      gap: 7px;
+
+      margin-top: 12px;
+    }
+
+    .inspector-button {
+      flex: 1;
+
+      padding: 9px;
+
+      border:
+        1px solid rgba(255,255,255,.12);
+
+      border-radius: 9px;
+
+      background: #25282e;
+
+      color: white;
+
+      font-size: 12px;
+    }
+
+    #closeInspector {
+      background: #3b2527;
+      color: #ffb8b8;
+    }
+
+
+    /* ==============================
+       SEARCH
+    ============================== */
+
+    #search {
+      width: calc(100% - 30px);
+
+      margin: 12px 15px 4px;
+
+      padding: 10px;
+
+      border:
+        1px solid rgba(255,255,255,.12);
+
+      border-radius: 9px;
+
+      outline: none;
+
+      background: #202329;
+
+      color: white;
+
+      font-size: 13px;
+    }
+
+
+    /* ==============================
+       RESULTS
+    ============================== */
+
+    #meshCount {
+      padding:
+        7px 15px;
+
+      color: #89919b;
+
+      font-size: 11px;
+    }
+
+    #meshList {
+      flex: 1;
+
+      overflow-y: auto;
+
+      padding:
+        0 12px 15px;
+    }
+
+    .mesh-item {
+      padding:
+        9px 10px;
+
+      margin-bottom: 5px;
+
+      background: #202329;
+
+      border-radius: 8px;
+
+      color: #d8dce1;
+
+      font-family:
+        ui-monospace,
+        SFMono-Regular,
+        Menlo,
+        monospace;
+
+      font-size: 11px;
+
+      word-break: break-word;
+    }
+
+    .mesh-number {
+      color: #707985;
+      margin-right: 6px;
+    }
+
+
+    /* ==============================
        HELP
-    ========================= */
+    ============================== */
 
     #help {
       position: fixed;
 
       left: 50%;
-      bottom: 20px;
-
-      z-index: 15;
+      bottom: 18px;
 
       transform:
         translateX(-50%);
 
-      padding: 9px 15px;
+      z-index: 15;
+
+      padding:
+        9px 15px;
 
       background:
         rgba(18,20,23,.86);
@@ -253,23 +436,18 @@
     }
 
 
-    @media (max-width: 700px) {
+    /* ==============================
+       IPAD / SMALL SCREEN
+    ============================== */
+
+    @media (max-width: 900px) {
 
       #panel {
-        top: 12px;
-        left: 12px;
-
-        width: 245px;
-
-        padding: 14px;
+        width: 250px;
       }
 
-      #panel h1 {
-        font-size: 18px;
-      }
-
-      .layer {
-        padding: 9px 10px;
+      #inspector {
+        width: 360px;
       }
 
     }
@@ -277,12 +455,7 @@
   </style>
 
 
-  <!-- =========================
-       THREE.JS IMPORT MAP
-  ========================== -->
-
   <script type="importmap">
-
   {
     "imports": {
 
@@ -294,19 +467,17 @@
 
     }
   }
-
   </script>
 
 </head>
 
 
-
 <body>
 
 
-  <!-- =========================
-       CONTROL PANEL
-  ========================== -->
+  <!-- ==============================
+       LEFT CONTROL PANEL
+  ============================== -->
 
   <div id="panel">
 
@@ -327,7 +498,7 @@
 
 
     <div class="section-title">
-      Anatomy Layers
+      ANATOMY LAYERS
     </div>
 
 
@@ -335,7 +506,6 @@
       class="layer active"
       data-layer="skeleton"
     >
-
       <span class="dot bone-dot"></span>
 
       Skeleton
@@ -343,7 +513,6 @@
       <span class="layer-state">
         ON
       </span>
-
     </button>
 
 
@@ -351,7 +520,6 @@
       class="layer"
       data-layer="muscular"
     >
-
       <span class="dot muscle-dot"></span>
 
       Muscles
@@ -359,7 +527,6 @@
       <span class="layer-state">
         OFF
       </span>
-
     </button>
 
 
@@ -367,7 +534,6 @@
       class="layer"
       data-layer="nervous"
     >
-
       <span class="dot nerve-dot"></span>
 
       Nervous System
@@ -375,7 +541,6 @@
       <span class="layer-state">
         OFF
       </span>
-
     </button>
 
 
@@ -383,7 +548,6 @@
       class="layer"
       data-layer="cardiovascular"
     >
-
       <span class="dot cardio-dot"></span>
 
       Cardiovascular
@@ -391,7 +555,6 @@
       <span class="layer-state">
         OFF
       </span>
-
     </button>
 
 
@@ -399,7 +562,6 @@
       class="layer"
       data-layer="visceral"
     >
-
       <span class="dot viscera-dot"></span>
 
       Viscera
@@ -407,21 +569,114 @@
       <span class="layer-state">
         OFF
       </span>
-
     </button>
+
+
+
+    <div class="divider"></div>
+
+
+    <!-- Future muscle layers -->
+
+    <div class="section-title">
+      MUSCLE DISSECTION
+    </div>
+
+
+    <div class="muscle-control">
+
+      <button
+        class="muscle-button"
+        disabled
+      >
+        − Muscle
+      </button>
+
+
+      <button
+        class="muscle-button"
+        disabled
+      >
+        + Muscle
+      </button>
+
+    </div>
+
+
+    <div id="muscle-note">
+      Inspector 完成後會啟用逐層肌肉加減。
+    </div>
+
 
 
     <div class="divider"></div>
 
 
     <div class="section-title">
-      Model
+      DEVELOPMENT
     </div>
 
 
-    <div id="info">
-      五個人體系統會使用相同的解剖座標載入。
-      點擊上方按鈕可以顯示或隱藏不同系統。
+    <button id="inspectButton">
+      Inspect Muscle Model
+    </button>
+
+  </div>
+
+
+
+  <!-- ==============================
+       MODEL INSPECTOR
+  ============================== -->
+
+  <div id="inspector">
+
+
+    <div id="inspectorHeader">
+
+      <div id="inspectorTitle">
+        Muscular Model Inspector
+      </div>
+
+      <div id="inspectorSubtitle">
+        muscular.glb — object / mesh names
+      </div>
+
+
+      <div id="inspectorControls">
+
+        <button
+          id="copyInspector"
+          class="inspector-button"
+        >
+          Copy All
+        </button>
+
+        <button
+          id="closeInspector"
+          class="inspector-button"
+        >
+          Close
+        </button>
+
+      </div>
+
+    </div>
+
+
+    <input
+      id="search"
+      type="text"
+      placeholder="Search mesh name..."
+    >
+
+
+    <div id="meshCount">
+      Waiting for model...
+    </div>
+
+
+    <div id="meshList">
     </div>
 
   </div>
@@ -474,6 +729,30 @@
     const status =
       document.getElementById(
         "status"
+      );
+
+
+    const inspector =
+      document.getElementById(
+        "inspector"
+      );
+
+
+    const meshList =
+      document.getElementById(
+        "meshList"
+      );
+
+
+    const meshCount =
+      document.getElementById(
+        "meshCount"
+      );
+
+
+    const search =
+      document.getElementById(
+        "search"
       );
 
 
@@ -536,22 +815,16 @@
 
 
     renderer.setSize(
-
       window.innerWidth,
-
       window.innerHeight
-
     );
 
 
     renderer.setPixelRatio(
 
       Math.min(
-
         window.devicePixelRatio,
-
         1.75
-
       )
 
     );
@@ -576,23 +849,19 @@
 
 
     // =====================================
-    // LIGHTING
+    // LIGHTS
     // =====================================
 
-    const hemisphereLight =
+    scene.add(
+
       new THREE.HemisphereLight(
 
         0xffffff,
-
         0x25282d,
-
         1.15
 
-      );
+      )
 
-
-    scene.add(
-      hemisphereLight
     );
 
 
@@ -601,7 +870,6 @@
       new THREE.DirectionalLight(
 
         0xfff6e8,
-
         1.8
 
       );
@@ -624,7 +892,6 @@
       new THREE.DirectionalLight(
 
         0xcbdcff,
-
         0.65
 
       );
@@ -647,7 +914,6 @@
       new THREE.DirectionalLight(
 
         0xffffff,
-
         0.55
 
       );
@@ -674,7 +940,6 @@
       new OrbitControls(
 
         camera,
-
         renderer.domElement
 
       );
@@ -718,7 +983,7 @@
 
 
     // =====================================
-    // GLTF
+    // GLTF LOADER
     // =====================================
 
     const loader =
@@ -732,21 +997,11 @@
 
 
     // =====================================
-    // HUMAN ROOT
-    //
-    // All anatomy systems live inside
-    // the same parent group.
-    //
-    // Later our joint system will be
-    // built underneath this hierarchy.
+    // HUMAN
     // =====================================
 
     const human =
       new THREE.Group();
-
-
-    human.name =
-      "Human";
 
 
     scene.add(
@@ -754,10 +1009,6 @@
     );
 
 
-
-    // =====================================
-    // LAYERS
-    // =====================================
 
     const layers = {
 
@@ -775,7 +1026,7 @@
 
 
 
-    const modelFiles = {
+    const files = {
 
       skeleton:
         "./models/skeleton.glb",
@@ -796,9 +1047,6 @@
 
 
 
-    // Skeleton visible initially.
-    // Other layers initially hidden.
-
     const initialVisibility = {
 
       skeleton: true,
@@ -815,69 +1063,70 @@
 
 
 
-    let loadedCount =
-      0;
-
-
-    const totalModels =
-      Object.keys(
-        modelFiles
-      ).length;
-
-
-
     // =====================================
-    // PREPARE MODEL
+    // MUSCLE INSPECTOR DATA
     // =====================================
 
-    function prepareModel(
-      model,
-      layerName
+    let muscleObjects = [];
+
+
+
+    function collectMuscleObjects(
+      model
     ) {
 
-      model.name =
-        layerName;
-
-
-      model.visible =
-        initialVisibility[
-          layerName
-        ];
+      muscleObjects = [];
 
 
       model.traverse(
 
         function (object) {
 
+
           if (
-            object.isMesh
+            object === model
           ) {
-
-            object.userData.anatomyLayer =
-              layerName;
-
-
-            object.frustumCulled =
-              true;
-
-
-            if (
-              object.material
-            ) {
-
-              object.material.side =
-                THREE.FrontSide;
-
-
-              object.material.needsUpdate =
-                true;
-
-            }
-
+            return;
           }
+
+
+          const type =
+            object.type || "Object3D";
+
+
+          const name =
+            object.name &&
+            object.name.trim() !== ""
+
+            ? object.name
+
+            : "(unnamed)";
+
+
+          muscleObjects.push({
+
+            name: name,
+
+            type: type,
+
+            uuid: object.uuid,
+
+            isMesh:
+              object.isMesh === true,
+
+            childCount:
+              object.children.length
+
+          });
 
         }
 
+      );
+
+
+      console.log(
+        "Muscular objects:",
+        muscleObjects
       );
 
     }
@@ -885,11 +1134,11 @@
 
 
     // =====================================
-    // LOAD ONE MODEL
+    // LOAD MODEL
     // =====================================
 
     function loadModel(
-      layerName,
+      name,
       file
     ) {
 
@@ -911,15 +1160,49 @@
                 gltf.scene;
 
 
-              prepareModel(
-                model,
-                layerName
+              model.name =
+                name;
+
+
+              model.visible =
+                initialVisibility[
+                  name
+                ];
+
+
+              model.traverse(
+
+                function (object) {
+
+                  if (
+                    object.isMesh
+                  ) {
+
+                    object.userData.anatomyLayer =
+                      name;
+
+
+                    if (
+                      object.material
+                    ) {
+
+                      object.material.side =
+                        THREE.FrontSide;
+
+
+                      object.material.needsUpdate =
+                        true;
+
+                    }
+
+                  }
+
+                }
+
               );
 
 
-              layers[
-                layerName
-              ] =
+              layers[name] =
                 model;
 
 
@@ -928,25 +1211,15 @@
               );
 
 
-              loadedCount++;
+              if (
+                name === "muscular"
+              ) {
 
+                collectMuscleObjects(
+                  model
+                );
 
-              status.textContent =
-
-                "● Loading anatomy " +
-
-                loadedCount +
-
-                "/" +
-
-                totalModels;
-
-
-              console.log(
-                "Loaded:",
-                layerName,
-                model
-              );
+              }
 
 
               resolve(
@@ -962,8 +1235,7 @@
             function (error) {
 
               console.error(
-                "Failed:",
-                layerName,
+                name,
                 error
               );
 
@@ -985,7 +1257,7 @@
 
 
     // =====================================
-    // LOAD ALL ANATOMY
+    // LOAD ANATOMY
     // =====================================
 
     async function loadAnatomy() {
@@ -997,27 +1269,27 @@
 
           loadModel(
             "skeleton",
-            modelFiles.skeleton
+            files.skeleton
           ),
 
           loadModel(
             "muscular",
-            modelFiles.muscular
+            files.muscular
           ),
 
           loadModel(
             "nervous",
-            modelFiles.nervous
+            files.nervous
           ),
 
           loadModel(
             "cardiovascular",
-            modelFiles.cardiovascular
+            files.cardiovascular
           ),
 
           loadModel(
             "visceral",
-            modelFiles.visceral
+            files.visceral
           )
 
         ]);
@@ -1025,17 +1297,23 @@
 
 
         // =================================
-        // Calculate complete anatomy box
+        // IMPORTANT:
+        // Use skeleton bounding box
+        // to centre all anatomy together.
         // =================================
 
         const box =
           new THREE.Box3()
           .setFromObject(
-            human
+            layers.skeleton
           );
 
 
         const center =
+          new THREE.Vector3();
+
+
+        const size =
           new THREE.Vector3();
 
 
@@ -1044,46 +1322,15 @@
         );
 
 
+        box.getSize(
+          size
+        );
 
-        // =================================
-        // Move ALL layers together
-        //
-        // Important:
-        // Never centre layers individually.
-        // Otherwise anatomy alignment
-        // would be destroyed.
-        // =================================
 
         human.position.sub(
           center
         );
 
-
-
-        // =================================
-        // Recalculate bounding box
-        // =================================
-
-        const centeredBox =
-          new THREE.Box3()
-          .setFromObject(
-            human
-          );
-
-
-        const size =
-          new THREE.Vector3();
-
-
-        centeredBox.getSize(
-          size
-        );
-
-
-
-        // =================================
-        // CAMERA FIT
-        // =================================
 
         fitCamera(
           size
@@ -1099,28 +1346,12 @@
           "#7ee787";
 
 
-        console.log(
-          "All anatomy loaded"
-        );
-
-
-        console.log(
-          "Human:",
-          human
-        );
-
-
-        console.log(
-          "Anatomy size:",
-          size
-        );
-
-
       }
 
       catch (
         error
       ) {
+
 
         console.error(
           error
@@ -1141,41 +1372,40 @@
 
 
     // =====================================
-    // FIT CAMERA
+    // CAMERA FIT
     // =====================================
 
     function fitCamera(
       size
     ) {
 
-      const verticalFOV =
+      const vFov =
         THREE.MathUtils.degToRad(
           camera.fov
         );
 
 
-      const distanceHeight =
+      const heightDistance =
 
         size.y /
 
         (
           2 *
-
           Math.tan(
-            verticalFOV / 2
+            vFov / 2
           )
         );
 
 
 
-      const horizontalFOV =
+      const hFov =
 
         2 *
 
         Math.atan(
 
           Math.tan(
-            verticalFOV / 2
+            vFov / 2
           )
 
           *
@@ -1186,15 +1416,14 @@
 
 
 
-      const distanceWidth =
+      const widthDistance =
 
         size.x /
 
         (
           2 *
-
           Math.tan(
-            horizontalFOV / 2
+            hFov / 2
           )
         );
 
@@ -1204,9 +1433,9 @@
 
         Math.max(
 
-          distanceHeight,
+          heightDistance,
 
-          distanceWidth
+          widthDistance
 
         );
 
@@ -1217,36 +1446,26 @@
 
 
       camera.position.set(
-
         0,
-
         0,
-
         distance
-
       );
 
 
-
-      const maxDimension =
-
+      const maxSize =
         Math.max(
 
           size.x,
-
           size.y,
-
           size.z
 
         );
 
 
-
       camera.near =
         Math.max(
 
-          maxDimension /
-          1000,
+          maxSize / 1000,
 
           0.001
 
@@ -1254,15 +1473,7 @@
 
 
       camera.far =
-        Math.max(
-
-          maxDimension *
-          100,
-
-          distance *
-          10
-
-        );
+        maxSize * 100;
 
 
       camera.updateProjectionMatrix();
@@ -1277,13 +1488,11 @@
 
 
       controls.minDistance =
-        distance *
-        0.08;
+        distance * 0.08;
 
 
       controls.maxDistance =
-        distance *
-        6;
+        distance * 6;
 
 
       controls.update();
@@ -1293,72 +1502,355 @@
 
 
     // =====================================
-    // LAYER BUTTONS
+    // ANATOMY LAYER BUTTONS
     // =====================================
 
-    const layerButtons =
-      document.querySelectorAll(
+    document
+      .querySelectorAll(
         ".layer"
+      )
+      .forEach(
+
+        function (button) {
+
+
+          button.addEventListener(
+
+            "click",
+
+            function () {
+
+
+              const name =
+                button.dataset.layer;
+
+
+              const model =
+                layers[name];
+
+
+              if (
+                !model
+              ) {
+                return;
+              }
+
+
+              model.visible =
+                !model.visible;
+
+
+              button
+                .classList
+                .toggle(
+                  "active",
+                  model.visible
+                );
+
+
+              button
+                .querySelector(
+                  ".layer-state"
+                )
+                .textContent =
+
+                  model.visible
+                  ? "ON"
+                  : "OFF";
+
+            }
+
+          );
+
+        }
+
       );
 
 
-    layerButtons.forEach(
 
-      function (button) {
+    // =====================================
+    // RENDER INSPECTOR
+    // =====================================
 
-        button.addEventListener(
-
-          "click",
-
-          function () {
-
-            const layerName =
-              button.dataset.layer;
+    function renderInspector(
+      filter = ""
+    ) {
 
 
-            const model =
-              layers[
-                layerName
-              ];
+      meshList.innerHTML =
+        "";
+
+
+      const lowerFilter =
+        filter.toLowerCase();
+
+
+      const filtered =
+        muscleObjects.filter(
+
+          function (item) {
 
 
             if (
-              !model
+              lowerFilter === ""
             ) {
 
-              return;
+              return true;
 
             }
 
 
-            model.visible =
-              !model.visible;
+            return (
 
+              item.name
+                .toLowerCase()
+                .includes(
+                  lowerFilter
+                )
 
-            button.classList.toggle(
-              "active",
-              model.visible
+              ||
+
+              item.type
+                .toLowerCase()
+                .includes(
+                  lowerFilter
+                )
+
             );
-
-
-            const state =
-              button.querySelector(
-                ".layer-state"
-              );
-
-
-            state.textContent =
-              model.visible
-              ? "ON"
-              : "OFF";
 
           }
 
         );
 
+
+
+      meshCount.textContent =
+
+        filtered.length +
+
+        " objects shown / " +
+
+        muscleObjects.length +
+
+        " total";
+
+
+
+      filtered.forEach(
+
+        function (
+          item,
+          index
+        ) {
+
+
+          const div =
+            document.createElement(
+              "div"
+            );
+
+
+          div.className =
+            "mesh-item";
+
+
+          div.textContent =
+
+            (index + 1) +
+
+            ". [" +
+
+            item.type +
+
+            "] " +
+
+            item.name;
+
+
+          meshList.appendChild(
+            div
+          );
+
+        }
+
+      );
+
+    }
+
+
+
+    // =====================================
+    // OPEN INSPECTOR
+    // =====================================
+
+    document
+      .getElementById(
+        "inspectButton"
+      )
+      .addEventListener(
+
+        "click",
+
+        function () {
+
+
+          inspector.style.display =
+            "flex";
+
+
+          renderInspector(
+            search.value
+          );
+
+        }
+
+      );
+
+
+
+    // =====================================
+    // CLOSE
+    // =====================================
+
+    document
+      .getElementById(
+        "closeInspector"
+      )
+      .addEventListener(
+
+        "click",
+
+        function () {
+
+          inspector.style.display =
+            "none";
+
+        }
+
+      );
+
+
+
+    // =====================================
+    // SEARCH
+    // =====================================
+
+    search.addEventListener(
+
+      "input",
+
+      function () {
+
+        renderInspector(
+          search.value
+        );
+
       }
 
     );
+
+
+
+    // =====================================
+    // COPY INSPECTOR
+    // =====================================
+
+    document
+      .getElementById(
+        "copyInspector"
+      )
+      .addEventListener(
+
+        "click",
+
+        async function () {
+
+
+          const lines =
+            muscleObjects.map(
+
+              function (
+                item,
+                index
+              ) {
+
+                return (
+
+                  (index + 1) +
+
+                  ". [" +
+
+                  item.type +
+
+                  "] " +
+
+                  item.name
+
+                );
+
+              }
+
+            );
+
+
+          const text =
+            lines.join(
+              "\n"
+            );
+
+
+          try {
+
+
+            await navigator
+              .clipboard
+              .writeText(
+                text
+              );
+
+
+            this.textContent =
+              "Copied ✓";
+
+
+            const button =
+              this;
+
+
+            setTimeout(
+
+              function () {
+
+                button.textContent =
+                  "Copy All";
+
+              },
+
+              1500
+
+            );
+
+
+          }
+
+          catch (
+            error
+          ) {
+
+
+            console.error(
+              error
+            );
+
+
+            this.textContent =
+              "Copy failed";
+
+          }
+
+        }
+
+      );
 
 
 
@@ -1371,6 +1863,7 @@
       "resize",
 
       function () {
+
 
         camera.aspect =
 
@@ -1402,6 +1895,7 @@
 
     function animate() {
 
+
       requestAnimationFrame(
         animate
       );
@@ -1411,11 +1905,8 @@
 
 
       renderer.render(
-
         scene,
-
         camera
-
       );
 
     }
