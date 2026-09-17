@@ -447,19 +447,12 @@ input[type="range"]{
         MUSCLE DISSECTION｜肌肉分層
       </div>
 
-      <div id="depthName">Full musculature｜完整肌肉</div>
-      <div id="depthDescription">完整肌肉顯示</div>
-
-      <div class="depthBars">
-        <div class="depthBar active"></div>
-        <div class="depthBar active"></div>
-        <div class="depthBar active"></div>
-        <div class="depthBar active"></div>
-      </div>
+      <div id="depthName">Structure dissection｜逐塊解剖</div>
+      <div id="depthDescription">點選一塊肌肉，再按 − Muscle 移除；會露出其下方深層結構。</div>
 
       <div class="twoButtons">
-        <button id="muscleMinus">− Muscle</button>
-        <button id="musclePlus">+ Muscle</button>
+        <button id="muscleMinus">− Selected muscle</button>
+        <button id="musclePlus">Undo muscle</button>
       </div>
 
       <button id="restoreAll" class="fullButton">
@@ -468,7 +461,7 @@ input[type="range"]{
 
     </div>
 
-    <div class="section">
+    <div class="section" style="display:none">
 
       <div class="sectionTitle">
         RIGHT UPPER LIMB JOINTS｜右上肢關節
@@ -919,9 +912,14 @@ async function loadOptionalLayer(key,label){
 
     await loadOne(key);
 
-    // Keep every anatomical system in its original GLB hierarchy.
-    // Re-parenting static meshes into the prototype arm rig corrupts
-    // nerves/vessels and can move structures away from the body.
+    /*
+      IMPORTANT:
+      Any newly loaded soft-tissue layer must be registered
+      into the already-created right upper-limb rig.
+    */
+    // V3: keep every anatomy system in its authored world position.
+    // Do NOT re-parent unrigged nerves/vessels/muscles into a synthetic limb rig.
+
     updateSystemButtons();
 
     await sleep(120);
@@ -955,10 +953,10 @@ function prepareSkin(model){
       color: 0xd8a184,
       roughness: 0.72,
       metalness: 0.0,
-      transparent: true,
-      opacity: 0.34,
-      depthWrite: false,
-      side: THREE.DoubleSide
+      transparent: false,
+      opacity: 1.0,
+      depthWrite: true,
+      side: THREE.FrontSide
     });
 
     o.castShadow = false;
@@ -2127,179 +2125,39 @@ document.getElementById(
 ========================================================= */
 
 let muscleDepth=4;
-
-const accessoryRegex =
-  /(fascia|bursa|retinac|ligament|tendon|aponeuros|septum|sheath)/i;
-
-function getHierarchyName(object){
-
-  const parts=[];
-
-  let p=object;
-
-  while(
-    p &&
-    p!==layers.muscular
-  ){
-
-    if(p.name){
-      parts.push(p.name);
-    }
-
-    p=p.parent;
-  }
-
-  return parts.join(" ");
-}
-
-function muscleDepthFor(mesh){
-
-  const n =
-    getHierarchyName(mesh)
-      .toLowerCase();
-
-  /*
-    Accessory connective structures are excluded
-    from muscle-depth logic.
-  */
-
-  if(accessoryRegex.test(n)){
-    return -1;
-  }
-
-  /* DEEPEST */
-
-  if(
-    /(subscapularis|supraspinatus|infraspinatus|teres minor|multifidus|rotatores|interspinal|intertransvers|transversus abdominis|gluteus minimus|pronator quadratus|supinator|popliteus|quadratus femoris|obturator|gemellus|interossei|lumbrical|flexor hallucis brevis|adductor hallucis)/i.test(n)
-  ){
-    return 1;
-  }
-
-  /* DEEP / INTERMEDIATE */
-
-  if(
-    /(internal oblique|rhomboid|pectoralis minor|serratus anterior|gluteus medius|vastus intermedius|flexor digitorum profundus|tibialis posterior)/i.test(n)
-  ){
-    return 2;
-  }
-
-  /* SUPERFICIAL */
-
-  if(
-    /(trapezius|latissimus|pectoralis major|deltoid|biceps|triceps|sternocleidomastoid|frontalis|occipitalis|temporoparietalis|orbicularis|zygomaticus|risorius|platysma|masseter|rectus abdominis|external oblique|gluteus maximus|sartorius|rectus femoris|vastus lateralis|vastus medialis|gastrocnemius|soleus|tibialis anterior|brachioradialis|palmaris longus)/i.test(n)
-  ){
-    return 4;
-  }
-
-  // Unclassified muscles are treated as intermediate rather than
-  // superficial. This makes each minus-step visibly peel a layer.
-  return 2;
-}
+const muscleDissectionStack=[];
 
 function updateMuscleDepth(){
-
+  // V3 uses true structure-by-structure dissection, like anatomy atlas apps.
+  // Never globally guess depth from names; that produced incorrect front/back layers.
   if(!layers.muscular) return;
-
-  const muscleLayerOn =
-    layerVisibility.muscular;
-
-  layers.muscular.visible = muscleLayerOn;
-
   layers.muscular.traverse(obj=>{
-
     if(!obj.isMesh) return;
-
-    const depth =
-      muscleDepthFor(obj);
-
-    if(depth===-1){
-
-      obj.visible =
-        muscleLayerOn &&
-        muscleDepth>0;
-
-      return;
-    }
-
-    obj.visible =
-      muscleLayerOn &&
-      depth<=muscleDepth;
-
+    const hidden=individualOverrides.get(obj)==="hidden";
+    obj.visible=!!layerVisibility.muscular && !hidden;
   });
-
-  const names={
-    4:[
-      "Full musculature｜完整肌肉",
-      "完整肌肉顯示"
-    ],
-    3:[
-      "Superficial dissection｜表層解剖",
-      "移除最表層肌肉"
-    ],
-    2:[
-      "Intermediate｜中層",
-      "顯示較深層肌肉"
-    ],
-    1:[
-      "Deep muscles｜深層肌肉",
-      "深層肌肉顯示"
-    ],
-    0:[
-      "Skeleton｜骨骼",
-      "肌肉已隱藏"
-    ]
-  };
-
-  document.getElementById(
-    "depthName"
-  ).textContent=
-    names[muscleDepth][0];
-
-  document.getElementById(
-    "depthDescription"
-  ).textContent=
-    names[muscleDepth][1];
-
-  const bars =
-    document.querySelectorAll(
-      ".depthBar"
-    );
-
-  bars.forEach((bar,index)=>{
-
-    bar.classList.toggle(
-      "active",
-      index < muscleDepth
-    );
-
-  });
-
 }
 
-document.getElementById(
-  "muscleMinus"
-).addEventListener("click",()=>{
-
-  muscleDepth =
-    Math.max(
-      0,
-      muscleDepth-1
-    );
-
-  updateMuscleDepth();
+document.getElementById("muscleMinus").addEventListener("click",()=>{
+  if(!selectedObject || selectedObject.userData.anatomyLayer!=="muscular"){
+    document.getElementById("depthDescription").textContent="先點選要移除的肌肉，再按 − Selected muscle。";
+    return;
+  }
+  const obj=selectedObject;
+  restoreOriginalMaterials();
+  obj.visible=false;
+  individualOverrides.set(obj,"hidden");
+  muscleDissectionStack.push(obj);
+  selectedObject=null;
+  document.getElementById("depthDescription").textContent="已移除 1 塊肌肉；現在可直接點選露出的深層肌肉繼續解剖。";
 });
 
-document.getElementById(
-  "musclePlus"
-).addEventListener("click",()=>{
-
-  muscleDepth =
-    Math.min(
-      4,
-      muscleDepth+1
-    );
-
-  updateMuscleDepth();
+document.getElementById("musclePlus").addEventListener("click",()=>{
+  const obj=muscleDissectionStack.pop();
+  if(!obj) return;
+  individualOverrides.delete(obj);
+  obj.visible=!!layerVisibility.muscular;
+  document.getElementById("depthDescription").textContent="已恢復上一塊肌肉。";
 });
 
 /* =========================================================
@@ -2346,14 +2204,28 @@ document
         layerVisibility[key] =
           !layerVisibility[key];
 
-        // Each anatomical system is an independent GLB root.
-        // Toggle the root so nerves, vessels, viscera and skin work
-        // independently from skeleton/muscle visibility.
-        if(layers[key]){
-          layers[key].visible = !!layerVisibility[key];
-        }
+        /*
+          Since rigged meshes are no longer necessarily
+          children of the original layer root, toggle
+          using userData anatomyLayer across the HUMAN tree.
+        */
 
-        if(key==="muscular"){
+        human.traverse(obj=>{
+
+          if(
+            obj.isMesh &&
+            obj.userData.anatomyLayer===key
+          ){
+            obj.visible =
+              layerVisibility[key];
+          }
+
+        });
+
+        if(
+          key==="muscular" &&
+          layerVisibility.muscular
+        ){
           updateMuscleDepth();
         }
 
@@ -2387,10 +2259,7 @@ function selectableMeshes(){
     if(
       obj.isMesh &&
       obj.visible &&
-      (
-        obj.userData.anatomyLayer==="muscular" ||
-        obj.userData.anatomyLayer==="skeleton"
-      )
+      obj.userData.anatomyLayer
     ){
       arr.push(obj);
     }
@@ -2680,6 +2549,12 @@ function selectObject(obj){
     "skeleton"
   ){
     showBoneInfo(obj);
+  } else {
+    const labels={nervous:"NERVE / NERVOUS｜神經",cardiovascular:"CARDIOVASCULAR｜心血管",visceral:"VISCERA｜內臟",skin:"SKIN｜皮膚"};
+    document.getElementById("structureBadge").textContent=labels[obj.userData.anatomyLayer] || "STRUCTURE｜結構";
+    document.getElementById("structureName").textContent=cleanName(obj.name) || "Structure";
+    document.getElementById("structureChinese").textContent="";
+    document.getElementById("infoContent").innerHTML=`<div class="placeholder">${obj.name || "Selected structure"}</div>`;
   }
 }
 
@@ -2843,11 +2718,6 @@ document.getElementById(
 
     layerVisibility.skeleton=true;
     layerVisibility.muscular=true;
-
-    // Restore means the two core layers; optional systems keep their
-    // current on/off state instead of being accidentally overwritten.
-    if(layers.skeleton) layers.skeleton.visible=true;
-    if(layers.muscular) layers.muscular.visible=true;
 
     human.traverse(obj=>{
 
@@ -3119,7 +2989,9 @@ async function init(){
       2. BUILD RIGHT ARM SKELETAL RIG
     */
 
-    buildRig();
+    // V3 STABLE: source GLBs have no armature/skin weights.
+    // Synthetic re-parenting was the cause of separated bones, muscles and nerves.
+    // Joint motion is intentionally disabled until a common authored rig is available.
 
     updateSystemButtons();
 
@@ -3137,8 +3009,13 @@ async function init(){
       "muscular"
     );
 
-    // Do NOT attach static muscle meshes to the prototype arm rig.
-    // The source GLB is not skinned/rigged; re-parenting breaks anatomy.
+    /*
+      Attach right upper-limb muscle meshes
+      to shoulder/elbow/wrist hierarchy.
+    */
+
+    // V3: muscular geometry remains in its original authored hierarchy.
+
     updateMuscleDepth();
 
     setStatus(
