@@ -1,1738 +1,1575 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
-
 <head>
 <meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 
-<meta
-  name="viewport"
-  content="width=device-width, initial-scale=1.0"
->
-
-<title>MJ Anatomy 3D — Skeleton Inspector</title>
+<title>MJ Anatomy 3D</title>
 
 <style>
+*{box-sizing:border-box}
+html,body{
+  margin:0;width:100%;height:100%;overflow:hidden;
+  background:#07090c;color:#fff;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+canvas{display:block;touch-action:none}
 
-* {
-  box-sizing: border-box;
+.panel{
+  position:fixed;z-index:20;
+  background:rgba(15,17,21,.94);
+  border:1px solid rgba(255,255,255,.12);
+  backdrop-filter:blur(18px);
+  border-radius:18px;
+  overflow:auto;
 }
 
-html,
-body {
-  margin: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  background: #08090b;
-  color: white;
-
-  font-family:
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    sans-serif;
+#left{
+  left:14px;top:14px;
+  width:270px;
+  max-height:calc(100vh - 28px);
+  padding:16px;
 }
 
-canvas {
-  display: block;
-  width: 100%;
-  height: 100%;
-  touch-action: none;
+#right{
+  right:14px;top:14px;
+  width:355px;
+  max-height:calc(100vh - 28px);
+  padding:16px;
 }
 
+h1{font-size:20px;margin:0}
+.sub{font-size:11px;color:#8e98a4;margin:5px 0 10px}
+#status{font-size:11px;color:#d7ad67;margin-bottom:12px}
 
-/* ===========================
-   LEFT PANEL
-=========================== */
-
-#panel {
-  position: fixed;
-
-  top: 18px;
-  left: 18px;
-
-  z-index: 20;
-
-  width: 280px;
-
-  padding: 18px;
-
-  background:
-    rgba(17,19,23,.93);
-
-  border:
-    1px solid
-    rgba(255,255,255,.12);
-
-  border-radius: 18px;
-
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+.section{
+  border-top:1px solid rgba(255,255,255,.09);
+  padding-top:12px;margin-top:12px;
+}
+.title{
+  font-size:10px;color:#8d96a1;
+  font-weight:700;letter-spacing:1px;
+  margin-bottom:8px;
 }
 
-#panel h1 {
-  margin: 0;
-  font-size: 21px;
+button{
+  border:1px solid rgba(255,255,255,.11);
+  color:#d7dbe0;background:#24272d;
+  border-radius:9px;padding:9px;
 }
 
-#subtitle {
-  margin-top: 5px;
-
-  color: #969da7;
-
-  font-size: 13px;
+.layer{
+  width:100%;text-align:left;margin:3px 0;
+}
+.layer.on{
+  background:#253b32;
+  color:#b9f5cf;
+  border-color:#3e6853;
 }
 
-#status {
-  margin-top: 12px;
+.row{display:flex;gap:6px}
+.row button{flex:1}
 
-  color: #f0c36a;
-
-  font-size: 12px;
+#stage{
+  font-weight:700;font-size:13px;margin-bottom:4px;
+}
+.small{
+  color:#919aa5;font-size:10px;line-height:1.45;
 }
 
-.divider {
-  height: 1px;
+.depth{display:flex;gap:3px;margin:9px 0}
+.depth span{
+  flex:1;height:5px;border-radius:4px;background:#343941;
+}
+.depth span.active{background:#c76d61}
 
-  margin: 16px 0;
-
-  background:
-    rgba(255,255,255,.10);
+input[type=range]{
+  width:100%;
+  accent-color:#d48678;
 }
 
-.section-title {
-  margin-bottom: 10px;
+.jointRow{margin:10px 0}
+.jointTop{
+  display:flex;justify-content:space-between;
+  font-size:11px;margin-bottom:3px;
+}
+.value{color:#e4a093}
 
-  color: #aeb5bf;
+#selectedName{font-size:19px;font-weight:750}
+#selectedChinese{font-size:14px;color:#e4a093;margin-top:2px}
+#meta{font-size:10px;color:#89939e;margin-top:6px}
 
-  font-size: 11px;
+.card{
+  border-top:1px solid rgba(255,255,255,.09);
+  margin-top:12px;padding-top:10px;
+}
+.cardTitle{
+  font-size:11px;font-weight:750;color:#df8d80;
+}
+.cardBody{
+  font-size:12px;color:#d5d8dd;
+  line-height:1.55;margin-top:5px;
+}
+.cardBody div{margin:4px 0}
 
-  font-weight: 700;
-
-  letter-spacing: 1px;
+#search{
+  width:100%;padding:9px;
+  background:#202329;color:white;
+  border:1px solid rgba(255,255,255,.11);
+  border-radius:8px;
+}
+#results{
+  max-height:130px;overflow:auto;margin-top:5px;
+}
+.result{
+  font-size:10px;padding:7px;
+  background:#202329;margin:3px 0;border-radius:7px;
 }
 
-
-/* ===========================
-   BUTTON
-=========================== */
-
-.main-button {
-  width: 100%;
-
-  padding: 12px;
-
-  margin-bottom: 8px;
-
-  border:
-    1px solid
-    rgba(255,255,255,.14);
-
-  border-radius: 11px;
-
-  background: #26384c;
-
-  color: #d9eaff;
-
-  font-size: 13px;
-
-  font-weight: 600;
-
-  cursor: pointer;
+#hint{
+  position:fixed;z-index:15;
+  bottom:13px;left:50%;transform:translateX(-50%);
+  padding:8px 13px;border-radius:20px;
+  background:rgba(15,17,21,.86);
+  color:#969faa;font-size:10px;
+  border:1px solid rgba(255,255,255,.1);
 }
 
-#info {
-  margin-top: 10px;
-
-  color: #8e969f;
-
-  font-size: 11px;
-
-  line-height: 1.5;
+.warning{
+  padding:8px;border-radius:8px;
+  background:#30291d;color:#e7c889;
+  font-size:10px;line-height:1.4;
 }
 
-
-/* ===========================
-   INSPECTOR
-=========================== */
-
-#inspector {
-  position: fixed;
-
-  top: 18px;
-  right: 18px;
-
-  z-index: 30;
-
-  display: none;
-
-  flex-direction: column;
-
-  width: 410px;
-
-  height:
-    calc(100vh - 36px);
-
-  background:
-    rgba(14,16,19,.98);
-
-  border:
-    1px solid
-    rgba(255,255,255,.14);
-
-  border-radius: 18px;
-
-  overflow: hidden;
-
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+@media(max-width:900px){
+  #left{width:225px}
+  #right{width:290px}
 }
-
-#inspectorHeader {
-  padding: 16px;
-
-  border-bottom:
-    1px solid
-    rgba(255,255,255,.10);
-}
-
-#inspectorTitle {
-  font-size: 17px;
-
-  font-weight: 700;
-}
-
-#inspectorSubtitle {
-  margin-top: 4px;
-
-  color: #8e969f;
-
-  font-size: 11px;
-}
-
-#controls {
-  display: flex;
-
-  gap: 8px;
-
-  margin-top: 12px;
-}
-
-.inspector-button {
-  flex: 1;
-
-  padding: 10px;
-
-  border:
-    1px solid
-    rgba(255,255,255,.12);
-
-  border-radius: 9px;
-
-  background: #25282e;
-
-  color: white;
-
-  font-size: 12px;
-}
-
-#copyButton {
-  background: #26384c;
-
-  color: #d9eaff;
-}
-
-#closeButton {
-  background: #3b2527;
-
-  color: #ffb8b8;
-}
-
-
-/* ===========================
-   SEARCH
-=========================== */
-
-#search {
-  width:
-    calc(100% - 30px);
-
-  margin:
-    12px 15px 4px;
-
-  padding: 10px;
-
-  border:
-    1px solid
-    rgba(255,255,255,.12);
-
-  border-radius: 9px;
-
-  outline: none;
-
-  background: #202329;
-
-  color: white;
-
-  font-size: 13px;
-}
-
-#objectCount {
-  padding:
-    7px 15px;
-
-  color: #89919b;
-
-  font-size: 11px;
-}
-
-
-/* ===========================
-   OBJECT LIST
-=========================== */
-
-#objectList {
-  flex: 1;
-
-  overflow-y: auto;
-
-  padding:
-    0 12px 15px;
-}
-
-.object-item {
-  padding:
-    9px 10px;
-
-  margin-bottom: 5px;
-
-  background: #202329;
-
-  border-radius: 8px;
-
-  color: #d8dce1;
-
-  font-family:
-    ui-monospace,
-    SFMono-Regular,
-    Menlo,
-    monospace;
-
-  font-size: 11px;
-
-  word-break: break-word;
-}
-
-.object-parent {
-  display: block;
-
-  margin-top: 3px;
-
-  color: #737c87;
-
-  font-size: 10px;
-}
-
-
-/* ===========================
-   HELP
-=========================== */
-
-#help {
-  position: fixed;
-
-  left: 50%;
-  bottom: 18px;
-
-  transform:
-    translateX(-50%);
-
-  z-index: 15;
-
-  padding:
-    9px 15px;
-
-  background:
-    rgba(18,20,23,.86);
-
-  border:
-    1px solid
-    rgba(255,255,255,.12);
-
-  border-radius: 20px;
-
-  color: #a5abb2;
-
-  font-size: 12px;
-
-  white-space: nowrap;
-}
-
-
-/* ===========================
-   IPAD
-=========================== */
-
-@media (max-width: 900px) {
-
-  #panel {
-    width: 245px;
-  }
-
-  #inspector {
-    width: 370px;
-  }
-
-}
-
 </style>
 
-
 <script type="importmap">
-
 {
-  "imports": {
-
-    "three":
-    "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
-
-    "three/addons/":
-    "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
-
+  "imports":{
+    "three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+    "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
   }
 }
-
 </script>
-
 </head>
-
 
 <body>
 
+<div id="left" class="panel">
+  <h1>MJ Anatomy 3D</h1>
+  <div class="sub">Interactive Human Anatomy</div>
+  <div id="status">● Loading anatomy...</div>
 
-<!-- ===========================
-     LEFT PANEL
-=========================== -->
+  <div class="section">
+    <div class="title">ANATOMICAL SYSTEMS</div>
 
-<div id="panel">
-
-  <h1>
-    MJ Anatomy 3D
-  </h1>
-
-  <div id="subtitle">
-    Skeleton Structure Inspector
+    <button class="layer on" data-layer="skeleton">
+      Skeleton｜骨骼
+    </button>
+    <button class="layer on" data-layer="muscular">
+      Muscles｜肌肉
+    </button>
+    <button class="layer" data-layer="nervous">
+      Nervous System｜神經系統
+    </button>
+    <button class="layer" data-layer="cardiovascular">
+      Cardiovascular｜心血管
+    </button>
+    <button class="layer" data-layer="visceral">
+      Viscera｜內臟
+    </button>
   </div>
 
-  <div id="status">
-    ● Loading skeleton...
+  <div class="section">
+    <div class="title">MUSCLE DISSECTION｜肌肉分層</div>
+
+    <div id="stage">Full musculature｜完整肌肉</div>
+    <div class="small" id="stageText">顯示全部主要肌肉層</div>
+
+    <div class="depth">
+      <span id="d1" class="active"></span>
+      <span id="d2" class="active"></span>
+      <span id="d3" class="active"></span>
+      <span id="d4" class="active"></span>
+    </div>
+
+    <div class="row">
+      <button id="minus">− Muscle</button>
+      <button id="plus">+ Muscle</button>
+    </div>
+
+    <button id="restoreMuscles" style="width:100%;margin-top:6px">
+      Restore all｜恢復全部
+    </button>
   </div>
 
+  <div class="section">
+    <div class="title">RIGHT UPPER LIMB JOINTS｜右上肢關節</div>
 
-  <div class="divider"></div>
+    <div class="warning">
+      Joint Prototype：骨骼已有 anatomical hierarchy；
+      soft tissue deformation 仍在下一階段。
+    </div>
 
+    <div class="jointRow">
+      <div class="jointTop">
+        <span>Shoulder flexion｜肩屈曲</span>
+        <span class="value" id="vShoulderFlex">0°</span>
+      </div>
+      <input id="shoulderFlex" type="range" min="-40" max="150" value="0">
+    </div>
 
-  <div class="section-title">
-    JOINT DEVELOPMENT
+    <div class="jointRow">
+      <div class="jointTop">
+        <span>Shoulder abduction｜肩外展</span>
+        <span class="value" id="vShoulderAbd">0°</span>
+      </div>
+      <input id="shoulderAbd" type="range" min="0" max="120" value="0">
+    </div>
+
+    <div class="jointRow">
+      <div class="jointTop">
+        <span>Shoulder rotation｜肩旋轉</span>
+        <span class="value" id="vShoulderRot">0°</span>
+      </div>
+      <input id="shoulderRot" type="range" min="-60" max="70" value="0">
+    </div>
+
+    <div class="jointRow">
+      <div class="jointTop">
+        <span>Elbow flexion｜屈肘</span>
+        <span class="value" id="vElbow">0°</span>
+      </div>
+      <input id="elbow" type="range" min="0" max="145" value="0">
+    </div>
+
+    <div class="jointRow">
+      <div class="jointTop">
+        <span>Pronation / Supination｜旋前／旋後</span>
+        <span class="value" id="vForearm">0°</span>
+      </div>
+      <input id="forearm" type="range" min="-80" max="80" value="0">
+    </div>
+
+    <div class="jointRow">
+      <div class="jointTop">
+        <span>Wrist flex/ext｜腕屈伸</span>
+        <span class="value" id="vWrist">0°</span>
+      </div>
+      <input id="wrist" type="range" min="-60" max="60" value="0">
+    </div>
+
+    <button id="resetPose" style="width:100%">
+      Reset Pose｜重設姿勢
+    </button>
   </div>
 
-
-  <button
-    id="inspectButton"
-    class="main-button"
-  >
-    Inspect Skeleton Model
-  </button>
-
-
-  <div id="info">
-
-    今次會讀取 skeleton.glb
-    入面所有骨骼 Mesh / Object3D。
-
-    <br><br>
-
-    完成後撳 Copy All，
-    將結果貼返俾我。
-
+  <div class="section">
+    <div class="title">FIND MUSCLE｜搜尋肌肉</div>
+    <input id="search" placeholder="Biceps / Deltoid / Gluteus...">
+    <div id="results"></div>
   </div>
-
 </div>
 
 
+<div id="right" class="panel">
+  <div class="title">ANATOMY TUTOR｜解剖教學</div>
 
-<!-- ===========================
-     INSPECTOR
-=========================== -->
+  <div id="selectedName">Select a muscle</div>
+  <div id="selectedChinese">點擊一塊肌肉</div>
+  <div id="meta">Origin · Insertion · Action · Nerve · Blood supply</div>
 
-<div id="inspector">
-
-
-  <div id="inspectorHeader">
-
-    <div id="inspectorTitle">
-      Skeleton Model Inspector
+  <div id="individual" style="display:none;margin-top:12px">
+    <div class="row">
+      <button id="hideMuscle">Hide｜隱藏</button>
+      <button id="isolateMuscle">Isolate｜獨立顯示</button>
     </div>
-
-
-    <div id="inspectorSubtitle">
-      skeleton.glb — hierarchy / bone names
-    </div>
-
-
-    <div id="controls">
-
-      <button
-        id="copyButton"
-        class="inspector-button"
-      >
-        Copy All
-      </button>
-
-
-      <button
-        id="closeButton"
-        class="inspector-button"
-      >
-        Close
-      </button>
-
-    </div>
-
+    <button id="resetOverride" style="width:100%;margin-top:6px">
+      Reset individual controls｜重設個別控制
+    </button>
   </div>
 
-
-  <input
-    id="search"
-    type="text"
-    placeholder="Search: humerus, radius, ulna..."
-  >
-
-
-  <div id="objectCount">
-    Waiting for skeleton...
+  <div id="lesson">
+    <div class="card">
+      <div class="cardBody">
+        在人體上點擊肌肉後，這裡會顯示中英文名稱及
+        Origin、Insertion、Action、Innervation 和 Blood supply。
+      </div>
+    </div>
   </div>
-
-
-  <div id="objectList"></div>
-
-
 </div>
 
-
-
-<div id="help">
-  單指旋轉 · 雙指縮放 / 移動
+<div id="hint">
+  點擊肌肉學習 · 單指旋轉 · 雙指縮放 / 移動
 </div>
-
 
 
 <script type="module">
 
+import * as THREE from "three";
+import {OrbitControls}
+from "three/addons/controls/OrbitControls.js";
+import {GLTFLoader}
+from "three/addons/loaders/GLTFLoader.js";
+import {DRACOLoader}
+from "three/addons/loaders/DRACOLoader.js";
 
-/* =========================================
-   IMPORTS
-========================================= */
 
-import * as THREE
-from "three";
+/* =========================================================
+   TEACHING DATABASE
+   More muscles can be added here without changing the viewer.
+========================================================= */
 
-
-import {
-  OrbitControls
+const DB = [
+{
+  keys:["biceps_brachii"],
+  en:"Biceps brachii",
+  zh:"肱二頭肌",
+  region:"Arm｜上臂",
+  layer:"Superficial｜淺層",
+  origin:[
+    "Long head: supraglenoid tubercle｜長頭：肩胛骨盂上結節",
+    "Short head: coracoid process｜短頭：肩胛骨喙突"
+  ],
+  insertion:[
+    "Radial tuberosity｜橈骨粗隆",
+    "Bicipital aponeurosis｜肱二頭肌腱膜"
+  ],
+  action:[
+    "Powerful supination of forearm｜前臂旋後",
+    "Flexion of elbow｜屈肘",
+    "Assists shoulder flexion｜協助肩屈曲"
+  ],
+  nerve:[
+    "Musculocutaneous nerve (C5–C6)｜肌皮神經（C5–C6）"
+  ],
+  blood:[
+    "Muscular branches of brachial artery｜肱動脈肌支"
+  ]
+},
+{
+  keys:["triceps_brachii"],
+  en:"Triceps brachii",
+  zh:"肱三頭肌",
+  region:"Arm｜上臂",
+  layer:"Posterior compartment｜後側肌群",
+  origin:[
+    "Long head: infraglenoid tubercle｜長頭：肩胛骨盂下結節",
+    "Lateral head: posterior humerus above radial groove｜外側頭：橈神經溝上方肱骨後面",
+    "Medial head: posterior humerus below radial groove｜內側頭：橈神經溝下方肱骨後面"
+  ],
+  insertion:[
+    "Olecranon of ulna｜尺骨鷹嘴"
+  ],
+  action:[
+    "Extension of elbow｜伸肘",
+    "Long head assists arm extension and adduction｜長頭協助肩伸展及內收"
+  ],
+  nerve:[
+    "Radial nerve (C6–C8)｜橈神經（C6–C8）"
+  ],
+  blood:[
+    "Profunda brachii artery｜肱深動脈"
+  ]
+},
+{
+  keys:["deltoid"],
+  en:"Deltoid",
+  zh:"三角肌",
+  region:"Shoulder｜肩部",
+  layer:"Superficial｜淺層",
+  origin:[
+    "Lateral third of clavicle｜鎖骨外側三分之一",
+    "Acromion｜肩峰",
+    "Spine of scapula｜肩胛岡"
+  ],
+  insertion:[
+    "Deltoid tuberosity of humerus｜肱骨三角肌粗隆"
+  ],
+  action:[
+    "Middle fibres abduct arm｜中束外展上臂",
+    "Anterior fibres flex and medially rotate arm｜前束屈曲及內旋上臂",
+    "Posterior fibres extend and laterally rotate arm｜後束伸展及外旋上臂"
+  ],
+  nerve:[
+    "Axillary nerve (C5–C6)｜腋神經（C5–C6）"
+  ],
+  blood:[
+    "Posterior circumflex humeral artery｜肱骨後旋動脈",
+    "Deltoid branch of thoracoacromial artery｜胸肩峰動脈三角肌支"
+  ]
+},
+{
+  keys:["pectoralis_major"],
+  en:"Pectoralis major",
+  zh:"胸大肌",
+  region:"Anterior thorax｜前胸",
+  layer:"Superficial｜淺層",
+  origin:[
+    "Medial half of clavicle｜鎖骨內側半",
+    "Sternum and upper costal cartilages｜胸骨及上位肋軟骨"
+  ],
+  insertion:[
+    "Lateral lip of intertubercular sulcus of humerus｜肱骨結節間溝外側唇"
+  ],
+  action:[
+    "Adducts and medially rotates arm｜內收及內旋上臂",
+    "Clavicular head assists arm flexion｜鎖骨部協助肩屈曲"
+  ],
+  nerve:[
+    "Lateral and medial pectoral nerves (C5–T1)｜胸外側及胸內側神經（C5–T1）"
+  ],
+  blood:[
+    "Pectoral branch of thoracoacromial artery｜胸肩峰動脈胸肌支",
+    "Lateral thoracic artery｜胸外側動脈"
+  ]
+},
+{
+  keys:["pectoralis_minor"],
+  en:"Pectoralis minor",
+  zh:"胸小肌",
+  region:"Anterior thorax｜前胸",
+  layer:"Deep｜深層",
+  origin:["Ribs 3–5｜第3–5肋骨"],
+  insertion:["Coracoid process｜肩胛骨喙突"],
+  action:[
+    "Draws scapula anteriorly and inferiorly｜牽拉肩胛骨向前下方",
+    "Stabilises scapula｜穩定肩胛骨"
+  ],
+  nerve:["Medial pectoral nerve (C8–T1)｜胸內側神經（C8–T1）"],
+  blood:["Thoracoacromial and lateral thoracic arteries｜胸肩峰及胸外側動脈"]
+},
+{
+  keys:["supraspinatus"],
+  en:"Supraspinatus",
+  zh:"棘上肌",
+  region:"Scapular region｜肩胛區",
+  layer:"Deep｜深層",
+  origin:["Supraspinous fossa｜肩胛骨棘上窩"],
+  insertion:["Superior facet of greater tubercle｜肱骨大結節上面"],
+  action:[
+    "Initiates arm abduction｜啟動上臂外展",
+    "Stabilises humeral head｜穩定肱骨頭"
+  ],
+  nerve:["Suprascapular nerve (C5–C6)｜肩胛上神經（C5–C6）"],
+  blood:["Suprascapular artery｜肩胛上動脈"]
+},
+{
+  keys:["infraspinatus"],
+  en:"Infraspinatus",
+  zh:"棘下肌",
+  region:"Scapular region｜肩胛區",
+  layer:"Deep｜深層",
+  origin:["Infraspinous fossa｜肩胛骨棘下窩"],
+  insertion:["Middle facet of greater tubercle｜肱骨大結節中面"],
+  action:[
+    "Lateral rotation of arm｜外旋上臂",
+    "Stabilises glenohumeral joint｜穩定盂肱關節"
+  ],
+  nerve:["Suprascapular nerve (C5–C6)｜肩胛上神經（C5–C6）"],
+  blood:["Suprascapular and circumflex scapular arteries｜肩胛上及旋肩胛動脈"]
+},
+{
+  keys:["subscapularis"],
+  en:"Subscapularis",
+  zh:"肩胛下肌",
+  region:"Scapular region｜肩胛區",
+  layer:"Deep｜深層",
+  origin:["Subscapular fossa｜肩胛下窩"],
+  insertion:["Lesser tubercle of humerus｜肱骨小結節"],
+  action:[
+    "Medially rotates arm｜內旋上臂",
+    "Stabilises humeral head｜穩定肱骨頭"
+  ],
+  nerve:["Upper and lower subscapular nerves (C5–C7)｜肩胛下神經（C5–C7）"],
+  blood:["Subscapular artery｜肩胛下動脈"]
+},
+{
+  keys:["teres_minor"],
+  en:"Teres minor",
+  zh:"小圓肌",
+  region:"Scapular region｜肩胛區",
+  layer:"Deep｜深層",
+  origin:["Lateral border of scapula｜肩胛骨外側緣"],
+  insertion:["Inferior facet of greater tubercle｜肱骨大結節下面"],
+  action:["Laterally rotates arm｜外旋上臂"],
+  nerve:["Axillary nerve (C5–C6)｜腋神經（C5–C6）"],
+  blood:["Circumflex scapular artery｜旋肩胛動脈"]
+},
+{
+  keys:["trapezius"],
+  en:"Trapezius",
+  zh:"斜方肌",
+  region:"Posterior neck and back｜後頸及背部",
+  layer:"Superficial｜淺層",
+  origin:[
+    "Occiput, nuchal ligament and C7–T12 spinous processes｜枕骨、項韌帶及C7–T12棘突"
+  ],
+  insertion:[
+    "Lateral clavicle, acromion and scapular spine｜鎖骨外側、肩峰及肩胛岡"
+  ],
+  action:[
+    "Elevates, retracts and depresses scapula according to fibre group｜依纖維部位上提、後縮及下壓肩胛骨",
+    "Assists upward rotation of scapula｜協助肩胛骨上旋"
+  ],
+  nerve:[
+    "Spinal accessory nerve (CN XI); C3–C4 proprioception｜副神經（CN XI）；C3–C4本體感覺"
+  ],
+  blood:["Transverse cervical artery｜頸橫動脈"]
+},
+{
+  keys:["latissimus_dorsi"],
+  en:"Latissimus dorsi",
+  zh:"背闊肌",
+  region:"Back｜背部",
+  layer:"Superficial｜淺層",
+  origin:[
+    "Lower thoracic vertebrae via thoracolumbar fascia｜經胸腰筋膜起自下胸椎",
+    "Iliac crest and lower ribs｜髂嵴及下位肋骨"
+  ],
+  insertion:["Floor of intertubercular sulcus｜肱骨結節間溝底"],
+  action:[
+    "Extends, adducts and medially rotates arm｜伸展、內收及內旋上臂"
+  ],
+  nerve:["Thoracodorsal nerve (C6–C8)｜胸背神經（C6–C8）"],
+  blood:["Thoracodorsal artery｜胸背動脈"]
+},
+{
+  keys:["rectus_abdominis"],
+  en:"Rectus abdominis",
+  zh:"腹直肌",
+  region:"Anterior abdominal wall｜前腹壁",
+  layer:"Superficial｜淺層",
+  origin:["Pubic symphysis and pubic crest｜恥骨聯合及恥骨嵴"],
+  insertion:["Xiphoid process and costal cartilages 5–7｜劍突及第5–7肋軟骨"],
+  action:["Flexes trunk and compresses abdominal viscera｜屈曲軀幹及壓迫腹腔臟器"],
+  nerve:["Thoracoabdominal nerves (T6–T12)｜胸腹神經（T6–T12）"],
+  blood:["Superior and inferior epigastric arteries｜腹壁上及腹壁下動脈"]
+},
+{
+  keys:["external_abdominal_oblique"],
+  en:"External abdominal oblique",
+  zh:"腹外斜肌",
+  region:"Abdominal wall｜腹壁",
+  layer:"Superficial｜淺層",
+  origin:["External surfaces of ribs 5–12｜第5–12肋骨外面"],
+  insertion:["Linea alba, pubic tubercle and iliac crest｜腹白線、恥骨結節及髂嵴"],
+  action:[
+    "Compresses abdominal contents｜壓迫腹腔內容物",
+    "Contralateral trunk rotation｜使軀幹旋向對側"
+  ],
+  nerve:["Thoracoabdominal nerves T7–T11 and subcostal nerve T12｜T7–T11胸腹神經及T12肋下神經"],
+  blood:["Lower intercostal and subcostal arteries｜下位肋間及肋下動脈"]
+},
+{
+  keys:["internal_abdominal_oblique"],
+  en:"Internal abdominal oblique",
+  zh:"腹內斜肌",
+  region:"Abdominal wall｜腹壁",
+  layer:"Intermediate｜中層",
+  origin:["Thoracolumbar fascia, iliac crest and inguinal ligament｜胸腰筋膜、髂嵴及腹股溝韌帶"],
+  insertion:["Lower ribs, linea alba and pubis｜下位肋骨、腹白線及恥骨"],
+  action:[
+    "Compresses abdomen｜壓迫腹部",
+    "Ipsilateral trunk rotation｜使軀幹旋向同側"
+  ],
+  nerve:["Thoracoabdominal nerves and L1 branches｜胸腹神經及L1分支"],
+  blood:["Lower intercostal, subcostal and lumbar vessels｜下位肋間、肋下及腰部血管"]
+},
+{
+  keys:["transversus_abdominis"],
+  en:"Transversus abdominis",
+  zh:"腹橫肌",
+  region:"Abdominal wall｜腹壁",
+  layer:"Deep｜深層",
+  origin:["Costal cartilages 7–12, thoracolumbar fascia and iliac crest｜第7–12肋軟骨、胸腰筋膜及髂嵴"],
+  insertion:["Linea alba and pubis｜腹白線及恥骨"],
+  action:["Compresses and supports abdominal viscera｜壓迫及支持腹腔臟器"],
+  nerve:["Thoracoabdominal nerves and L1 branches｜胸腹神經及L1分支"],
+  blood:["Lower intercostal, subcostal and related abdominal wall vessels｜下位肋間、肋下及相關腹壁血管"]
+},
+{
+  keys:["gluteus_maximus"],
+  en:"Gluteus maximus",
+  zh:"臀大肌",
+  region:"Gluteal region｜臀區",
+  layer:"Superficial｜淺層",
+  origin:["Posterior ilium, sacrum and coccyx｜髂骨後部、骶骨及尾骨"],
+  insertion:["Iliotibial tract and gluteal tuberosity｜髂脛束及股骨臀肌粗隆"],
+  action:["Extends and laterally rotates thigh｜伸展及外旋大腿"],
+  nerve:["Inferior gluteal nerve (L5–S2)｜臀下神經（L5–S2）"],
+  blood:["Superior and inferior gluteal arteries｜臀上及臀下動脈"]
+},
+{
+  keys:["gluteus_medius"],
+  en:"Gluteus medius",
+  zh:"臀中肌",
+  region:"Gluteal region｜臀區",
+  layer:"Intermediate｜中層",
+  origin:["External surface of ilium｜髂骨外面"],
+  insertion:["Lateral surface of greater trochanter｜股骨大轉子外側面"],
+  action:["Abducts thigh and stabilises pelvis during gait｜外展大腿並於步行時穩定骨盆"],
+  nerve:["Superior gluteal nerve (L4–S1)｜臀上神經（L4–S1）"],
+  blood:["Superior gluteal artery｜臀上動脈"]
+},
+{
+  keys:["gluteus_minimus"],
+  en:"Gluteus minimus",
+  zh:"臀小肌",
+  region:"Gluteal region｜臀區",
+  layer:"Deep｜深層",
+  origin:["External surface of ilium｜髂骨外面"],
+  insertion:["Anterior surface of greater trochanter｜股骨大轉子前面"],
+  action:["Abducts and medially rotates thigh｜外展及內旋大腿"],
+  nerve:["Superior gluteal nerve (L4–S1)｜臀上神經（L4–S1）"],
+  blood:["Superior gluteal artery｜臀上動脈"]
+},
+{
+  keys:["gastrocnemius"],
+  en:"Gastrocnemius",
+  zh:"腓腸肌",
+  region:"Posterior leg｜小腿後區",
+  layer:"Superficial｜淺層",
+  origin:["Medial and lateral femoral condylar regions｜股骨內、外側髁附近"],
+  insertion:["Calcaneus via calcaneal tendon｜經跟腱止於跟骨"],
+  action:["Plantarflexes ankle and assists knee flexion｜足底屈並協助屈膝"],
+  nerve:["Tibial nerve (S1–S2)｜脛神經（S1–S2）"],
+  blood:["Sural branches of popliteal artery｜膕動脈腓腸支"]
+},
+{
+  keys:["soleus"],
+  en:"Soleus",
+  zh:"比目魚肌",
+  region:"Posterior leg｜小腿後區",
+  layer:"Deep to gastrocnemius｜腓腸肌深面",
+  origin:["Posterior fibula and soleal line of tibia｜腓骨後面及脛骨比目魚肌線"],
+  insertion:["Calcaneus via calcaneal tendon｜經跟腱止於跟骨"],
+  action:["Plantarflexes ankle; important postural muscle｜足底屈；重要姿勢肌"],
+  nerve:["Tibial nerve (S1–S2)｜脛神經（S1–S2）"],
+  blood:["Posterior tibial and fibular arteries｜脛後及腓動脈"]
 }
-from
-"three/addons/controls/OrbitControls.js";
+];
 
 
-import {
-  GLTFLoader
-}
-from
-"three/addons/loaders/GLTFLoader.js";
-
-
-import {
-  DRACOLoader
-}
-from
-"three/addons/loaders/DRACOLoader.js";
-
-
-
-/* =========================================
-   UI
-========================================= */
-
-const status =
-  document.getElementById(
-    "status"
-  );
-
-
-const inspector =
-  document.getElementById(
-    "inspector"
-  );
-
-
-const objectList =
-  document.getElementById(
-    "objectList"
-  );
-
-
-const objectCount =
-  document.getElementById(
-    "objectCount"
-  );
-
-
-const search =
-  document.getElementById(
-    "search"
-  );
-
-
-
-/* =========================================
+/* =========================================================
    SCENE
-========================================= */
+========================================================= */
 
-const scene =
-  new THREE.Scene();
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x07090c);
 
-
-scene.background =
-  new THREE.Color(
-    0x08090b
-  );
-
-
-
-/* =========================================
-   CAMERA
-========================================= */
-
-const camera =
-  new THREE.PerspectiveCamera(
-
-    35,
-
-    window.innerWidth /
-    window.innerHeight,
-
-    0.01,
-
-    10000
-
-  );
-
-
-camera.position.set(
-  0,
-  0,
-  5
+const camera=new THREE.PerspectiveCamera(
+  35,innerWidth/innerHeight,.01,10000
 );
+camera.position.set(0,0,5);
+
+const renderer=new THREE.WebGLRenderer({
+  antialias:true,
+  powerPreference:"high-performance"
+});
+renderer.setSize(innerWidth,innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,1.6));
+renderer.outputColorSpace=THREE.SRGBColorSpace;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure=.72;
+document.body.appendChild(renderer.domElement);
+
+scene.add(new THREE.HemisphereLight(0xeaf0f8,0x281817,1.1));
+
+const keyLight=new THREE.DirectionalLight(0xffe7da,1.7);
+keyLight.position.set(4,6,6);
+scene.add(keyLight);
+
+const fillLight=new THREE.DirectionalLight(0xc8d8ff,.55);
+fillLight.position.set(-5,1,4);
+scene.add(fillLight);
+
+const rimLight=new THREE.DirectionalLight(0xffffff,.45);
+rimLight.position.set(2,4,-5);
+scene.add(rimLight);
+
+const controls=new OrbitControls(camera,renderer.domElement);
+controls.enableDamping=true;
+controls.dampingFactor=.06;
 
 
+/* =========================================================
+   LOADER
+========================================================= */
 
-/* =========================================
-   RENDERER
-========================================= */
+const draco=new DRACOLoader();
+draco.setDecoderPath("https://www.gstatic.com/draco/v1/decoders/");
 
-const renderer =
-  new THREE.WebGLRenderer({
+const loader=new GLTFLoader();
+loader.setDRACOLoader(draco);
 
-    antialias: true,
+const human=new THREE.Group();
+scene.add(human);
 
-    powerPreference:
-      "high-performance"
+const layers={};
 
+const files={
+  skeleton:"./models/skeleton.glb",
+  muscular:"./models/muscular.glb",
+  nervous:"./models/nervous.glb",
+  cardiovascular:"./models/cardiovascular.glb",
+  visceral:"./models/visceral.glb"
+};
+
+let muscles=[];
+let selectedMuscle=null;
+let stage=4;
+const overrides=new Map();
+
+
+/* =========================================================
+   MUSCLE HELPERS
+========================================================= */
+
+function hierarchyName(obj,root){
+  const arr=[];
+  let p=obj;
+
+  while(p && p!==root){
+    if(p.name) arr.push(p.name);
+    p=p.parent;
+  }
+
+  return arr.join(" ");
+}
+
+function isAccessory(n){
+  n=n.toLowerCase();
+
+  return [
+    "fascia",
+    "aponeurosis",
+    "bursa",
+    "retinaculum",
+    "ligament",
+    "tendon_sheath",
+    "tendinous_arch",
+    "intermuscular_septum",
+    "muscular_system"
+  ].some(x=>n.includes(x));
+}
+
+function depthFor(n){
+  n=n.toLowerCase();
+
+  if([
+    "subscapularis","supraspinatus","infraspinatus","teres_minor",
+    "transversus_abdominis","multifidus","rotatores",
+    "deep_part_of","gluteus_minimus","pronator_quadratus",
+    "flexor_digitorum_profundus","tibialis_posterior",
+    "obturator_internus","quadratus_femoris","gemellus"
+  ].some(x=>n.includes(x))) return 1;
+
+  if([
+    "pectoralis_minor","internal_abdominal_oblique",
+    "rhomboid","levator_scapulae","serratus_anterior",
+    "gluteus_medius","soleus","brachialis",
+    "adductor_magnus","semispinalis","splenius"
+  ].some(x=>n.includes(x))) return 2;
+
+  if([
+    "biceps_brachii","triceps_brachii",
+    "vastus","rectus_femoris","adductor_longus",
+    "flexor_carpi","extensor_carpi","brachioradialis"
+  ].some(x=>n.includes(x))) return 3;
+
+  if([
+    "deltoid","pectoralis_major","trapezius","latissimus_dorsi",
+    "external_abdominal_oblique","rectus_abdominis",
+    "gluteus_maximus","gastrocnemius","sternocleidomastoid",
+    "platysma","sartorius"
+  ].some(x=>n.includes(x))) return 4;
+
+  return 3;
+}
+
+
+/* =========================================================
+   PROCEDURAL MUSCLE FIBRE BUMP
+========================================================= */
+
+function createFibreTexture(){
+  const canvas=document.createElement("canvas");
+  canvas.width=256;
+  canvas.height=256;
+
+  const ctx=canvas.getContext("2d");
+  const img=ctx.createImageData(256,256);
+
+  for(let y=0;y<256;y++){
+    for(let x=0;x<256;x++){
+      const longWave=Math.sin(y*.42 + Math.sin(x*.05)*1.7);
+      const fine=Math.sin(y*1.25 + x*.025);
+      const noise=(Math.random()-.5)*10;
+
+      let v=128 + longWave*17 + fine*5 + noise;
+      v=Math.max(0,Math.min(255,v));
+
+      const i=(y*256+x)*4;
+      img.data[i]=v;
+      img.data[i+1]=v;
+      img.data[i+2]=v;
+      img.data[i+3]=255;
+    }
+  }
+
+  ctx.putImageData(img,0,0);
+
+  const tex=new THREE.CanvasTexture(canvas);
+  tex.wrapS=tex.wrapT=THREE.RepeatWrapping;
+  tex.repeat.set(3,10);
+  tex.anisotropy=renderer.capabilities.getMaxAnisotropy();
+
+  return tex;
+}
+
+const fibreTexture=createFibreTexture();
+
+function improveMuscle(mesh){
+  const mats=Array.isArray(mesh.material)
+    ? mesh.material
+    : [mesh.material];
+
+  const cloned=mats.map(original=>{
+    const m=original.clone();
+
+    if(m.isMeshStandardMaterial || m.isMeshPhysicalMaterial){
+      m.roughness=.74;
+      m.metalness=0;
+
+      if(mesh.geometry.attributes.uv){
+        m.bumpMap=fibreTexture;
+        m.bumpScale=.006;
+      }
+
+      if("clearcoat" in m){
+        m.clearcoat=.025;
+        m.clearcoatRoughness=.85;
+      }
+
+      m.needsUpdate=true;
+    }
+
+    return m;
+  });
+
+  mesh.material=Array.isArray(mesh.material)?cloned:cloned[0];
+}
+
+function prepareMuscles(root){
+  muscles=[];
+
+  root.traverse(obj=>{
+    if(!obj.isMesh) return;
+
+    const name=hierarchyName(obj,root);
+    obj.userData.anatomicalName=name;
+
+    if(isAccessory(name)){
+      obj.visible=false;
+      obj.userData.accessory=true;
+      return;
+    }
+
+    obj.userData.accessory=false;
+    obj.userData.depth=depthFor(name);
+
+    improveMuscle(obj);
+    muscles.push(obj);
+  });
+}
+
+
+/* =========================================================
+   LOAD MODELS
+========================================================= */
+
+async function loadModel(key){
+  const gltf=await loader.loadAsync(files[key]);
+  const model=gltf.scene;
+  model.name=key;
+
+  layers[key]=model;
+  human.add(model);
+
+  if(key==="muscular") prepareMuscles(model);
+
+  return model;
+}
+
+
+/* =========================================================
+   JOINT RIG
+========================================================= */
+
+const jointRig={
+  shoulder:null,
+  shoulderFlex:null,
+  shoulderAbd:null,
+  shoulderRot:null,
+  elbow:null,
+  forearm:null,
+  wrist:null
+};
+
+function getObject(name){
+  return layers.skeleton.getObjectByName(name);
+}
+
+function worldBox(obj){
+  return new THREE.Box3().setFromObject(obj);
+}
+
+function centerOfBox(box){
+  return box.getCenter(new THREE.Vector3());
+}
+
+function makePivot(name,worldPosition,parent){
+  const g=new THREE.Group();
+  g.name=name;
+
+  parent.add(g);
+
+  const local=parent.worldToLocal(worldPosition.clone());
+  g.position.copy(local);
+
+  return g;
+}
+
+function attachIf(group,obj){
+  if(obj) group.attach(obj);
+}
+
+function isRightHandBone(name){
+  const n=name.toLowerCase();
+
+  if(!n.endsWith("r001")) return false;
+
+  return (
+    n.includes("metacarpal") ||
+    n.includes("phalan") ||
+    n.includes("capitate") ||
+    n.includes("hamate") ||
+    n.includes("lunate") ||
+    n.includes("pisiform") ||
+    n.includes("scaphoid") ||
+    n.includes("trapezium") ||
+    n.includes("trapezoid") ||
+    n.includes("triquetrum")
+  );
+}
+
+function buildRightArmRig(){
+  const skeleton=layers.skeleton;
+
+  const humerus=getObject("Humerusr001");
+  const radius=getObject("Radiusr001");
+  const ulna=getObject("Ulnar001");
+
+  if(!humerus || !radius || !ulna){
+    console.warn("Right upper-limb bones not found.");
+    return;
+  }
+
+  skeleton.updateMatrixWorld(true);
+
+  const hb=worldBox(humerus);
+  const rb=worldBox(radius);
+  const ub=worldBox(ulna);
+
+  const hc=centerOfBox(hb);
+  const rc=centerOfBox(rb);
+  const uc=centerOfBox(ub);
+
+  /*
+    Model is upright (Y axis).
+    Shoulder = proximal/superior end of humerus.
+  */
+  const shoulderWorld=new THREE.Vector3(
+    hc.x,
+    hb.max.y,
+    hc.z
+  );
+
+  /*
+    Elbow = between distal humerus and proximal radius/ulna.
+  */
+  const elbowWorld=new THREE.Vector3(
+    (hc.x+rc.x+uc.x)/3,
+    (hb.min.y + Math.max(rb.max.y,ub.max.y))/2,
+    (hc.z+rc.z+uc.z)/3
+  );
+
+  /*
+    Wrist = distal end of radius/ulna.
+  */
+  const wristWorld=new THREE.Vector3(
+    (rc.x+uc.x)/2,
+    Math.min(rb.min.y,ub.min.y),
+    (rc.z+uc.z)/2
+  );
+
+
+  /*
+    Nested pivots allow three shoulder DOF.
+  */
+
+  jointRig.shoulderFlex=
+    makePivot("ShoulderFlexPivot",shoulderWorld,skeleton);
+
+  jointRig.shoulderAbd=
+    makePivot("ShoulderAbductionPivot",shoulderWorld,jointRig.shoulderFlex);
+
+  jointRig.shoulderRot=
+    makePivot("ShoulderRotationPivot",shoulderWorld,jointRig.shoulderAbd);
+
+  jointRig.shoulder=jointRig.shoulderFlex;
+
+
+  jointRig.elbow=
+    makePivot("ElbowPivot",elbowWorld,jointRig.shoulderRot);
+
+  jointRig.forearm=
+    makePivot("ForearmPivot",elbowWorld,jointRig.elbow);
+
+  jointRig.wrist=
+    makePivot("WristPivot",wristWorld,jointRig.forearm);
+
+
+  /*
+    Humerus follows shoulder only.
+  */
+  attachIf(jointRig.shoulderRot,humerus);
+
+  /*
+    Radius + ulna follow elbow and forearm twist.
+    This is a rigid first approximation of pronation/supination.
+  */
+  attachIf(jointRig.forearm,radius);
+  attachIf(jointRig.forearm,ulna);
+
+
+  /*
+    All right hand bones follow wrist.
+  */
+  const handBones=[];
+
+  skeleton.traverse(o=>{
+    if(o.isMesh && isRightHandBone(o.name)){
+      handBones.push(o);
+    }
+  });
+
+  handBones.forEach(o=>{
+    attachIf(jointRig.wrist,o);
   });
 
 
-renderer.setSize(
-
-  window.innerWidth,
-
-  window.innerHeight
-
-);
-
-
-renderer.setPixelRatio(
-
-  Math.min(
-
-    window.devicePixelRatio,
-
-    1.75
-
-  )
-
-);
-
-
-renderer.outputColorSpace =
-  THREE.SRGBColorSpace;
-
-
-renderer.toneMapping =
-  THREE.ACESFilmicToneMapping;
-
-
-renderer.toneMappingExposure =
-  0.72;
-
-
-document.body.appendChild(
-  renderer.domElement
-);
-
-
-
-/* =========================================
-   LIGHTING
-========================================= */
-
-scene.add(
-
-  new THREE.HemisphereLight(
-
-    0xffffff,
-
-    0x25282d,
-
-    1.15
-
-  )
-
-);
-
-
-
-const keyLight =
-  new THREE.DirectionalLight(
-
-    0xfff6e8,
-
-    1.8
-
-  );
-
-
-keyLight.position.set(
-  4,
-  6,
-  7
-);
-
-
-scene.add(
-  keyLight
-);
-
-
-
-const fillLight =
-  new THREE.DirectionalLight(
-
-    0xcbdcff,
-
-    0.65
-
-  );
-
-
-fillLight.position.set(
-  -5,
-  2,
-  4
-);
-
-
-scene.add(
-  fillLight
-);
-
-
-
-const rimLight =
-  new THREE.DirectionalLight(
-
-    0xffffff,
-
-    0.5
-
-  );
-
-
-rimLight.position.set(
-  0,
-  3,
-  -5
-);
-
-
-scene.add(
-  rimLight
-);
-
-
-
-/* =========================================
-   CONTROLS
-========================================= */
-
-const controls =
-  new OrbitControls(
-
-    camera,
-
-    renderer.domElement
-
-  );
-
-
-controls.enableDamping =
-  true;
-
-
-controls.dampingFactor =
-  0.06;
-
-
-controls.enableRotate =
-  true;
-
-
-controls.enableZoom =
-  true;
-
-
-controls.enablePan =
-  true;
-
-
-
-/* =========================================
-   DRACO
-========================================= */
-
-const dracoLoader =
-  new DRACOLoader();
-
-
-dracoLoader.setDecoderPath(
-
-  "https://www.gstatic.com/draco/v1/decoders/"
-
-);
-
-
-
-/* =========================================
-   GLTF
-========================================= */
-
-const loader =
-  new GLTFLoader();
-
-
-loader.setDRACOLoader(
-  dracoLoader
-);
-
-
-
-/* =========================================
-   SKELETON ROOT
-========================================= */
-
-const human =
-  new THREE.Group();
-
-
-scene.add(
-  human
-);
-
-
-let skeleton =
-  null;
-
-
-let skeletonObjects =
-  [];
-
-
-
-/* =========================================
-   COLLECT SKELETON OBJECTS
-========================================= */
-
-function collectSkeletonObjects(
-  model
-) {
-
-
-  skeletonObjects =
-    [];
-
-
-  model.traverse(
-
-    function (
-      object
-    ) {
-
-
-      if (
-        object === model
-      ) {
-
-        return;
-
-      }
-
-
-      const name =
-
-        object.name &&
-        object.name.trim() !== ""
-
-        ?
-
-        object.name
-
-        :
-
-        "(unnamed)";
-
-
-      const parentName =
-
-        object.parent &&
-        object.parent.name
-
-        ?
-
-        object.parent.name
-
-        :
-
-        "(none)";
-
-
-      skeletonObjects.push({
-
-        name:
-          name,
-
-        type:
-          object.type ||
-          "Object3D",
-
-        parent:
-          parentName,
-
-        childCount:
-          object.children.length,
-
-        isMesh:
-          object.isMesh === true
-
-      });
-
+  /*
+    Because wrist is inside forearm, it follows elbow automatically.
+  */
+
+  skeleton.updateMatrixWorld(true);
+
+  console.log("Right upper limb joint rig created.");
+}
+
+
+/* =========================================================
+   JOINT CONTROLS
+========================================================= */
+
+function deg(v){
+  return THREE.MathUtils.degToRad(Number(v));
+}
+
+function updateJointPose(){
+  if(!jointRig.shoulderFlex) return;
+
+  const sf=Number(document.getElementById("shoulderFlex").value);
+  const sa=Number(document.getElementById("shoulderAbd").value);
+  const sr=Number(document.getElementById("shoulderRot").value);
+  const ef=Number(document.getElementById("elbow").value);
+  const fr=Number(document.getElementById("forearm").value);
+  const wr=Number(document.getElementById("wrist").value);
+
+  /*
+    Initial anatomical-axis approximation.
+    These axes are intentionally isolated so they can be calibrated
+    without rebuilding the hierarchy.
+  */
+
+  jointRig.shoulderFlex.rotation.set(deg(sf),0,0);
+  jointRig.shoulderAbd.rotation.set(0,0,deg(-sa));
+  jointRig.shoulderRot.rotation.set(0,deg(sr),0);
+
+  jointRig.elbow.rotation.set(deg(-ef),0,0);
+
+  /*
+    Forearm longitudinal twist.
+  */
+  jointRig.forearm.rotation.set(0,deg(fr),0);
+
+  jointRig.wrist.rotation.set(deg(wr),0,0);
+
+
+  document.getElementById("vShoulderFlex").textContent=sf+"°";
+  document.getElementById("vShoulderAbd").textContent=sa+"°";
+  document.getElementById("vShoulderRot").textContent=sr+"°";
+  document.getElementById("vElbow").textContent=ef+"°";
+  document.getElementById("vForearm").textContent=fr+"°";
+  document.getElementById("vWrist").textContent=wr+"°";
+}
+
+[
+  "shoulderFlex",
+  "shoulderAbd",
+  "shoulderRot",
+  "elbow",
+  "forearm",
+  "wrist"
+].forEach(id=>{
+  document.getElementById(id).addEventListener("input",updateJointPose);
+});
+
+document.getElementById("resetPose").onclick=()=>{
+  [
+    "shoulderFlex",
+    "shoulderAbd",
+    "shoulderRot",
+    "elbow",
+    "forearm",
+    "wrist"
+  ].forEach(id=>{
+    document.getElementById(id).value=0;
+  });
+
+  updateJointPose();
+};
+
+
+/* =========================================================
+   MUSCLE LAYERS
+========================================================= */
+
+function updateMuscles(){
+  if(!layers.muscular) return;
+
+  layers.muscular.visible=stage>0;
+
+  muscles.forEach(m=>{
+    const override=overrides.get(m.uuid);
+
+    if(override===true){
+      m.visible=true;
+      return;
     }
 
-  );
+    if(override===false){
+      m.visible=false;
+      return;
+    }
 
+    m.visible=m.userData.depth<=stage;
+  });
 
-  console.log(
+  const labels=[
+    "Skeleton｜骨骼",
+    "Deep muscles｜深層肌肉",
+    "Intermediate deep｜中深層",
+    "Superficial dissection｜淺層解剖",
+    "Full musculature｜完整肌肉"
+  ];
 
-    "Skeleton objects:",
+  const descriptions=[
+    "肌肉隱藏，只觀察骨骼",
+    "主要深層肌肉",
+    "加入中深層肌肉",
+    "加入大部分表層肌",
+    "顯示全部主要肌肉層"
+  ];
 
-    skeletonObjects
+  document.getElementById("stage").textContent=labels[stage];
+  document.getElementById("stageText").textContent=descriptions[stage];
 
-  );
-
-}
-
-
-
-/* =========================================
-   LOAD SKELETON
-========================================= */
-
-loader.load(
-
-
-  "./models/skeleton.glb",
-
-
-  function (
-    gltf
-  ) {
-
-
-    skeleton =
-      gltf.scene;
-
-
-    skeleton.name =
-      "skeleton";
-
-
-    skeleton.traverse(
-
-      function (
-        object
-      ) {
-
-
-        if (
-          object.isMesh
-        ) {
-
-
-          if (
-            object.material
-          ) {
-
-
-            object.material.side =
-              THREE.FrontSide;
-
-
-            object.material.needsUpdate =
-              true;
-
-          }
-
-        }
-
-      }
-
-    );
-
-
-    human.add(
-      skeleton
-    );
-
-
-    collectSkeletonObjects(
-      skeleton
-    );
-
-
-    centreSkeleton();
-
-
-    status.textContent =
-      "● Skeleton loaded";
-
-
-    status.style.color =
-      "#7ee787";
-
-  },
-
-
-  undefined,
-
-
-  function (
-    error
-  ) {
-
-
-    console.error(
-      error
-    );
-
-
-    status.textContent =
-      "● Skeleton loading error";
-
-
-    status.style.color =
-      "#ff6b6b";
-
+  for(let i=1;i<=4;i++){
+    document.getElementById("d"+i)
+      .classList.toggle("active",i<=stage);
   }
 
+  const muscleButton=
+    document.querySelector('[data-layer="muscular"]');
 
-);
+  muscleButton.classList.toggle("on",stage>0);
+}
 
+document.getElementById("minus").onclick=()=>{
+  if(stage>0){
+    stage--;
+    updateMuscles();
+  }
+};
 
+document.getElementById("plus").onclick=()=>{
+  if(stage<4){
+    stage++;
+    updateMuscles();
+  }
+};
 
-/* =========================================
-   CENTRE / FIT
-========================================= */
-
-function centreSkeleton() {
-
-
-  const box =
-    new THREE.Box3()
-      .setFromObject(
-        skeleton
-      );
-
-
-  const center =
-    new THREE.Vector3();
-
-
-  const size =
-    new THREE.Vector3();
-
-
-  box.getCenter(
-    center
-  );
+document.getElementById("restoreMuscles").onclick=()=>{
+  stage=4;
+  overrides.clear();
+  updateMuscles();
+};
 
 
-  box.getSize(
-    size
-  );
+/* =========================================================
+   LAYER BUTTONS
+========================================================= */
+
+document.querySelectorAll(".layer").forEach(btn=>{
+  btn.onclick=()=>{
+    const key=btn.dataset.layer;
+
+    if(key==="muscular"){
+      stage=stage===0?4:0;
+      updateMuscles();
+      return;
+    }
+
+    if(!layers[key]) return;
+
+    layers[key].visible=!layers[key].visible;
+    btn.classList.toggle("on",layers[key].visible);
+  };
+});
 
 
-  human.position.sub(
-    center
-  );
+/* =========================================================
+   TEACHING
+========================================================= */
 
+function findInfo(name){
+  const n=name.toLowerCase();
 
-  fitCamera(
-    size
-  );
+  return DB.find(item=>
+    item.keys.some(k=>n.includes(k))
+  ) || null;
+}
 
+function cleanName(name){
+  return name
+    .replace(/[ijgrl]\d+$/i,"")
+    .replace(/_/g," ")
+    .trim();
+}
+
+function card(title,items){
+  return `
+    <div class="card">
+      <div class="cardTitle">${title}</div>
+      <div class="cardBody">
+        ${items.map(x=>`<div>• ${x}</div>`).join("")}
+      </div>
+    </div>
+  `;
+}
+
+function selectMuscle(mesh){
+  selectedMuscle=mesh;
+
+  const anatomicalName=
+    mesh.userData.anatomicalName || mesh.name;
+
+  const info=findInfo(anatomicalName);
+
+  document.getElementById("individual").style.display="block";
+
+  if(!info){
+    document.getElementById("selectedName").textContent=cleanName(mesh.name);
+    document.getElementById("selectedChinese").textContent="中文資料待加入";
+    document.getElementById("meta").textContent="Mesh: "+mesh.name;
+
+    document.getElementById("lesson").innerHTML=`
+      <div class="card">
+        <div class="cardBody">
+          呢塊結構已經可以獨立 Hide / Isolate。
+          教學資料庫會逐步擴充到全身肌肉。
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  document.getElementById("selectedName").textContent=info.en;
+  document.getElementById("selectedChinese").textContent=info.zh;
+  document.getElementById("meta").textContent=
+    info.region+" · "+info.layer;
+
+  document.getElementById("lesson").innerHTML=
+    card("ORIGIN｜起點",info.origin)+
+    card("INSERTION｜止點",info.insertion)+
+    card("ACTION｜作用",info.action)+
+    card("INNERVATION｜神經支配",info.nerve)+
+    card("BLOOD SUPPLY｜血液供應",info.blood);
 }
 
 
+/* =========================================================
+   INDIVIDUAL MUSCLE CONTROL
+========================================================= */
 
-/* =========================================
-   CAMERA FIT
-========================================= */
+document.getElementById("hideMuscle").onclick=()=>{
+  if(!selectedMuscle) return;
 
-function fitCamera(
-  size
-) {
+  overrides.set(selectedMuscle.uuid,false);
+  updateMuscles();
+};
 
+document.getElementById("isolateMuscle").onclick=()=>{
+  if(!selectedMuscle) return;
 
-  const vFov =
+  muscles.forEach(m=>{
+    overrides.set(m.uuid,m===selectedMuscle);
+  });
 
-    THREE.MathUtils
-      .degToRad(
-        camera.fov
-      );
+  if(stage===0) stage=4;
+  updateMuscles();
+};
 
-
-  const heightDistance =
-
-    size.y /
-
-    (
-      2 *
-
-      Math.tan(
-        vFov / 2
-      )
-    );
+document.getElementById("resetOverride").onclick=()=>{
+  overrides.clear();
+  updateMuscles();
+};
 
 
+/* =========================================================
+   CLICK MUSCLE
+========================================================= */
 
-  const hFov =
+const raycaster=new THREE.Raycaster();
+const pointer=new THREE.Vector2();
 
-    2 *
+let pointerStart={x:0,y:0};
 
-    Math.atan(
+renderer.domElement.addEventListener("pointerdown",e=>{
+  pointerStart.x=e.clientX;
+  pointerStart.y=e.clientY;
+});
 
-      Math.tan(
-        vFov / 2
-      )
-
-      *
-
-      camera.aspect
-
-    );
-
-
-
-  const widthDistance =
-
-    size.x /
-
-    (
-      2 *
-
-      Math.tan(
-        hFov / 2
-      )
-    );
-
-
-
-  let distance =
-
-    Math.max(
-
-      heightDistance,
-
-      widthDistance
-
-    );
-
-
-  distance *=
-    1.15;
-
-
-
-  camera.position.set(
-
-    0,
-
-    0,
-
-    distance
-
+renderer.domElement.addEventListener("pointerup",e=>{
+  const moved=Math.hypot(
+    e.clientX-pointerStart.x,
+    e.clientY-pointerStart.y
   );
 
+  if(moved>7) return;
 
-  const maxSize =
+  pointer.x=(e.clientX/innerWidth)*2-1;
+  pointer.y=-(e.clientY/innerHeight)*2+1;
 
-    Math.max(
+  raycaster.setFromCamera(pointer,camera);
 
-      size.x,
+  const candidates=muscles.filter(m=>m.visible);
 
-      size.y,
+  const hits=raycaster.intersectObjects(candidates,false);
 
-      size.z
-
-    );
-
-
-  camera.near =
-
-    Math.max(
-
-      maxSize / 1000,
-
-      0.001
-
-    );
+  if(hits.length){
+    selectMuscle(hits[0].object);
+  }
+});
 
 
-  camera.far =
+/* =========================================================
+   SEARCH
+========================================================= */
 
-    maxSize *
-    100;
+const search=document.getElementById("search");
+const results=document.getElementById("results");
 
+function rebuildSearch(query=""){
+  const q=query.toLowerCase().trim();
+  results.innerHTML="";
+
+  if(!q) return;
+
+  const found=muscles
+    .filter(m=>{
+      const raw=(m.userData.anatomicalName+" "+m.name).toLowerCase();
+      const info=findInfo(raw);
+
+      return raw.includes(q) ||
+        (info && (
+          info.en.toLowerCase().includes(q) ||
+          info.zh.includes(query)
+        ));
+    })
+    .slice(0,18);
+
+  found.forEach(m=>{
+    const div=document.createElement("div");
+    div.className="result";
+
+    const info=findInfo(m.userData.anatomicalName);
+
+    div.textContent=info
+      ? `${info.en}｜${info.zh}`
+      : cleanName(m.name);
+
+    div.onclick=()=>{
+      /*
+        Search can explicitly reveal a muscle,
+        overriding current layer.
+      */
+      overrides.set(m.uuid,true);
+
+      if(stage===0) stage=1;
+
+      updateMuscles();
+      selectMuscle(m);
+    };
+
+    results.appendChild(div);
+  });
+}
+
+search.addEventListener("input",()=>{
+  rebuildSearch(search.value);
+});
+
+
+/* =========================================================
+   CAMERA
+========================================================= */
+
+function fitCamera(size){
+  const vfov=THREE.MathUtils.degToRad(camera.fov);
+
+  const distanceY=
+    size.y/(2*Math.tan(vfov/2));
+
+  const hfov=
+    2*Math.atan(Math.tan(vfov/2)*camera.aspect);
+
+  const distanceX=
+    size.x/(2*Math.tan(hfov/2));
+
+  const d=Math.max(distanceX,distanceY)*1.15;
+
+  camera.position.set(0,0,d);
+
+  controls.target.set(0,0,0);
+
+  controls.minDistance=d*.07;
+  controls.maxDistance=d*6;
+
+  camera.near=Math.max(
+    Math.max(size.x,size.y,size.z)/1500,
+    .001
+  );
+
+  camera.far=
+    Math.max(size.x,size.y,size.z)*100;
 
   camera.updateProjectionMatrix();
-
-
-
-  controls.target.set(
-    0,
-    0,
-    0
-  );
-
-
-  controls.minDistance =
-    distance *
-    0.08;
-
-
-  controls.maxDistance =
-    distance *
-    6;
-
-
   controls.update();
-
 }
 
 
-
-/* =========================================
-   RENDER INSPECTOR
-========================================= */
-
-function renderInspector(
-  filter = ""
-) {
-
-
-  objectList.innerHTML =
-    "";
-
-
-  const q =
-    filter
-      .trim()
-      .toLowerCase();
-
-
-  const filtered =
-
-    skeletonObjects.filter(
-
-      function (
-        item
-      ) {
-
-
-        if (
-          q === ""
-        ) {
-
-          return true;
-
-        }
-
-
-        return (
-
-          item.name
-            .toLowerCase()
-            .includes(
-              q
-            )
-
-          ||
-
-          item.parent
-            .toLowerCase()
-            .includes(
-              q
-            )
-
-          ||
-
-          item.type
-            .toLowerCase()
-            .includes(
-              q
-            )
-
-        );
-
-      }
-
-    );
-
-
-  objectCount.textContent =
-
-    filtered.length +
-
-    " shown / " +
-
-    skeletonObjects.length +
-
-    " total objects";
-
-
-
-  filtered.forEach(
-
-    function (
-      item,
-      index
-    ) {
-
-
-      const div =
-        document.createElement(
-          "div"
-        );
-
-
-      div.className =
-        "object-item";
-
-
-      const title =
-        document.createElement(
-          "div"
-        );
-
-
-      title.textContent =
-
-        (index + 1) +
-
-        ". [" +
-
-        item.type +
-
-        "] " +
-
-        item.name;
-
-
-
-      const parent =
-        document.createElement(
-          "span"
-        );
-
-
-      parent.className =
-        "object-parent";
-
-
-      parent.textContent =
-
-        "parent: " +
-
-        item.parent +
-
-        " · children: " +
-
-        item.childCount;
-
-
-
-      div.appendChild(
-        title
-      );
-
-
-      div.appendChild(
-        parent
-      );
-
-
-      objectList.appendChild(
-        div
-      );
-
-    }
-
-  );
-
+/* =========================================================
+   INITIALISE
+========================================================= */
+
+async function init(){
+  try{
+    await Promise.all([
+      loadModel("skeleton"),
+      loadModel("muscular"),
+      loadModel("nervous"),
+      loadModel("cardiovascular"),
+      loadModel("visceral")
+    ]);
+
+    layers.skeleton.visible=true;
+    layers.muscular.visible=true;
+    layers.nervous.visible=false;
+    layers.cardiovascular.visible=false;
+    layers.visceral.visible=false;
+
+    /*
+      Hide source model's text/root label if present.
+    */
+    const skeletalLabel=
+      layers.skeleton.getObjectByName("Skeletal_systemg001");
+
+    if(skeletalLabel) skeletalLabel.visible=false;
+
+
+    /*
+      Important:
+      build rig BEFORE translating entire human to centre.
+    */
+    buildRightArmRig();
+
+
+    /*
+      Fit according to skeleton only.
+    */
+    layers.skeleton.updateMatrixWorld(true);
+
+    const box=new THREE.Box3().setFromObject(layers.skeleton);
+    const center=box.getCenter(new THREE.Vector3());
+    const size=box.getSize(new THREE.Vector3());
+
+    human.position.sub(center);
+
+    fitCamera(size);
+    updateMuscles();
+    updateJointPose();
+
+    document.getElementById("status").textContent="● Anatomy + joints loaded";
+    document.getElementById("status").style.color="#79d99b";
+  }
+  catch(err){
+    console.error(err);
+
+    document.getElementById("status").textContent="● Loading error — open browser console";
+    document.getElementById("status").style.color="#ff8d8d";
+  }
 }
 
+init();
 
 
-/* =========================================
-   OPEN INSPECTOR
-========================================= */
+/* =========================================================
+   RESIZE + RENDER
+========================================================= */
 
-document
-  .getElementById(
-    "inspectButton"
-  )
-  .addEventListener(
+addEventListener("resize",()=>{
+  camera.aspect=innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight);
+});
 
-    "click",
-
-    function () {
-
-
-      inspector.style.display =
-        "flex";
-
-
-      renderInspector(
-        search.value
-      );
-
-    }
-
-  );
-
-
-
-/* =========================================
-   CLOSE
-========================================= */
-
-document
-  .getElementById(
-    "closeButton"
-  )
-  .addEventListener(
-
-    "click",
-
-    function () {
-
-
-      inspector.style.display =
-        "none";
-
-    }
-
-  );
-
-
-
-/* =========================================
-   SEARCH
-========================================= */
-
-search.addEventListener(
-
-  "input",
-
-  function () {
-
-
-    renderInspector(
-      search.value
-    );
-
-  }
-
-);
-
-
-
-/* =========================================
-   COPY ALL
-========================================= */
-
-document
-  .getElementById(
-    "copyButton"
-  )
-  .addEventListener(
-
-    "click",
-
-    async function () {
-
-
-      const button =
-        this;
-
-
-      const text =
-
-        skeletonObjects
-          .map(
-
-            function (
-              item,
-              index
-            ) {
-
-
-              return (
-
-                (index + 1) +
-
-                ". [" +
-
-                item.type +
-
-                "] " +
-
-                item.name +
-
-                " | parent: " +
-
-                item.parent +
-
-                " | children: " +
-
-                item.childCount
-
-              );
-
-            }
-
-          )
-          .join(
-            "\n"
-          );
-
-
-      try {
-
-
-        await navigator
-          .clipboard
-          .writeText(
-            text
-          );
-
-
-        button.textContent =
-          "Copied ✓";
-
-
-        setTimeout(
-
-          function () {
-
-
-            button.textContent =
-              "Copy All";
-
-          },
-
-          1500
-
-        );
-
-
-      }
-
-      catch (
-        error
-      ) {
-
-
-        console.error(
-          error
-        );
-
-
-        /*
-          iPad fallback:
-          put all text directly on screen
-          so it can still be selected/copied.
-        */
-
-
-        objectList.innerHTML =
-          "";
-
-
-        const textarea =
-          document.createElement(
-            "textarea"
-          );
-
-
-        textarea.value =
-          text;
-
-
-        textarea.style.width =
-          "100%";
-
-
-        textarea.style.height =
-          "100%";
-
-
-        textarea.style.background =
-          "#17191d";
-
-
-        textarea.style.color =
-          "white";
-
-
-        textarea.style.border =
-          "none";
-
-
-        textarea.style.padding =
-          "12px";
-
-
-        textarea.style.fontSize =
-          "11px";
-
-
-        objectList.appendChild(
-          textarea
-        );
-
-
-        textarea.focus();
-
-
-        textarea.select();
-
-
-        button.textContent =
-          "Select text below";
-
-      }
-
-    }
-
-  );
-
-
-
-/* =========================================
-   RESIZE
-========================================= */
-
-window.addEventListener(
-
-  "resize",
-
-  function () {
-
-
-    camera.aspect =
-
-      window.innerWidth /
-
-      window.innerHeight;
-
-
-    camera.updateProjectionMatrix();
-
-
-    renderer.setSize(
-
-      window.innerWidth,
-
-      window.innerHeight
-
-    );
-
-  }
-
-);
-
-
-
-/* =========================================
-   ANIMATION
-========================================= */
-
-function animate() {
-
-
-  requestAnimationFrame(
-    animate
-  );
-
-
+function animate(){
+  requestAnimationFrame(animate);
   controls.update();
-
-
-  renderer.render(
-
-    scene,
-
-    camera
-
-  );
-
+  renderer.render(scene,camera);
 }
-
 
 animate();
 
-
 </script>
-
 </body>
 </html>
