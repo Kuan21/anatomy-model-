@@ -493,7 +493,7 @@ input[type="range"]{
       </div>
 
       <div class="jointNotice">
-        Coupled anatomy rig｜骨骼＋肌肉＋神經＋血管同步
+        Segmented joint rig｜骨骼＋局部肌肉；神經/血管保持完整避免撕裂
       </div>
 
       <div class="sliderRow">
@@ -503,8 +503,8 @@ input[type="range"]{
         </div>
         <input id="shoulderFlex"
                type="range"
-               min="-40"
-               max="150"
+               min="-20"
+               max="120"
                value="0">
       </div>
 
@@ -516,7 +516,7 @@ input[type="range"]{
         <input id="shoulderAbduction"
                type="range"
                min="0"
-               max="120"
+               max="100"
                value="0">
       </div>
 
@@ -527,8 +527,8 @@ input[type="range"]{
         </div>
         <input id="shoulderRotation"
                type="range"
-               min="-60"
-               max="70"
+               min="-45"
+               max="60"
                value="0">
       </div>
 
@@ -540,7 +540,7 @@ input[type="range"]{
         <input id="elbowFlexion"
                type="range"
                min="0"
-               max="145"
+               max="135"
                value="0">
       </div>
 
@@ -551,8 +551,8 @@ input[type="range"]{
         </div>
         <input id="forearmRotation"
                type="range"
-               min="-80"
-               max="80"
+               min="-75"
+               max="75"
                value="0">
       </div>
 
@@ -1608,16 +1608,16 @@ function buildRig(){
   */
 
   const handBones=[];
+  const provisionalForearmLength = elbow.distanceTo(wrist);
 
   layers.skeleton.traverse(obj=>{
-
-    if(
-      obj.isMesh &&
-      isRightHandBone(obj)
-    ){
+    if(!obj.isMesh || !isRightHandBone(obj)) return;
+    // Name alone is insufficient: the source model uses the same r001 suffix on
+    // phalanges in more than one region. A true hand bone must also sit near the wrist.
+    const c = worldCenter(obj);
+    if(c.distanceTo(wrist) <= provisionalForearmLength * 0.72){
       handBones.push(obj);
     }
-
   });
 
   handBones.forEach(mesh=>{
@@ -1780,7 +1780,10 @@ function registerSoftTissueLayer(key){
     Viscera are deliberately NOT rigged to the arm.
   */
 
-  if(key==="visceral"){
+  // V6 safety: viscera, nerves and vessels stay complete and in their source hierarchy.
+  // Their GLBs contain long continuous meshes crossing multiple body regions; re-parenting
+  // those meshes to one arm joint is what made most of the system disappear / tear apart.
+  if(key==="visceral" || key==="nervous" || key==="cardiovascular" || key==="skin"){
     return;
   }
 
@@ -2093,11 +2096,13 @@ function effectiveDepthForRegion(region){
 
 function updateMuscleDepth(){
   if(!layers.muscular) return;
-  layers.muscular.traverse(obj=>{
-    if(!obj.isMesh) return;
+  (layerMeshRegistry.muscular||[]).forEach(obj=>{
+    if(!obj || !obj.isMesh) return;
     if(obj.userData.hiddenIndividually){ obj.visible=false; return; }
-    const region=muscleRegionFor(obj);
-    const d=muscleLayerFor(obj);
+    // Region/layer are cached before any rig re-parenting so moving the arm cannot
+    // accidentally turn an arm muscle into a chest/leg muscle.
+    const region=obj.userData.muscleRegion || muscleRegionFor(obj);
+    const d=obj.userData.muscleLayer || muscleLayerFor(obj);
     obj.userData.muscleRegion=region; obj.userData.muscleLayer=d;
     obj.visible=layerVisibility.muscular && d<=effectiveDepthForRegion(region);
   });
