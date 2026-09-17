@@ -9,7 +9,7 @@
   content="width=device-width, initial-scale=1.0"
 >
 
-<title>MJ Anatomy 3D</title>
+<title>MJ Anatomy 3D — Skeleton Inspector</title>
 
 <style>
 
@@ -23,7 +23,6 @@ body {
   width: 100%;
   height: 100%;
   overflow: hidden;
-
   background: #08090b;
   color: white;
 
@@ -42,12 +41,11 @@ canvas {
 }
 
 
-/* ========================================
+/* ===========================
    LEFT PANEL
-======================================== */
+=========================== */
 
 #panel {
-
   position: fixed;
 
   top: 18px;
@@ -55,17 +53,12 @@ canvas {
 
   z-index: 20;
 
-  width: 285px;
-
-  max-height:
-    calc(100vh - 36px);
-
-  overflow-y: auto;
+  width: 280px;
 
   padding: 18px;
 
   background:
-    rgba(17,19,23,.92);
+    rgba(17,19,23,.93);
 
   border:
     1px solid
@@ -73,63 +66,41 @@ canvas {
 
   border-radius: 18px;
 
-  backdrop-filter:
-    blur(18px);
-
-  -webkit-backdrop-filter:
-    blur(18px);
-
-  box-shadow:
-    0 12px 40px
-    rgba(0,0,0,.35);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
 }
-
 
 #panel h1 {
-
   margin: 0;
-
   font-size: 21px;
-
 }
 
-
 #subtitle {
-
   margin-top: 5px;
 
   color: #969da7;
 
   font-size: 13px;
-
 }
 
-
 #status {
-
   margin-top: 12px;
 
   color: #f0c36a;
 
   font-size: 12px;
-
 }
 
-
 .divider {
-
   height: 1px;
 
   margin: 16px 0;
 
   background:
     rgba(255,255,255,.10);
-
 }
 
-
 .section-title {
-
   margin-bottom: 10px;
 
   color: #aeb5bf;
@@ -139,267 +110,238 @@ canvas {
   font-weight: 700;
 
   letter-spacing: 1px;
-
 }
 
 
+/* ===========================
+   BUTTON
+=========================== */
 
-/* ========================================
-   LAYER BUTTON
-======================================== */
-
-.layer {
-
-  display: flex;
-
-  align-items: center;
-
+.main-button {
   width: 100%;
-
-  margin-bottom: 7px;
-
-  padding: 11px 12px;
-
-  border:
-    1px solid
-    rgba(255,255,255,.10);
-
-  border-radius: 11px;
-
-  background: #202329;
-
-  color: white;
-
-  font-size: 14px;
-
-  cursor: pointer;
-
-  -webkit-tap-highlight-color:
-    transparent;
-}
-
-
-.layer.active {
-
-  background: #303741;
-
-  border-color:
-    rgba(255,255,255,.25);
-
-}
-
-
-.dot {
-
-  width: 10px;
-
-  height: 10px;
-
-  margin-right: 10px;
-
-  border-radius: 50%;
-
-}
-
-
-.bone-dot {
-  background: #e8dfca;
-}
-
-.muscle-dot {
-  background: #c95d5d;
-}
-
-.nerve-dot {
-  background: #e6c94c;
-}
-
-.cardio-dot {
-  background: #d65360;
-}
-
-.viscera-dot {
-  background: #c68c7c;
-}
-
-
-.layer-state {
-
-  margin-left: auto;
-
-  color: #9da5af;
-
-  font-size: 11px;
-
-}
-
-
-
-/* ========================================
-   MUSCLE DISSECTION
-======================================== */
-
-#muscleStage {
 
   padding: 12px;
 
-  margin-bottom: 9px;
-
-  background: #1d2025;
+  margin-bottom: 8px;
 
   border:
     1px solid
-    rgba(255,255,255,.09);
+    rgba(255,255,255,.14);
 
   border-radius: 11px;
 
-}
+  background: #26384c;
 
-
-#muscleStageLabel {
-
-  font-size: 14px;
-
-  font-weight: 600;
-
-}
-
-
-#muscleStageDescription {
-
-  margin-top: 4px;
-
-  color: #8e969f;
-
-  font-size: 11px;
-
-  line-height: 1.4;
-
-}
-
-
-#depthBar {
-
-  display: flex;
-
-  gap: 4px;
-
-  margin-top: 10px;
-
-}
-
-
-.depth-segment {
-
-  flex: 1;
-
-  height: 4px;
-
-  background: #343941;
-
-  border-radius: 5px;
-
-}
-
-
-.depth-segment.active {
-
-  background: #c95d5d;
-
-}
-
-
-.muscle-controls {
-
-  display: flex;
-
-  gap: 8px;
-
-}
-
-
-.muscle-control {
-
-  flex: 1;
-
-  padding: 11px 8px;
-
-  border:
-    1px solid
-    rgba(255,255,255,.12);
-
-  border-radius: 11px;
-
-  background: #282c32;
-
-  color: white;
+  color: #d9eaff;
 
   font-size: 13px;
 
   font-weight: 600;
 
   cursor: pointer;
-
 }
-
-
-.muscle-control:disabled {
-
-  opacity: .32;
-
-}
-
-
-#resetMuscles {
-
-  width: 100%;
-
-  margin-top: 8px;
-
-  padding: 9px;
-
-  border:
-    1px solid
-    rgba(255,255,255,.10);
-
-  border-radius: 9px;
-
-  background: transparent;
-
-  color: #9ba3ad;
-
-  font-size: 11px;
-
-}
-
-
-
-/* ========================================
-   INFO
-======================================== */
 
 #info {
+  margin-top: 10px;
 
-  color: #8e959e;
+  color: #8e969f;
 
   font-size: 11px;
 
   line-height: 1.5;
-
 }
 
 
+/* ===========================
+   INSPECTOR
+=========================== */
 
-/* ========================================
+#inspector {
+  position: fixed;
+
+  top: 18px;
+  right: 18px;
+
+  z-index: 30;
+
+  display: none;
+
+  flex-direction: column;
+
+  width: 410px;
+
+  height:
+    calc(100vh - 36px);
+
+  background:
+    rgba(14,16,19,.98);
+
+  border:
+    1px solid
+    rgba(255,255,255,.14);
+
+  border-radius: 18px;
+
+  overflow: hidden;
+
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+#inspectorHeader {
+  padding: 16px;
+
+  border-bottom:
+    1px solid
+    rgba(255,255,255,.10);
+}
+
+#inspectorTitle {
+  font-size: 17px;
+
+  font-weight: 700;
+}
+
+#inspectorSubtitle {
+  margin-top: 4px;
+
+  color: #8e969f;
+
+  font-size: 11px;
+}
+
+#controls {
+  display: flex;
+
+  gap: 8px;
+
+  margin-top: 12px;
+}
+
+.inspector-button {
+  flex: 1;
+
+  padding: 10px;
+
+  border:
+    1px solid
+    rgba(255,255,255,.12);
+
+  border-radius: 9px;
+
+  background: #25282e;
+
+  color: white;
+
+  font-size: 12px;
+}
+
+#copyButton {
+  background: #26384c;
+
+  color: #d9eaff;
+}
+
+#closeButton {
+  background: #3b2527;
+
+  color: #ffb8b8;
+}
+
+
+/* ===========================
+   SEARCH
+=========================== */
+
+#search {
+  width:
+    calc(100% - 30px);
+
+  margin:
+    12px 15px 4px;
+
+  padding: 10px;
+
+  border:
+    1px solid
+    rgba(255,255,255,.12);
+
+  border-radius: 9px;
+
+  outline: none;
+
+  background: #202329;
+
+  color: white;
+
+  font-size: 13px;
+}
+
+#objectCount {
+  padding:
+    7px 15px;
+
+  color: #89919b;
+
+  font-size: 11px;
+}
+
+
+/* ===========================
+   OBJECT LIST
+=========================== */
+
+#objectList {
+  flex: 1;
+
+  overflow-y: auto;
+
+  padding:
+    0 12px 15px;
+}
+
+.object-item {
+  padding:
+    9px 10px;
+
+  margin-bottom: 5px;
+
+  background: #202329;
+
+  border-radius: 8px;
+
+  color: #d8dce1;
+
+  font-family:
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
+
+  font-size: 11px;
+
+  word-break: break-word;
+}
+
+.object-parent {
+  display: block;
+
+  margin-top: 3px;
+
+  color: #737c87;
+
+  font-size: 10px;
+}
+
+
+/* ===========================
    HELP
-======================================== */
+=========================== */
 
 #help {
-
   position: fixed;
 
   left: 50%;
-
   bottom: 18px;
 
   transform:
@@ -407,7 +349,8 @@ canvas {
 
   z-index: 15;
 
-  padding: 9px 15px;
+  padding:
+    9px 15px;
 
   background:
     rgba(18,20,23,.86);
@@ -423,45 +366,26 @@ canvas {
   font-size: 12px;
 
   white-space: nowrap;
-
 }
 
 
+/* ===========================
+   IPAD
+=========================== */
 
-/* ========================================
-   MOBILE / IPAD
-======================================== */
-
-@media (max-width: 700px) {
+@media (max-width: 900px) {
 
   #panel {
-
-    top: 10px;
-
-    left: 10px;
-
     width: 245px;
-
-    padding: 14px;
-
   }
 
-  #panel h1 {
-
-    font-size: 18px;
-
-  }
-
-  .layer {
-
-    padding: 9px 10px;
-
+  #inspector {
+    width: 370px;
   }
 
 }
 
 </style>
-
 
 
 <script type="importmap">
@@ -483,243 +407,114 @@ canvas {
 </head>
 
 
-
 <body>
 
 
-<!-- ======================================
-     CONTROL PANEL
-======================================= -->
+<!-- ===========================
+     LEFT PANEL
+=========================== -->
 
 <div id="panel">
-
 
   <h1>
     MJ Anatomy 3D
   </h1>
 
-
   <div id="subtitle">
-    Interactive Human Anatomy
+    Skeleton Structure Inspector
   </div>
-
 
   <div id="status">
-    ● Loading anatomy...
+    ● Loading skeleton...
   </div>
-
 
 
   <div class="divider"></div>
 
-
-
-  <!-- ==================================
-       ANATOMY LAYERS
-  =================================== -->
 
   <div class="section-title">
-    ANATOMY LAYERS
+    JOINT DEVELOPMENT
   </div>
 
 
-
   <button
-    class="layer active"
-    data-layer="skeleton"
+    id="inspectButton"
+    class="main-button"
   >
-
-    <span
-      class="dot bone-dot"
-    ></span>
-
-    Skeleton
-
-    <span class="layer-state">
-      ON
-    </span>
-
+    Inspect Skeleton Model
   </button>
-
-
-
-  <button
-    class="layer active"
-    data-layer="muscular"
-  >
-
-    <span
-      class="dot muscle-dot"
-    ></span>
-
-    Muscles
-
-    <span class="layer-state">
-      ON
-    </span>
-
-  </button>
-
-
-
-  <button
-    class="layer"
-    data-layer="nervous"
-  >
-
-    <span
-      class="dot nerve-dot"
-    ></span>
-
-    Nervous System
-
-    <span class="layer-state">
-      OFF
-    </span>
-
-  </button>
-
-
-
-  <button
-    class="layer"
-    data-layer="cardiovascular"
-  >
-
-    <span
-      class="dot cardio-dot"
-    ></span>
-
-    Cardiovascular
-
-    <span class="layer-state">
-      OFF
-    </span>
-
-  </button>
-
-
-
-  <button
-    class="layer"
-    data-layer="visceral"
-  >
-
-    <span
-      class="dot viscera-dot"
-    ></span>
-
-    Viscera
-
-    <span class="layer-state">
-      OFF
-    </span>
-
-  </button>
-
-
-
-  <div class="divider"></div>
-
-
-
-  <!-- ==================================
-       MUSCLE DISSECTION
-  =================================== -->
-
-  <div class="section-title">
-    MUSCLE DISSECTION
-  </div>
-
-
-
-  <div id="muscleStage">
-
-
-    <div id="muscleStageLabel">
-      Full Musculature
-    </div>
-
-
-    <div id="muscleStageDescription">
-      Complete muscular system
-    </div>
-
-
-    <div id="depthBar">
-
-      <div
-        class="depth-segment active"
-      ></div>
-
-      <div
-        class="depth-segment active"
-      ></div>
-
-      <div
-        class="depth-segment active"
-      ></div>
-
-      <div
-        class="depth-segment active"
-      ></div>
-
-    </div>
-
-
-  </div>
-
-
-
-  <div class="muscle-controls">
-
-
-    <button
-      id="muscleMinus"
-      class="muscle-control"
-    >
-      − Muscle
-    </button>
-
-
-    <button
-      id="musclePlus"
-      class="muscle-control"
-    >
-      + Muscle
-    </button>
-
-
-  </div>
-
-
-
-  <button id="resetMuscles">
-    Restore all muscles
-  </button>
-
-
-
-  <div class="divider"></div>
-
 
 
   <div id="info">
 
-    Muscle −：
-    逐步移除較表層肌肉。
+    今次會讀取 skeleton.glb
+    入面所有骨骼 Mesh / Object3D。
 
     <br><br>
 
-    Muscle +：
-    逐步加回肌肉。
-
-    <br><br>
-
-    不同身體區域的肌肉深度並不完全相同，
-    系統會按主要解剖層次顯示。
+    完成後撳 Copy All，
+    將結果貼返俾我。
 
   </div>
+
+</div>
+
+
+
+<!-- ===========================
+     INSPECTOR
+=========================== -->
+
+<div id="inspector">
+
+
+  <div id="inspectorHeader">
+
+    <div id="inspectorTitle">
+      Skeleton Model Inspector
+    </div>
+
+
+    <div id="inspectorSubtitle">
+      skeleton.glb — hierarchy / bone names
+    </div>
+
+
+    <div id="controls">
+
+      <button
+        id="copyButton"
+        class="inspector-button"
+      >
+        Copy All
+      </button>
+
+
+      <button
+        id="closeButton"
+        class="inspector-button"
+      >
+        Close
+      </button>
+
+    </div>
+
+  </div>
+
+
+  <input
+    id="search"
+    type="text"
+    placeholder="Search: humerus, radius, ulna..."
+  >
+
+
+  <div id="objectCount">
+    Waiting for skeleton...
+  </div>
+
+
+  <div id="objectList"></div>
 
 
 </div>
@@ -727,9 +522,7 @@ canvas {
 
 
 <div id="help">
-
   單指旋轉 · 雙指縮放 / 移動
-
 </div>
 
 
@@ -737,9 +530,9 @@ canvas {
 <script type="module">
 
 
-// =========================================
-// IMPORTS
-// =========================================
+/* =========================================
+   IMPORTS
+========================================= */
 
 import * as THREE
 from "three";
@@ -767,9 +560,9 @@ from
 
 
 
-// =========================================
-// UI
-// =========================================
+/* =========================================
+   UI
+========================================= */
 
 const status =
   document.getElementById(
@@ -777,46 +570,34 @@ const status =
   );
 
 
-const stageLabel =
+const inspector =
   document.getElementById(
-    "muscleStageLabel"
+    "inspector"
   );
 
 
-const stageDescription =
+const objectList =
   document.getElementById(
-    "muscleStageDescription"
+    "objectList"
   );
 
 
-const minusButton =
+const objectCount =
   document.getElementById(
-    "muscleMinus"
+    "objectCount"
   );
 
 
-const plusButton =
+const search =
   document.getElementById(
-    "musclePlus"
-  );
-
-
-const resetButton =
-  document.getElementById(
-    "resetMuscles"
-  );
-
-
-const depthSegments =
-  document.querySelectorAll(
-    ".depth-segment"
+    "search"
   );
 
 
 
-// =========================================
-// SCENE
-// =========================================
+/* =========================================
+   SCENE
+========================================= */
 
 const scene =
   new THREE.Scene();
@@ -829,9 +610,9 @@ scene.background =
 
 
 
-// =========================================
-// CAMERA
-// =========================================
+/* =========================================
+   CAMERA
+========================================= */
 
 const camera =
   new THREE.PerspectiveCamera(
@@ -856,9 +637,9 @@ camera.position.set(
 
 
 
-// =========================================
-// RENDERER
-// =========================================
+/* =========================================
+   RENDERER
+========================================= */
 
 const renderer =
   new THREE.WebGLRenderer({
@@ -911,9 +692,9 @@ document.body.appendChild(
 
 
 
-// =========================================
-// LIGHTING
-// =========================================
+/* =========================================
+   LIGHTING
+========================================= */
 
 scene.add(
 
@@ -923,7 +704,7 @@ scene.add(
 
     0x25282d,
 
-    1.1
+    1.15
 
   )
 
@@ -934,9 +715,9 @@ scene.add(
 const keyLight =
   new THREE.DirectionalLight(
 
-    0xfff4e5,
+    0xfff6e8,
 
-    1.7
+    1.8
 
   );
 
@@ -959,7 +740,7 @@ const fillLight =
 
     0xcbdcff,
 
-    0.6
+    0.65
 
   );
 
@@ -1000,9 +781,9 @@ scene.add(
 
 
 
-// =========================================
-// CONTROLS
-// =========================================
+/* =========================================
+   CONTROLS
+========================================= */
 
 const controls =
   new OrbitControls(
@@ -1035,9 +816,9 @@ controls.enablePan =
 
 
 
-// =========================================
-// DRACO
-// =========================================
+/* =========================================
+   DRACO
+========================================= */
 
 const dracoLoader =
   new DRACOLoader();
@@ -1051,9 +832,9 @@ dracoLoader.setDecoderPath(
 
 
 
-// =========================================
-// GLTF
-// =========================================
+/* =========================================
+   GLTF
+========================================= */
 
 const loader =
   new GLTFLoader();
@@ -1065,16 +846,12 @@ loader.setDRACOLoader(
 
 
 
-// =========================================
-// HUMAN ROOT
-// =========================================
+/* =========================================
+   SKELETON ROOT
+========================================= */
 
 const human =
   new THREE.Group();
-
-
-human.name =
-  "Human";
 
 
 scene.add(
@@ -1082,458 +859,26 @@ scene.add(
 );
 
 
+let skeleton =
+  null;
 
-// =========================================
-// ANATOMY LAYERS
-// =========================================
 
-const layers = {
+let skeletonObjects =
+  [];
 
-  skeleton: null,
 
-  muscular: null,
 
-  nervous: null,
+/* =========================================
+   COLLECT SKELETON OBJECTS
+========================================= */
 
-  cardiovascular: null,
-
-  visceral: null
-
-};
-
-
-
-const files = {
-
-  skeleton:
-    "./models/skeleton.glb",
-
-  muscular:
-    "./models/muscular.glb",
-
-  nervous:
-    "./models/nervous.glb",
-
-  cardiovascular:
-    "./models/cardiovascular.glb",
-
-  visceral:
-    "./models/visceral.glb"
-
-};
-
-
-
-const initialVisibility = {
-
-  skeleton: true,
-
-  muscular: true,
-
-  nervous: false,
-
-  cardiovascular: false,
-
-  visceral: false
-
-};
-
-
-
-// =========================================
-// MUSCLE DATA
-// =========================================
-
-let muscleMeshes = [];
-
-
-/*
-  Depth system
-
-  4 = superficial
-  3 = intermediate-superficial
-  2 = intermediate-deep
-  1 = deep
-
-  This is a viewer/dissection grouping.
-  Human anatomy does not consist of one
-  universal four-layer arrangement across
-  every region.
-*/
-
-
-function muscleDepth(
-  rawName
-) {
-
-
-  const name =
-    rawName
-      .toLowerCase();
-
-
-  // =======================================
-  // DEEP — LEVEL 1
-  // =======================================
-
-  const deepPatterns = [
-
-    "subscapularis",
-
-    "supraspinatus",
-
-    "infraspinatus",
-
-    "teres_minor",
-
-    "pectoralis_minor",
-
-    "transversus_abdominis",
-
-    "innermost_intercostal",
-
-    "internal_intercostal",
-
-    "multifidus",
-
-    "rotatores",
-
-    "interspinales",
-
-    "intertransversarii",
-
-    "suboccipital",
-
-    "longus_colli",
-
-    "longus_capitis",
-
-    "rectus_anterior_capitis",
-
-    "rectus_lateralis_capitis",
-
-    "pronator_quadratus",
-
-    "flexor_digitorum_profundus",
-
-    "flexor_pollicis_longus",
-
-    "supinator",
-
-    "deep_part_of",
-
-    "gluteus_minimus",
-
-    "obturator_internus",
-
-    "obturator_externus",
-
-    "quadratus_femoris",
-
-    "gemellus",
-
-    "popliteus",
-
-    "tibialis_posterior",
-
-    "flexor_hallucis_longus",
-
-    "flexor_digitorum_longus",
-
-    "dorsal_interossei",
-
-    "palmar_interossei",
-
-    "plantar_interossei",
-
-    "lumbrical",
-
-    "quadratus_plantae",
-
-    "adductor_hallucis",
-
-    "adductor_pollicis",
-
-    "pterygoid",
-
-    "genioglossus",
-
-    "hyoglossus"
-
-  ];
-
-
-
-  // =======================================
-  // INTERMEDIATE-DEEP — LEVEL 2
-  // =======================================
-
-  const intermediateDeepPatterns = [
-
-    "rhomboid",
-
-    "levator_scapulae",
-
-    "serratus_posterior",
-
-    "serratus_anterior",
-
-    "external_intercostal",
-
-    "internal_abdominal_oblique",
-
-    "quadratus_lumborum",
-
-    "iliocostalis",
-
-    "longissimus",
-
-    "spinalis",
-
-    "semispinalis",
-
-    "splenius",
-
-    "brachialis",
-
-    "coracobrachialis",
-
-    "pronator_teres",
-
-    "flexor_digitorum_superficialis",
-
-    "extensor_pollicis",
-
-    "abductor_pollicis_longus",
-
-    "extensor_indicis",
-
-    "gluteus_medius",
-
-    "piriformis",
-
-    "adductor_brevis",
-
-    "adductor_magnus",
-
-    "vastus_intermedius",
-
-    "soleus",
-
-    "plantaris",
-
-    "flexor_hallucis_brevis",
-
-    "temporalis",
-
-    "masseter",
-
-    "scalenus"
-
-  ];
-
-
-
-  // =======================================
-  // INTERMEDIATE-SUPERFICIAL — LEVEL 3
-  // =======================================
-
-  const intermediatePatterns = [
-
-    "biceps_brachii",
-
-    "triceps_brachii",
-
-    "brachialis",
-
-    "brachioradialis",
-
-    "flexor_carpi",
-
-    "extensor_carpi",
-
-    "extensor_digitorum",
-
-    "flexor_digitorum_superficialis",
-
-    "rectus_abdominis",
-
-    "gluteus_medius",
-
-    "adductor_longus",
-
-    "gracilis",
-
-    "pectineus",
-
-    "rectus_femoris",
-
-    "vastus_lateralis",
-
-    "vastus_medialis",
-
-    "biceps_femoris",
-
-    "semimembranosus",
-
-    "semitendinosus",
-
-    "soleus",
-
-    "fibularis_brevis",
-
-    "extensor_hallucis_longus",
-
-    "extensor_digitorum_longus",
-
-    "sternohyoid",
-
-    "sternothyroid",
-
-    "omohyoid",
-
-    "thyrohyoid"
-
-  ];
-
-
-
-  // =======================================
-  // TEST DEEP FIRST
-  // =======================================
-
-  for (
-    const pattern
-    of deepPatterns
-  ) {
-
-    if (
-      name.includes(
-        pattern
-      )
-    ) {
-
-      return 1;
-
-    }
-
-  }
-
-
-
-  for (
-    const pattern
-    of intermediateDeepPatterns
-  ) {
-
-    if (
-      name.includes(
-        pattern
-      )
-    ) {
-
-      return 2;
-
-    }
-
-  }
-
-
-
-  for (
-    const pattern
-    of intermediatePatterns
-  ) {
-
-    if (
-      name.includes(
-        pattern
-      )
-    ) {
-
-      return 3;
-
-    }
-
-  }
-
-
-
-  // =======================================
-  // EVERYTHING ELSE DEFAULTS TO
-  // SUPERFICIAL LEVEL 4
-  // =======================================
-
-  return 4;
-
-}
-
-
-
-// =========================================
-// NON-MUSCLE STRUCTURES INSIDE
-// muscular.glb
-// =========================================
-
-function isAccessoryStructure(
-  rawName
-) {
-
-
-  const name =
-    rawName.toLowerCase();
-
-
-  const patterns = [
-
-    "fascia",
-
-    "aponeurosis",
-
-    "bursa",
-
-    "retinaculum",
-
-    "ligament",
-
-    "tendon_sheath",
-
-    "tendinous_arch",
-
-    "intermuscular_septum",
-
-    "tarsus",
-
-    "trochlea",
-
-    "common_tendinous_ring"
-
-  ];
-
-
-  return patterns.some(
-
-    pattern =>
-      name.includes(
-        pattern
-      )
-
-  );
-
-}
-
-
-
-// =========================================
-// PREPARE MUSCLES
-// =========================================
-
-function prepareMuscles(
+function collectSkeletonObjects(
   model
 ) {
 
 
-  muscleMeshes = [];
+  skeletonObjects =
+    [];
 
 
   model.traverse(
@@ -1544,7 +889,7 @@ function prepareMuscles(
 
 
       if (
-        !object.isMesh
+        object === model
       ) {
 
         return;
@@ -1552,29 +897,53 @@ function prepareMuscles(
       }
 
 
-      const accessory =
-        isAccessoryStructure(
-          object.name
-        );
+      const name =
+
+        object.name &&
+        object.name.trim() !== ""
+
+        ?
+
+        object.name
+
+        :
+
+        "(unnamed)";
 
 
-      const depth =
-        muscleDepth(
-          object.name
-        );
+      const parentName =
+
+        object.parent &&
+        object.parent.name
+
+        ?
+
+        object.parent.name
+
+        :
+
+        "(none)";
 
 
-      object.userData.isAccessory =
-        accessory;
+      skeletonObjects.push({
 
+        name:
+          name,
 
-      object.userData.muscleDepth =
-        depth;
+        type:
+          object.type ||
+          "Object3D",
 
+        parent:
+          parentName,
 
-      muscleMeshes.push(
-        object
-      );
+        childCount:
+          object.children.length,
+
+        isMesh:
+          object.isMesh === true
+
+      });
 
     }
 
@@ -1583,57 +952,9 @@ function prepareMuscles(
 
   console.log(
 
-    "Muscle meshes:",
+    "Skeleton objects:",
 
-    muscleMeshes.length
-
-  );
-
-
-  console.log(
-
-    "Depth 4:",
-
-    muscleMeshes.filter(
-      m =>
-      m.userData.muscleDepth === 4
-    ).length
-
-  );
-
-
-  console.log(
-
-    "Depth 3:",
-
-    muscleMeshes.filter(
-      m =>
-      m.userData.muscleDepth === 3
-    ).length
-
-  );
-
-
-  console.log(
-
-    "Depth 2:",
-
-    muscleMeshes.filter(
-      m =>
-      m.userData.muscleDepth === 2
-    ).length
-
-  );
-
-
-  console.log(
-
-    "Depth 1:",
-
-    muscleMeshes.filter(
-      m =>
-      m.userData.muscleDepth === 1
-    ).length
+    skeletonObjects
 
   );
 
@@ -1641,631 +962,89 @@ function prepareMuscles(
 
 
 
-// =========================================
-// MUSCLE STAGE
-//
-// 4 = full
-// 3 = remove superficial
-// 2 = deeper
-// 1 = deepest
-// 0 = skeleton
-// =========================================
+/* =========================================
+   LOAD SKELETON
+========================================= */
 
-let currentMuscleStage =
-  4;
+loader.load(
 
 
-
-const stageInformation = {
-
-  4: {
-
-    label:
-      "Full Musculature",
-
-    description:
-      "Complete muscular system"
-
-  },
+  "./models/skeleton.glb",
 
 
-  3: {
-
-    label:
-      "Superficial Dissection",
-
-    description:
-      "Major superficial muscles removed"
-
-  },
-
-
-  2: {
-
-    label:
-      "Intermediate Layer",
-
-    description:
-      "Intermediate and deep muscles"
-
-  },
-
-
-  1: {
-
-    label:
-      "Deep Muscles",
-
-    description:
-      "Deep anatomical muscle groups"
-
-  },
-
-
-  0: {
-
-    label:
-      "Skeleton",
-
-    description:
-      "Muscular layer removed"
-
-  }
-
-};
-
-
-
-// =========================================
-// UPDATE MUSCLE DISPLAY
-// =========================================
-
-function updateMuscleStage() {
-
-
-  const muscular =
-    layers.muscular;
-
-
-  if (
-    !muscular
-  ) {
-
-    return;
-
-  }
-
-
-
-  // =======================================
-  // STAGE 0
-  // =======================================
-
-  if (
-    currentMuscleStage === 0
+  function (
+    gltf
   ) {
 
 
-    muscular.visible =
-      false;
+    skeleton =
+      gltf.scene;
 
 
-  }
-
-  else {
-
-
-    muscular.visible =
-      true;
+    skeleton.name =
+      "skeleton";
 
 
-
-    muscleMeshes.forEach(
+    skeleton.traverse(
 
       function (
-        mesh
+        object
       ) {
 
 
-        const depth =
-          mesh.userData.muscleDepth;
+        if (
+          object.isMesh
+        ) {
 
 
-        /*
-          Example:
-
-          Stage 4:
-          show depth 1,2,3,4
-
-          Stage 3:
-          show depth 1,2,3
-
-          Stage 2:
-          show depth 1,2
-
-          Stage 1:
-          show depth 1
-        */
+          if (
+            object.material
+          ) {
 
 
-        mesh.visible =
+            object.material.side =
+              THREE.FrontSide;
 
-          depth <=
-          currentMuscleStage;
+
+            object.material.needsUpdate =
+              true;
+
+          }
+
+        }
 
       }
 
     );
 
-  }
 
-
-
-  // =======================================
-  // UPDATE TEXT
-  // =======================================
-
-  const info =
-    stageInformation[
-      currentMuscleStage
-    ];
-
-
-  stageLabel.textContent =
-    info.label;
-
-
-  stageDescription.textContent =
-    info.description;
-
-
-
-  // =======================================
-  // DEPTH BAR
-  // =======================================
-
-  depthSegments.forEach(
-
-    function (
-      segment,
-      index
-    ) {
-
-
-      const level =
-        index + 1;
-
-
-      segment.classList.toggle(
-
-        "active",
-
-        level <=
-        currentMuscleStage
-
-      );
-
-    }
-
-  );
-
-
-
-  // =======================================
-  // BUTTON LIMITS
-  // =======================================
-
-  minusButton.disabled =
-
-    currentMuscleStage === 0;
-
-
-  plusButton.disabled =
-
-    currentMuscleStage === 4;
-
-
-
-  // =======================================
-  // UPDATE MUSCLE LAYER BUTTON
-  // =======================================
-
-  const muscleLayerButton =
-
-    document.querySelector(
-
-      '[data-layer="muscular"]'
-
+    human.add(
+      skeleton
     );
 
 
-  const muscleState =
-
-    muscleLayerButton
-      .querySelector(
-        ".layer-state"
-      );
-
-
-  const muscleVisible =
-
-    currentMuscleStage > 0;
-
-
-  muscleLayerButton
-    .classList
-    .toggle(
-
-      "active",
-
-      muscleVisible
-
+    collectSkeletonObjects(
+      skeleton
     );
 
 
-  muscleState.textContent =
-
-    muscleVisible
-    ? "ON"
-    : "OFF";
-
-}
-
-
-
-// =========================================
-// MUSCLE MINUS
-// =========================================
-
-minusButton.addEventListener(
-
-  "click",
-
-  function () {
-
-
-    if (
-      currentMuscleStage > 0
-    ) {
-
-
-      currentMuscleStage--;
-
-
-      updateMuscleStage();
-
-    }
-
-  }
-
-);
-
-
-
-// =========================================
-// MUSCLE PLUS
-// =========================================
-
-plusButton.addEventListener(
-
-  "click",
-
-  function () {
-
-
-    if (
-      currentMuscleStage < 4
-    ) {
-
-
-      currentMuscleStage++;
-
-
-      updateMuscleStage();
-
-    }
-
-  }
-
-);
-
-
-
-// =========================================
-// RESTORE MUSCLES
-// =========================================
-
-resetButton.addEventListener(
-
-  "click",
-
-  function () {
-
-
-    currentMuscleStage =
-      4;
-
-
-    updateMuscleStage();
-
-  }
-
-);
-
-
-
-// =========================================
-// LOAD MODEL
-// =========================================
-
-function loadModel(
-  name,
-  file
-) {
-
-
-  return new Promise(
-
-    function (
-      resolve,
-      reject
-    ) {
-
-
-      loader.load(
-
-
-        file,
-
-
-        function (
-          gltf
-        ) {
-
-
-          const model =
-            gltf.scene;
-
-
-          model.name =
-            name;
-
-
-          model.visible =
-            initialVisibility[
-              name
-            ];
-
-
-          model.traverse(
-
-            function (
-              object
-            ) {
-
-
-              if (
-                object.isMesh
-              ) {
-
-
-                object.userData.anatomyLayer =
-                  name;
-
-
-                if (
-                  object.material
-                ) {
-
-
-                  object.material.side =
-                    THREE.FrontSide;
-
-
-                  object.material.needsUpdate =
-                    true;
-
-                }
-
-              }
-
-            }
-
-          );
-
-
-
-          layers[
-            name
-          ] =
-            model;
-
-
-          human.add(
-            model
-          );
-
-
-
-          if (
-            name ===
-            "muscular"
-          ) {
-
-
-            prepareMuscles(
-              model
-            );
-
-          }
-
-
-
-          resolve(
-            model
-          );
-
-        },
-
-
-        undefined,
-
-
-        function (
-          error
-        ) {
-
-
-          console.error(
-            "Failed:",
-            name,
-            error
-          );
-
-
-          reject(
-            error
-          );
-
-        }
-
-
-      );
-
-    }
-
-  );
-
-}
-
-
-
-// =========================================
-// LOAD ALL ANATOMY
-// =========================================
-
-async function loadAnatomy() {
-
-
-  try {
-
-
-    await Promise.all([
-
-
-      loadModel(
-
-        "skeleton",
-
-        files.skeleton
-
-      ),
-
-
-      loadModel(
-
-        "muscular",
-
-        files.muscular
-
-      ),
-
-
-      loadModel(
-
-        "nervous",
-
-        files.nervous
-
-      ),
-
-
-      loadModel(
-
-        "cardiovascular",
-
-        files.cardiovascular
-
-      ),
-
-
-      loadModel(
-
-        "visceral",
-
-        files.visceral
-
-      )
-
-
-    ]);
-
-
-
-    // =====================================
-    // CENTRE USING SKELETON
-    // =====================================
-
-    const box =
-      new THREE.Box3()
-      .setFromObject(
-        layers.skeleton
-      );
-
-
-    const center =
-      new THREE.Vector3();
-
-
-    const size =
-      new THREE.Vector3();
-
-
-    box.getCenter(
-      center
-    );
-
-
-    box.getSize(
-      size
-    );
-
-
-    human.position.sub(
-      center
-    );
-
-
-
-    // =====================================
-    // CAMERA
-    // =====================================
-
-    fitCamera(
-      size
-    );
-
-
-
-    // =====================================
-    // MUSCLE STAGE
-    // =====================================
-
-    updateMuscleStage();
-
+    centreSkeleton();
 
 
     status.textContent =
-      "● Anatomy loaded";
+      "● Skeleton loaded";
 
 
     status.style.color =
       "#7ee787";
 
+  },
 
-  }
 
-  catch (
+  undefined,
+
+
+  function (
     error
   ) {
 
@@ -2276,7 +1055,7 @@ async function loadAnatomy() {
 
 
     status.textContent =
-      "● Anatomy loading error";
+      "● Skeleton loading error";
 
 
     status.style.color =
@@ -2284,13 +1063,59 @@ async function loadAnatomy() {
 
   }
 
+
+);
+
+
+
+/* =========================================
+   CENTRE / FIT
+========================================= */
+
+function centreSkeleton() {
+
+
+  const box =
+    new THREE.Box3()
+      .setFromObject(
+        skeleton
+      );
+
+
+  const center =
+    new THREE.Vector3();
+
+
+  const size =
+    new THREE.Vector3();
+
+
+  box.getCenter(
+    center
+  );
+
+
+  box.getSize(
+    size
+  );
+
+
+  human.position.sub(
+    center
+  );
+
+
+  fitCamera(
+    size
+  );
+
 }
 
 
 
-// =========================================
-// CAMERA FIT
-// =========================================
+/* =========================================
+   CAMERA FIT
+========================================= */
 
 function fitCamera(
   size
@@ -2363,7 +1188,7 @@ function fitCamera(
 
 
   distance *=
-    1.18;
+    1.15;
 
 
 
@@ -2378,7 +1203,6 @@ function fitCamera(
   );
 
 
-
   const maxSize =
 
     Math.max(
@@ -2390,7 +1214,6 @@ function fitCamera(
       size.z
 
     );
-
 
 
   camera.near =
@@ -2437,118 +1260,189 @@ function fitCamera(
 
 
 
-// =========================================
-// GENERAL LAYER BUTTONS
-// =========================================
+/* =========================================
+   RENDER INSPECTOR
+========================================= */
 
-document
-  .querySelectorAll(
-    ".layer"
-  )
-  .forEach(
-
-    function (
-      button
-    ) {
+function renderInspector(
+  filter = ""
+) {
 
 
-      button.addEventListener(
-
-        "click",
-
-        function () {
+  objectList.innerHTML =
+    "";
 
 
-          const name =
-            button.dataset.layer;
+  const q =
+    filter
+      .trim()
+      .toLowerCase();
 
 
-          const model =
-            layers[
-              name
-            ];
+  const filtered =
+
+    skeletonObjects.filter(
+
+      function (
+        item
+      ) {
 
 
-          if (
-            !model
-          ) {
+        if (
+          q === ""
+        ) {
 
-            return;
-
-          }
-
-
-
-          // =================================
-          // MUSCLE BUTTON SPECIAL BEHAVIOUR
-          // =================================
-
-          if (
-            name ===
-            "muscular"
-          ) {
-
-
-            if (
-              currentMuscleStage === 0
-            ) {
-
-
-              currentMuscleStage =
-                4;
-
-
-            }
-
-            else {
-
-
-              currentMuscleStage =
-                0;
-
-            }
-
-
-            updateMuscleStage();
-
-
-            return;
-
-          }
-
-
-
-          // =================================
-          // OTHER LAYERS
-          // =================================
-
-          model.visible =
-            !model.visible;
-
-
-          button
-            .classList
-            .toggle(
-
-              "active",
-
-              model.visible
-
-            );
-
-
-          button
-            .querySelector(
-              ".layer-state"
-            )
-            .textContent =
-
-              model.visible
-              ? "ON"
-              : "OFF";
+          return true;
 
         }
 
+
+        return (
+
+          item.name
+            .toLowerCase()
+            .includes(
+              q
+            )
+
+          ||
+
+          item.parent
+            .toLowerCase()
+            .includes(
+              q
+            )
+
+          ||
+
+          item.type
+            .toLowerCase()
+            .includes(
+              q
+            )
+
+        );
+
+      }
+
+    );
+
+
+  objectCount.textContent =
+
+    filtered.length +
+
+    " shown / " +
+
+    skeletonObjects.length +
+
+    " total objects";
+
+
+
+  filtered.forEach(
+
+    function (
+      item,
+      index
+    ) {
+
+
+      const div =
+        document.createElement(
+          "div"
+        );
+
+
+      div.className =
+        "object-item";
+
+
+      const title =
+        document.createElement(
+          "div"
+        );
+
+
+      title.textContent =
+
+        (index + 1) +
+
+        ". [" +
+
+        item.type +
+
+        "] " +
+
+        item.name;
+
+
+
+      const parent =
+        document.createElement(
+          "span"
+        );
+
+
+      parent.className =
+        "object-parent";
+
+
+      parent.textContent =
+
+        "parent: " +
+
+        item.parent +
+
+        " · children: " +
+
+        item.childCount;
+
+
+
+      div.appendChild(
+        title
+      );
+
+
+      div.appendChild(
+        parent
+      );
+
+
+      objectList.appendChild(
+        div
+      );
+
+    }
+
+  );
+
+}
+
+
+
+/* =========================================
+   OPEN INSPECTOR
+========================================= */
+
+document
+  .getElementById(
+    "inspectButton"
+  )
+  .addEventListener(
+
+    "click",
+
+    function () {
+
+
+      inspector.style.display =
+        "flex";
+
+
+      renderInspector(
+        search.value
       );
 
     }
@@ -2557,9 +1451,226 @@ document
 
 
 
-// =========================================
-// RESIZE
-// =========================================
+/* =========================================
+   CLOSE
+========================================= */
+
+document
+  .getElementById(
+    "closeButton"
+  )
+  .addEventListener(
+
+    "click",
+
+    function () {
+
+
+      inspector.style.display =
+        "none";
+
+    }
+
+  );
+
+
+
+/* =========================================
+   SEARCH
+========================================= */
+
+search.addEventListener(
+
+  "input",
+
+  function () {
+
+
+    renderInspector(
+      search.value
+    );
+
+  }
+
+);
+
+
+
+/* =========================================
+   COPY ALL
+========================================= */
+
+document
+  .getElementById(
+    "copyButton"
+  )
+  .addEventListener(
+
+    "click",
+
+    async function () {
+
+
+      const button =
+        this;
+
+
+      const text =
+
+        skeletonObjects
+          .map(
+
+            function (
+              item,
+              index
+            ) {
+
+
+              return (
+
+                (index + 1) +
+
+                ". [" +
+
+                item.type +
+
+                "] " +
+
+                item.name +
+
+                " | parent: " +
+
+                item.parent +
+
+                " | children: " +
+
+                item.childCount
+
+              );
+
+            }
+
+          )
+          .join(
+            "\n"
+          );
+
+
+      try {
+
+
+        await navigator
+          .clipboard
+          .writeText(
+            text
+          );
+
+
+        button.textContent =
+          "Copied ✓";
+
+
+        setTimeout(
+
+          function () {
+
+
+            button.textContent =
+              "Copy All";
+
+          },
+
+          1500
+
+        );
+
+
+      }
+
+      catch (
+        error
+      ) {
+
+
+        console.error(
+          error
+        );
+
+
+        /*
+          iPad fallback:
+          put all text directly on screen
+          so it can still be selected/copied.
+        */
+
+
+        objectList.innerHTML =
+          "";
+
+
+        const textarea =
+          document.createElement(
+            "textarea"
+          );
+
+
+        textarea.value =
+          text;
+
+
+        textarea.style.width =
+          "100%";
+
+
+        textarea.style.height =
+          "100%";
+
+
+        textarea.style.background =
+          "#17191d";
+
+
+        textarea.style.color =
+          "white";
+
+
+        textarea.style.border =
+          "none";
+
+
+        textarea.style.padding =
+          "12px";
+
+
+        textarea.style.fontSize =
+          "11px";
+
+
+        objectList.appendChild(
+          textarea
+        );
+
+
+        textarea.focus();
+
+
+        textarea.select();
+
+
+        button.textContent =
+          "Select text below";
+
+      }
+
+    }
+
+  );
+
+
+
+/* =========================================
+   RESIZE
+========================================= */
 
 window.addEventListener(
 
@@ -2592,9 +1703,9 @@ window.addEventListener(
 
 
 
-// =========================================
-// RENDER LOOP
-// =========================================
+/* =========================================
+   ANIMATION
+========================================= */
 
 function animate() {
 
@@ -2618,19 +1729,10 @@ function animate() {
 }
 
 
-
-// =========================================
-// START
-// =========================================
-
 animate();
-
-
-loadAnatomy();
 
 
 </script>
 
 </body>
-
 </html>
