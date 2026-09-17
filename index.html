@@ -469,7 +469,7 @@ input[type="range"]{
         <button class="regionBtn" data-region="hip">髖</button>
         <button class="regionBtn" data-region="leg">膝和足</button>
       </div>
-      <div id="depthName">Full musculature｜完整肌肉</div>
+      <div id="depthName">Layer 4 · Superficial complete｜表層完整</div>
       <div id="depthDescription">所選區域：完整肌肉</div>
 
       <div class="depthBars">
@@ -782,6 +782,7 @@ const layerVisibility = {
 // V5: stable mesh registries. Re-parented meshes leave their original GLB root,
 // so all visibility/dissection logic must use these registries, not root.traverse().
 const layerMeshRegistry = {skeleton:[],muscular:[],nervous:[],cardiovascular:[],visceral:[],skin:[]};
+let referenceSkeletonBox=null;
 
 
 const files = {
@@ -996,6 +997,24 @@ function prepareSkin(model){
   model.position.set(0,0,0);
   model.rotation.set(0,0,0);
   model.scale.set(1,1,1);
+
+  // V8: fit skin to the PRE-RIG skeleton, never to an already posed arm.
+  // This removes the "large skin wrapped around a small person" mismatch.
+  if(referenceSkeletonBox){
+    scene.updateMatrixWorld(true);
+    const sb=new THREE.Box3().setFromObject(model);
+    const ss=new THREE.Vector3(), rs=new THREE.Vector3();
+    const sc=new THREE.Vector3(), rc=new THREE.Vector3();
+    sb.getSize(ss); referenceSkeletonBox.getSize(rs);
+    sb.getCenter(sc); referenceSkeletonBox.getCenter(rc);
+    if(ss.y>0 && rs.y>0){
+      const k=(rs.y/ss.y)*1.015;
+      model.scale.setScalar(k);
+      scene.updateMatrixWorld(true);
+      const b2=new THREE.Box3().setFromObject(model), c2=new THREE.Vector3(); b2.getCenter(c2);
+      model.position.add(rc.clone().sub(c2));
+    }
+  }
 }
 
 function alignSkinToSkeleton(skin){
@@ -1786,21 +1805,22 @@ function anatomicalArmSegment(mesh){
   if(!rightSideName(mesh)) return null;
   const n=getHierarchyName(mesh).toLowerCase();
 
-  // IMPORTANT: only muscles whose bulk belongs to one moving segment are rigidly
-  // carried by that segment. Trunk/scapular muscles (serratus, pectorals, latissimus,
-  // trapezius, rotator-cuff, etc.) are deliberately excluded because a rigid attach
-  // would tear their thoracic/scapular origin away during shoulder flexion.
+  // V8: strict NAME whitelist. Never classify an arm structure by proximity alone.
+  // Explicit lower-limb words win first; this prevents toe/leg structures with names
+  // such as "flexor digitorum longus.r.001" from entering the hand/forearm rig.
+  if(/foot|plantar|halluc|tibial|fibular|perone|ankle|crural|femor|patell|gastrocnem|soleus|poplite|calcane/i.test(n)) return null;
+  // Thorax/scapula muscles are NOT rigid arm segments. Serratus anterior stays on ribs.
   if(/serratus|pectoralis|latissimus|trapezius|rhomboid|subscapularis|supraspinatus|infraspinatus|teres major|teres minor|levator scapulae/i.test(n)) return null;
 
-  if(/biceps brachii|triceps brachii|brachialis|coracobrachialis|brachial fascia/i.test(n)) return "upperArm";
+  // Muscles whose belly is predominantly on the brachium.
+  if(/(?:long|short) head of biceps brachii|(?:long|lateral|medial) head of triceps brachii|brachialis muscle|coracobrachialis muscle|brachial fascia/i.test(n)) return "upperArm";
 
-  if(/brachioradialis|pronator teres|pronator quadratus|supinator|flexor carpi|extensor carpi|flexor digitorum|extensor digitorum|flexor pollicis longus|extensor pollicis|palmaris longus|antebrachial fascia/i.test(n)) {
-    // Exclude foot/leg homonyms explicitly.
-    if(/foot|halluc|tibial|ankle|crural|femor/i.test(n)) return null;
-    return "forearm";
-  }
+  // Forearm structures: explicit upper-limb names only.
+  if(/brachioradialis|pronator teres|pronator quadratus|supinator|extensor carpi radialis|extensor carpi ulnaris|flexor carpi radialis|flexor carpi ulnaris|palmaris longus|extensor digitorum\.r|flexor digitorum profundus|flexor digitorum superficialis|extensor indicis|extensor digiti minimi|abductor pollicis longus|extensor pollicis longus|extensor pollicis brevis|flexor pollicis longus|antebrachial fascia/i.test(n)) return "forearm";
 
-  if(/of hand|muscles of hand|palmar interossei|lumbrical muscles of hand|thenar|hypothenar|adductor pollicis|abductor pollicis brevis|opponens pollicis|flexor pollicis brevis|dorsal fascia of hand/i.test(n)) return "hand";
+  // Intrinsic hand muscles only. The phrase "of hand" is intentionally required
+  // for interossei/lumbricals because the foot contains names with the same stem.
+  if(/palmar aponeurosis|palmar interossei muscles|dorsal interossei muscles of hand|lumbrical muscles of hand|opponens pollicis|abductor pollicis brevis|adductor pollicis|flexor pollicis brevis|opponens digiti minimi|abductor digiti minimi.*hand|flexor digiti minimi.*hand/i.test(n)) return "hand";
   return null;
 }
 
@@ -2014,12 +2034,22 @@ let activeMuscleRegion="full";
 const regionDepth={full:4,headneck:4,shoulder:4,arm:4,spine:4,chest:4,abdomen:4,pelvis:4,hip:4,leg:4};
 
 function muscleRegionFor(mesh){
+  const n=getHierarchyName(mesh).toLowerCase();
+  // V8 anatomical-name region mapping first; geometry is fallback only.
+  if(/capitis|cervic|sternocleidomastoid|scalen|hyoid|phary|laryng|facial|orbicularis|masseter|temporalis/i.test(n)) return "headneck";
+  if(/deltoid|supraspinatus|infraspinatus|subscapularis|teres major|teres minor|rotator cuff/i.test(n)) return "shoulder";
+  if(/brachii|brachialis|coracobrachialis|brachioradialis|carpi|pollicis|pronator|supinator|antebrach|palmar|hand|indicis/i.test(n)) return "arm";
+  if(/trapezius|latissimus|rhomboid|erector spinae|multifidus|rotatores|interspinal|spinalis|longissimus|iliocostalis/i.test(n)) return "spine";
+  if(/pectoralis|serratus|intercostal|thorac|subclavius/i.test(n)) return "chest";
+  if(/rectus abdominis|oblique|transversus abdominis|quadratus lumborum/i.test(n)) return "abdomen";
+  if(/pelvic|perine|coccygeus|levator ani|obturator internus/i.test(n)) return "pelvis";
+  if(/glute|piriformis|iliacus|psoas|tensor fasciae latae|adductor|pectineus/i.test(n)) return "hip";
+  if(/femor|vastus|sartorius|gracilis|gastrocnem|soleus|tibialis|fibular|perone|halluc|foot|plantar|poplite|crural/i.test(n)) return "leg";
   const b=worldBox(mesh), c=new THREE.Vector3(); b.getCenter(c);
-  const x=Math.abs(c.x), y=c.y, z=c.z;
+  const x=Math.abs(c.x), y=c.y;
   if(y>1.40) return "headneck";
   if(y>1.16 && x>0.16) return "shoulder";
   if(y>0.72 && x>0.24) return "arm";
-  if(y>0.96 && y<=1.38 && Math.abs(z)>0.045 && z<0) return "spine";
   if(y>0.93 && y<=1.35) return "chest";
   if(y>0.66 && y<=1.02) return "abdomen";
   if(y>0.48 && y<=0.76 && x<0.22) return "pelvis";
@@ -2028,12 +2058,18 @@ function muscleRegionFor(mesh){
 }
 
 function muscleLayerFor(mesh){
-  // Use explicit anatomical names when available; otherwise use local radial depth.
   const n=getHierarchyName(mesh).toLowerCase();
-  if(/(subscapularis|supraspinatus|infraspinatus|teres minor|multifidus|rotatores|interspinal|transversus abdominis|gluteus minimus|pronator quadratus|supinator|popliteus)/i.test(n)) return 1;
-  if(/(internal oblique|rhomboid|pectoralis minor|serratus anterior|gluteus medius|vastus intermedius|flexor digitorum profundus|tibialis posterior)/i.test(n)) return 2;
-  if(/(trapezius|latissimus|pectoralis major|deltoid|biceps|triceps|sternocleidomastoid|rectus abdominis|external oblique|gluteus maximus|sartorius|rectus femoris|vastus lateralis|vastus medialis|gastrocnemius|tibialis anterior)/i.test(n)) return 4;
-  return 3;
+  // V8 anatomical dissection map. 4 = most superficial, 1 = deepest.
+  // Fascia/aponeuroses are treated as superficial coverings so the first peel
+  // actually reveals the muscles beneath, matching anatomy-app behaviour.
+  if(/fascia|aponeurosis|retinaculum/i.test(n)) return 4;
+  if(/trapezius|deltoid|pectoralis major|latissimus dorsi|sternocleidomastoid|biceps brachii|brachioradialis|rectus abdominis|external oblique|gluteus maximus|tensor fasciae latae|sartorius|rectus femoris|vastus lateralis|vastus medialis|gastrocnemius|tibialis anterior|fibularis longus/i.test(n)) return 4;
+  if(/pectoralis minor|serratus anterior|rhomboid|splenius|triceps brachii|flexor digitorum superficialis|extensor digitorum|internal oblique|gluteus medius|adductor longus|gracilis|soleus|extensor hallucis longus|extensor digitorum longus/i.test(n)) return 3;
+  if(/supraspinatus|infraspinatus|teres major|teres minor|subscapularis|brachialis|coracobrachialis|pronator teres|supinator|flexor digitorum profundus|transversus abdominis|erector spinae|gluteus minimus|adductor brevis|vastus intermedius|tibialis posterior|flexor digitorum longus|flexor hallucis longus/i.test(n)) return 2;
+  if(/multifidus|rotatores|interspinal|intertransvers|pronator quadratus|quadratus lumborum|iliacus|psoas|piriformis|obturator|gemellus|quadratus femoris|popliteus|interossei/i.test(n)) return 1;
+  // Unknown named structures stay in the middle rather than contaminating the
+  // superficial layer. They disappear before the deep-only view.
+  return 2;
 }
 
 function getHierarchyName(object){
@@ -2061,7 +2097,7 @@ function updateMuscleDepth(){
   });
   const depth=regionDepth[activeMuscleRegion];
   const regionNames={full:"Full body｜全身",headneck:"Head & neck｜頭頸",shoulder:"Shoulder｜肩",arm:"Hand & elbow｜手和肘",spine:"Spine｜脊柱",chest:"Chest｜胸",abdomen:"Abdomen｜腹",pelvis:"Pelvis｜盆",hip:"Hip｜髖",leg:"Knee & foot｜膝和足"};
-  const names={4:["Full musculature｜完整肌肉","完整顯示所選區域"],3:["Superficial layer｜淺層","移除所選區域最表層"],2:["Intermediate layer｜中層","顯示所選區域中層肌肉"],1:["Deep layer｜深層","顯示所選區域深層肌肉"],0:["Bones exposed｜骨骼顯露","所選區域肌肉已隱藏"]};
+  const names={4:["Layer 4 · Superficial complete｜表層完整","完整顯示所選區域"],3:["Layer 3 · Superficial removed｜移除最表層","移除所選區域最表層"],2:["Layer 2 · Intermediate｜中層","顯示所選區域中層肌肉"],1:["Layer 1 · Deep｜深層","顯示所選區域深層肌肉"],0:["Bones exposed｜骨骼顯露","所選區域肌肉已隱藏"]};
   document.getElementById("regionName").textContent=regionNames[activeMuscleRegion];
   document.getElementById("depthName").textContent=names[depth][0];
   document.getElementById("depthDescription").textContent=names[depth][1];
@@ -2916,6 +2952,7 @@ async function init(){
 
     box.getCenter(center);
     box.getSize(size);
+    referenceSkeletonBox = box.clone();
 
     human.position.sub(center);
 
@@ -3009,7 +3046,7 @@ async function init(){
     /*
       7. SKIN
       Loaded last and automatically aligned to the skeleton.
-      It starts hidden and can be toggled with Skin｜皮膚.
+      It can be toggled with Skin｜皮膚.
     */
 
     await loadOptionalLayer(
