@@ -775,6 +775,11 @@ const layerVisibility = {
   skin:false
 };
 
+// V5: stable mesh registries. Re-parented meshes leave their original GLB root,
+// so all visibility/dissection logic must use these registries, not root.traverse().
+const layerMeshRegistry = {skeleton:[],muscular:[],nervous:[],cardiovascular:[],visceral:[],skin:[]};
+
+
 const files = {
   skeleton:"./models/skeleton.glb",
   muscular:"./models/muscular.glb",
@@ -1041,9 +1046,9 @@ function tagLayerMeshes(root,key){
     if(!obj.isMesh) return;
 
     obj.userData.anatomyLayer = key;
+    if(!layerMeshRegistry[key].includes(obj)) layerMeshRegistry[key].push(obj);
 
-    obj.userData.originalVisible =
-      obj.visible;
+    obj.userData.originalVisible = obj.visible;
 
   });
 }
@@ -1722,123 +1727,40 @@ function buildRig(){
 */
 
 function classifyRightUpperLimbMesh(mesh){
-
   if(!rig.ready) return null;
-
   scene.updateMatrixWorld(true);
-
   const box=worldBox(mesh);
-
-  if(box.isEmpty()){
-    return null;
-  }
-
-  const center =
-    new THREE.Vector3();
-
-  const size =
-    new THREE.Vector3();
-
-  box.getCenter(center);
-  box.getSize(size);
-
+  if(box.isEmpty()) return null;
+  const center=new THREE.Vector3(), size=new THREE.Vector3();
+  box.getCenter(center); box.getSize(size);
   const r=rig.refs;
+  const upperDist=pointSegmentDistance(center,r.shoulder,r.elbow);
+  const foreDist=pointSegmentDistance(center,r.elbow,r.wrist);
+  const handDist=center.distanceTo(r.handCenter);
+  const upperRadius=r.upperArmLength*.34;
+  const foreRadius=r.forearmLength*.34;
+  const handRadius=r.forearmLength*.38;
 
-  const upperDist =
-    pointSegmentDistance(
-      center,
-      r.shoulder,
-      r.elbow
-    );
+  // V5 safety: a mesh may be moved only when its WHOLE bounding box is local to
+  // the right upper limb. This deliberately rejects torso, knee, contralateral
+  // and long multi-region meshes instead of dragging half the body with the arm.
+  const diag=size.length();
+  if(diag > Math.max(r.upperArmLength,r.forearmLength)*1.45) return null;
 
-  const foreDist =
-    pointSegmentDistance(
-      center,
-      r.elbow,
-      r.wrist
-    );
+  const corners=[];
+  for(const x of [box.min.x,box.max.x]) for(const y of [box.min.y,box.max.y]) for(const z of [box.min.z,box.max.z]) corners.push(new THREE.Vector3(x,y,z));
+  const maxSegDist=(a,b)=>Math.max(...corners.map(p=>pointSegmentDistance(p,a,b)));
+  const maxHandDist=Math.max(...corners.map(p=>p.distanceTo(r.handCenter)));
 
-  const handDist =
-    center.distanceTo(
-      r.handCenter
-    );
-
-  /*
-    Conservative radii.
-
-    Prevent torso / opposite limb / toes from being
-    accidentally classified as arm structures.
-  */
-
-  const upperRadius =
-    r.upperArmLength*.52;
-
-  const foreRadius =
-    r.forearmLength*.52;
-
-  const handRadius =
-    r.forearmLength*.55;
-
-  /* Long nerves and vessels may span more than one joint. Do not reject them only because their bounding box is long. */
-
-  /*
-    RIGHT-vs-LEFT safety check.
-  */
-
+  // Reject structures that are spatially closer to the opposite shoulder.
   if(r.leftShoulder){
-
-    const rightDistance =
-      Math.min(
-        upperDist,
-        foreDist,
-        handDist
-      );
-
-    const leftDistance =
-      center.distanceTo(
-        r.leftShoulder
-      );
-
-    if(
-      leftDistance <
-      rightDistance
-    ){
-      return null;
-    }
+    const rightDistance=Math.min(upperDist,foreDist,handDist);
+    if(center.distanceTo(r.leftShoulder) < rightDistance*.92) return null;
   }
 
-  /*
-    Hand takes priority.
-  */
-
-  if(
-    handDist < handRadius &&
-    handDist <= foreDist*1.15
-  ){
-    return "hand";
-  }
-
-  /*
-    Forearm.
-  */
-
-  if(
-    foreDist < foreRadius &&
-    foreDist <= upperDist
-  ){
-    return "forearm";
-  }
-
-  /*
-    Upper arm.
-  */
-
-  if(
-    upperDist < upperRadius
-  ){
-    return "upperArm";
-  }
-
+  if(handDist < handRadius && maxHandDist < handRadius*1.9) return "hand";
+  if(foreDist < foreRadius && foreDist <= upperDist && maxSegDist(r.elbow,r.wrist) < foreRadius*1.75) return "forearm";
+  if(upperDist < upperRadius && maxSegDist(r.shoulder,r.elbow) < upperRadius*1.75) return "upperArm";
   return null;
 }
 
@@ -1871,6 +1793,14 @@ function registerSoftTissueLayer(key){
   */
 
   const assignments=[];
+
+  // Cache muscle anatomy metadata BEFORE any re-parenting changes world transforms.
+  if(key==="muscular"){
+    for(const mesh of meshes){
+      mesh.userData.muscleRegion = muscleRegionFor(mesh);
+      mesh.userData.muscleLayer = muscleLayerFor(mesh);
+    }
+  }
 
   for(const mesh of meshes){
 
@@ -2243,16 +2173,8 @@ document
           using userData anatomyLayer across the HUMAN tree.
         */
 
-        human.traverse(obj=>{
-
-          if(
-            obj.isMesh &&
-            obj.userData.anatomyLayer===key
-          ){
-            obj.visible =
-              layerVisibility[key];
-          }
-
+        (layerMeshRegistry[key]||[]).forEach(obj=>{
+          if(obj && obj.isMesh) obj.visible=layerVisibility[key];
         });
 
         if(
