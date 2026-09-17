@@ -3,9 +3,388 @@
 
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0">
 
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
+  <title>MJ Anatomy 3D</title>
 
-  
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #050607;
+      color: white;
+      font-family: -apple-system, BlinkMacSystemFont,
+                   "Segoe UI", sans-serif;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+    }
+
+    #panel {
+      position: fixed;
+      top: 25px;
+      left: 25px;
+      z-index: 10;
+
+      padding: 18px 22px;
+
+      background: rgba(18, 20, 23, 0.82);
+      border: 1px solid #34383e;
+      border-radius: 16px;
+
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+
+    #panel h2 {
+      margin: 0 0 6px 0;
+      font-size: 22px;
+    }
+
+    #panel p {
+      margin: 0;
+      color: #9ba0a8;
+      font-size: 14px;
+    }
+
+    #status {
+      margin-top: 12px;
+      color: #7ee787;
+      font-size: 12px;
+    }
+
+    #help {
+      position: fixed;
+      left: 50%;
+      bottom: 25px;
+      transform: translateX(-50%);
+
+      z-index: 10;
+
+      padding: 10px 16px;
+
+      background: rgba(18,20,23,.8);
+      border: 1px solid #34383e;
+      border-radius: 20px;
+
+      color: #aaa;
+      font-size: 13px;
+
+      white-space: nowrap;
+    }
+  </style>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three":
+        "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+
+      "three/addons/":
+        "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+    }
+  }
+  </script>
+
+</head>
+
+<body>
+
+  <div id="panel">
+    <h2>MJ Anatomy 3D</h2>
+
+    <p>Interactive medical anatomy viewer</p>
+
+    <div id="status">
+      ● 3D Engine Running
+    </div>
+  </div>
+
+  <div id="help">
+    單指旋轉 · 兩指縮放 / 移動
+  </div>
+
+
+  <script type="module">
+
+    import * as THREE from "three";
+
+    import {
+      OrbitControls
+    } from "three/addons/controls/OrbitControls.js";
+
+
+    // =============================
+    // SCENE
+    // =============================
+
+    const scene = new THREE.Scene();
+
+    scene.background =
+      new THREE.Color(0x050607);
+
+
+    // =============================
+    // CAMERA
+    // =============================
+
+    const camera =
+      new THREE.PerspectiveCamera(
+        40,
+        window.innerWidth /
+        window.innerHeight,
+        0.1,
+        100
+      );
+
+    camera.position.set(
+      0,
+      0.4,
+      5
+    );
+
+
+    // =============================
+    // RENDERER
+    // =============================
+
+    const renderer =
+      new THREE.WebGLRenderer({
+        antialias: true
+      });
+
+    renderer.setSize(
+      window.innerWidth,
+      window.innerHeight
+    );
+
+    renderer.setPixelRatio(
+      Math.min(
+        window.devicePixelRatio,
+        2
+      )
+    );
+
+    renderer.outputColorSpace =
+      THREE.SRGBColorSpace;
+
+    document.body.appendChild(
+      renderer.domElement
+    );
+
+
+    // =============================
+    // LIGHTS
+    // =============================
+
+    const hemisphere =
+      new THREE.HemisphereLight(
+        0xffffff,
+        0x202020,
+        3
+      );
+
+    scene.add(hemisphere);
+
+
+    const keyLight =
+      new THREE.DirectionalLight(
+        0xffffff,
+        5
+      );
+
+    keyLight.position.set(
+      4,
+      6,
+      5
+    );
+
+    scene.add(keyLight);
+
+
+    const sideLight =
+      new THREE.DirectionalLight(
+        0xb8d4ff,
+        2
+      );
+
+    sideLight.position.set(
+      -4,
+      2,
+      3
+    );
+
+    scene.add(sideLight);
+
+
+    // =============================
+    // TEST OBJECT
+    // =============================
+
+    const geometry =
+      new THREE.IcosahedronGeometry(
+        1,
+        4
+      );
+
+    const material =
+      new THREE.MeshStandardMaterial({
+        color: 0xe7ddca,
+        roughness: 0.72,
+        metalness: 0
+      });
+
+    const testObject =
+      new THREE.Mesh(
+        geometry,
+        material
+      );
+
+    testObject.position.y = 0.2;
+
+    scene.add(testObject);
+
+
+    // =============================
+    // SMALL RED LANDMARK
+    // =============================
+
+    const marker =
+      new THREE.Mesh(
+        new THREE.SphereGeometry(
+          0.12,
+          32,
+          32
+        ),
+
+        new THREE.MeshStandardMaterial({
+          color: 0xc94b43
+        })
+      );
+
+    marker.position.set(
+      0.65,
+      0.65,
+      0.65
+    );
+
+    scene.add(marker);
+
+
+    // =============================
+    // FLOOR
+    // =============================
+
+    const floor =
+      new THREE.Mesh(
+        new THREE.CircleGeometry(
+          2.2,
+          80
+        ),
+
+        new THREE.MeshStandardMaterial({
+          color: 0x141619,
+          roughness: 1
+        })
+      );
+
+    floor.rotation.x =
+      -Math.PI / 2;
+
+    floor.position.y =
+      -1.2;
+
+    scene.add(floor);
+
+
+    // =============================
+    // ORBIT CONTROLS
+    // =============================
+
+    const controls =
+      new OrbitControls(
+        camera,
+        renderer.domElement
+      );
+
+    controls.enableDamping = true;
+
+    controls.dampingFactor = 0.06;
+
+    controls.enableZoom = true;
+
+    controls.enableRotate = true;
+
+    controls.enablePan = true;
+
+    controls.minDistance = 2;
+
+    controls.maxDistance = 9;
+
+    controls.target.set(
+      0,
+      0,
+      0
+    );
+
+
+    // =============================
+    // RESIZE
+    // =============================
+
+    window.addEventListener(
+      "resize",
+      function () {
+
+        camera.aspect =
+          window.innerWidth /
+          window.innerHeight;
+
+        camera.updateProjectionMatrix();
+
+        renderer.setSize(
+          window.innerWidth,
+          window.innerHeight
+        );
+
+      }
+    );
+
+
+    // =============================
+    // RENDER LOOP
+    // =============================
+
+    function animate() {
+
+      requestAnimationFrame(
+        animate
+      );
+
+      controls.update();
+
+      renderer.render(
+        scene,
+        camera
+      );
+
+    }
+
+    animate();
+
+  </script>
+
+</body>
+
+</html>
