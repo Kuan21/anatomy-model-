@@ -3,25 +3,35 @@
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport"
-        content="width=device-width, initial-scale=1.0">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
 
   <title>MJ Anatomy 3D</title>
 
   <style>
+
     * {
       box-sizing: border-box;
     }
 
-    html, body {
+    html,
+    body {
       margin: 0;
       width: 100%;
       height: 100%;
       overflow: hidden;
+
       background: #050607;
       color: white;
-      font-family: -apple-system, BlinkMacSystemFont,
-                   "Segoe UI", sans-serif;
+
+      font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
     }
 
     canvas {
@@ -33,14 +43,22 @@
 
     #panel {
       position: fixed;
+
       top: 25px;
       left: 25px;
+
       z-index: 10;
+
+      min-width: 280px;
 
       padding: 18px 22px;
 
-      background: rgba(18, 20, 23, 0.82);
-      border: 1px solid #34383e;
+      background:
+        rgba(18, 20, 23, 0.82);
+
+      border:
+        1px solid #34383e;
+
       border-radius: 16px;
 
       backdrop-filter: blur(16px);
@@ -54,28 +72,37 @@
 
     #panel p {
       margin: 0;
+
       color: #9ba0a8;
       font-size: 14px;
     }
 
     #status {
       margin-top: 12px;
-      color: #7ee787;
+
+      color: #f0c36a;
       font-size: 12px;
     }
 
     #help {
       position: fixed;
+
       left: 50%;
       bottom: 25px;
-      transform: translateX(-50%);
+
+      transform:
+        translateX(-50%);
 
       z-index: 10;
 
       padding: 10px 16px;
 
-      background: rgba(18,20,23,.8);
-      border: 1px solid #34383e;
+      background:
+        rgba(18, 20, 23, 0.8);
+
+      border:
+        1px solid #34383e;
+
       border-radius: 20px;
 
       color: #aaa;
@@ -83,288 +110,624 @@
 
       white-space: nowrap;
     }
+
   </style>
+
 
   <script type="importmap">
   {
     "imports": {
+
       "three":
-        "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+      "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
 
       "three/addons/":
-        "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+      "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+
     }
   }
   </script>
 
 </head>
 
+
 <body>
 
   <div id="panel">
-    <h2>MJ Anatomy 3D</h2>
 
-    <p>Interactive medical anatomy viewer</p>
+    <h2>
+      MJ Anatomy 3D
+    </h2>
+
+    <p>
+      Human Skeletal System
+    </p>
 
     <div id="status">
-      ● 3D Engine Running
+      ● Loading skeleton...
     </div>
+
   </div>
 
+
   <div id="help">
-    單指旋轉 · 兩指縮放 / 移動
+    單指旋轉 · 雙指縮放 / 移動
   </div>
+
 
 
   <script type="module">
 
-    import * as THREE from "three";
+    // =====================================
+    // IMPORT THREE.JS
+    // =====================================
+
+    import * as THREE
+    from "three";
+
 
     import {
       OrbitControls
-    } from "three/addons/controls/OrbitControls.js";
+    }
+    from
+    "three/addons/controls/OrbitControls.js";
 
 
-    // =============================
+    import {
+      GLTFLoader
+    }
+    from
+    "three/addons/loaders/GLTFLoader.js";
+
+
+
+    // =====================================
+    // HTML STATUS
+    // =====================================
+
+    const status =
+      document.getElementById(
+        "status"
+      );
+
+
+
+    // =====================================
     // SCENE
-    // =============================
+    // =====================================
 
-    const scene = new THREE.Scene();
+    const scene =
+      new THREE.Scene();
+
 
     scene.background =
-      new THREE.Color(0x050607);
+      new THREE.Color(
+        0x050607
+      );
 
 
-    // =============================
+
+    // =====================================
     // CAMERA
-    // =============================
+    // =====================================
 
     const camera =
       new THREE.PerspectiveCamera(
-        40,
+
+        35,
+
         window.innerWidth /
         window.innerHeight,
-        0.1,
-        100
+
+        0.01,
+
+        1000
+
       );
+
 
     camera.position.set(
       0,
-      0.4,
+      0,
       5
     );
 
 
-    // =============================
+
+    // =====================================
     // RENDERER
-    // =============================
+    // =====================================
 
     const renderer =
       new THREE.WebGLRenderer({
-        antialias: true
+
+        antialias: true,
+
+        powerPreference:
+          "high-performance"
+
       });
 
+
     renderer.setSize(
+
       window.innerWidth,
+
       window.innerHeight
+
     );
 
+
     renderer.setPixelRatio(
+
       Math.min(
+
         window.devicePixelRatio,
+
         2
+
       )
+
     );
+
 
     renderer.outputColorSpace =
       THREE.SRGBColorSpace;
+
 
     document.body.appendChild(
       renderer.domElement
     );
 
 
-    // =============================
-    // LIGHTS
-    // =============================
 
-    const hemisphere =
+    // =====================================
+    // LIGHTING
+    // =====================================
+
+    const ambientLight =
       new THREE.HemisphereLight(
+
         0xffffff,
+
         0x202020,
-        3
+
+        2.5
+
       );
 
-    scene.add(hemisphere);
+
+    scene.add(
+      ambientLight
+    );
 
 
-    const keyLight =
+
+    const frontLight =
       new THREE.DirectionalLight(
+
         0xffffff,
-        5
+
+        4
+
       );
 
-    keyLight.position.set(
+
+    frontLight.position.set(
       4,
       6,
-      5
+      8
     );
 
-    scene.add(keyLight);
+
+    scene.add(
+      frontLight
+    );
 
 
-    const sideLight =
+
+    const leftLight =
       new THREE.DirectionalLight(
-        0xb8d4ff,
+
+        0xc7dcff,
+
         2
+
       );
 
-    sideLight.position.set(
-      -4,
+
+    leftLight.position.set(
+      -5,
       2,
-      3
+      4
     );
 
-    scene.add(sideLight);
 
-
-    // =============================
-    // TEST OBJECT
-    // =============================
-
-    const geometry =
-      new THREE.IcosahedronGeometry(
-        1,
-        4
-      );
-
-    const material =
-      new THREE.MeshStandardMaterial({
-        color: 0xe7ddca,
-        roughness: 0.72,
-        metalness: 0
-      });
-
-    const testObject =
-      new THREE.Mesh(
-        geometry,
-        material
-      );
-
-    testObject.position.y = 0.2;
-
-    scene.add(testObject);
-
-
-    // =============================
-    // SMALL RED LANDMARK
-    // =============================
-
-    const marker =
-      new THREE.Mesh(
-        new THREE.SphereGeometry(
-          0.12,
-          32,
-          32
-        ),
-
-        new THREE.MeshStandardMaterial({
-          color: 0xc94b43
-        })
-      );
-
-    marker.position.set(
-      0.65,
-      0.65,
-      0.65
+    scene.add(
+      leftLight
     );
 
-    scene.add(marker);
 
 
-    // =============================
-    // FLOOR
-    // =============================
+    const backLight =
+      new THREE.DirectionalLight(
 
-    const floor =
-      new THREE.Mesh(
-        new THREE.CircleGeometry(
-          2.2,
-          80
-        ),
+        0xffffff,
 
-        new THREE.MeshStandardMaterial({
-          color: 0x141619,
-          roughness: 1
-        })
+        1.5
+
       );
 
-    floor.rotation.x =
-      -Math.PI / 2;
 
-    floor.position.y =
-      -1.2;
+    backLight.position.set(
+      0,
+      4,
+      -5
+    );
 
-    scene.add(floor);
+
+    scene.add(
+      backLight
+    );
 
 
-    // =============================
+
+    // =====================================
     // ORBIT CONTROLS
-    // =============================
+    // =====================================
 
     const controls =
       new OrbitControls(
+
         camera,
+
         renderer.domElement
+
       );
 
-    controls.enableDamping = true;
 
-    controls.dampingFactor = 0.06;
-
-    controls.enableZoom = true;
-
-    controls.enableRotate = true;
-
-    controls.enablePan = true;
-
-    controls.minDistance = 2;
-
-    controls.maxDistance = 9;
-
-    controls.target.set(
-      0,
-      0,
-      0
-    );
+    controls.enableDamping =
+      true;
 
 
-    // =============================
-    // RESIZE
-    // =============================
+    controls.dampingFactor =
+      0.06;
 
-    window.addEventListener(
-      "resize",
-      function () {
 
-        camera.aspect =
-          window.innerWidth /
-          window.innerHeight;
+    controls.enableRotate =
+      true;
+
+
+    controls.enableZoom =
+      true;
+
+
+    controls.enablePan =
+      true;
+
+
+    controls.minDistance =
+      0.5;
+
+
+    controls.maxDistance =
+      20;
+
+
+
+    // =====================================
+    // LOAD SKELETON
+    // =====================================
+
+    const loader =
+      new GLTFLoader();
+
+
+    loader.load(
+
+      "./models/skeleton.glb",
+
+
+      // SUCCESS
+      function (gltf) {
+
+        const skeleton =
+          gltf.scene;
+
+
+        scene.add(
+          skeleton
+        );
+
+
+
+        // -----------------------------
+        // Calculate model bounding box
+        // -----------------------------
+
+        const box =
+          new THREE.Box3()
+          .setFromObject(
+            skeleton
+          );
+
+
+        const size =
+          new THREE.Vector3();
+
+
+        const center =
+          new THREE.Vector3();
+
+
+        box.getSize(
+          size
+        );
+
+
+        box.getCenter(
+          center
+        );
+
+
+
+        // -----------------------------
+        // Move skeleton to origin
+        // -----------------------------
+
+        skeleton.position.x -=
+          center.x;
+
+
+        skeleton.position.y -=
+          center.y;
+
+
+        skeleton.position.z -=
+          center.z;
+
+
+
+        // -----------------------------
+        // Calculate ideal camera
+        // -----------------------------
+
+        const maxDimension =
+          Math.max(
+
+            size.x,
+
+            size.y,
+
+            size.z
+
+          );
+
+
+        const fov =
+          camera.fov *
+          Math.PI /
+          180;
+
+
+        let cameraDistance =
+
+          maxDimension /
+
+          (
+            2 *
+            Math.tan(
+              fov / 2
+            )
+          );
+
+
+        cameraDistance *=
+          1.25;
+
+
+
+        // -----------------------------
+        // Position camera
+        // -----------------------------
+
+        camera.position.set(
+
+          0,
+
+          0,
+
+          cameraDistance
+
+        );
+
+
+        camera.near =
+          Math.max(
+
+            cameraDistance /
+            1000,
+
+            0.001
+
+          );
+
+
+        camera.far =
+          cameraDistance *
+          100;
+
 
         camera.updateProjectionMatrix();
 
-        renderer.setSize(
-          window.innerWidth,
-          window.innerHeight
+
+
+        // -----------------------------
+        // Set controls
+        // -----------------------------
+
+        controls.target.set(
+          0,
+          0,
+          0
         );
 
+
+        controls.minDistance =
+          cameraDistance *
+          0.15;
+
+
+        controls.maxDistance =
+          cameraDistance *
+          5;
+
+
+        controls.update();
+
+
+
+        // -----------------------------
+        // Improve bone appearance
+        // -----------------------------
+
+        skeleton.traverse(
+
+          function (object) {
+
+            if (
+              object.isMesh
+            ) {
+
+              object.frustumCulled =
+                true;
+
+
+              if (
+                object.material
+              ) {
+
+                object.material.side =
+                  THREE.FrontSide;
+
+              }
+
+            }
+
+          }
+
+        );
+
+
+
+        // -----------------------------
+        // Update UI
+        // -----------------------------
+
+        status.textContent =
+          "● Skeleton loaded";
+
+
+        status.style.color =
+          "#7ee787";
+
+
+        console.log(
+          "Skeleton loaded:",
+          skeleton
+        );
+
+      },
+
+
+
+      // PROGRESS
+      function (xhr) {
+
+        if (
+          xhr.total > 0
+        ) {
+
+          const percent =
+            Math.round(
+
+              xhr.loaded /
+              xhr.total *
+              100
+
+            );
+
+
+          status.textContent =
+            "● Loading skeleton " +
+            percent +
+            "%";
+
+        }
+
+      },
+
+
+
+      // ERROR
+      function (error) {
+
+        console.error(
+          "Skeleton loading error:",
+          error
+        );
+
+
+        status.textContent =
+          "● Failed to load skeleton";
+
+
+        status.style.color =
+          "#ff6b6b";
+
       }
+
     );
 
 
-    // =============================
-    // RENDER LOOP
-    // =============================
+
+    // =====================================
+    // WINDOW RESIZE
+    // =====================================
+
+    window.addEventListener(
+
+      "resize",
+
+      function () {
+
+        camera.aspect =
+
+          window.innerWidth /
+
+          window.innerHeight;
+
+
+        camera.updateProjectionMatrix();
+
+
+        renderer.setSize(
+
+          window.innerWidth,
+
+          window.innerHeight
+
+        );
+
+      }
+
+    );
+
+
+
+    // =====================================
+    // ANIMATION LOOP
+    // =====================================
 
     function animate() {
 
@@ -372,16 +735,23 @@
         animate
       );
 
+
       controls.update();
 
+
       renderer.render(
+
         scene,
+
         camera
+
       );
 
     }
 
+
     animate();
+
 
   </script>
 
