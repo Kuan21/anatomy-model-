@@ -3,3096 +3,3188 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport"
-content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
 <title>MJ Anatomy 3D</title>
 
 <style>
-*{box-sizing:border-box}
+*{
+  box-sizing:border-box;
+}
 
 html,body{
- margin:0;
- width:100%;
- height:100%;
- overflow:hidden;
- background:#07090c;
- color:#fff;
- font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  margin:0;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  background:#080b0e;
+  color:#f3f5f7;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",
+              "PingFang TC","Noto Sans TC",Arial,sans-serif;
+}
+
+body{
+  touch-action:none;
+}
+
+#app{
+  position:fixed;
+  inset:0;
+  overflow:hidden;
+}
+
+#viewer{
+  position:absolute;
+  inset:0;
+  z-index:0;
 }
 
 canvas{
- display:block;
- touch-action:none;
+  display:block;
+  width:100%;
+  height:100%;
 }
+
+/* =========================
+   PANELS
+========================= */
 
 .panel{
- position:fixed;
- z-index:20;
- background:rgba(14,16,20,.94);
- border:1px solid rgba(255,255,255,.12);
- backdrop-filter:blur(18px);
- border-radius:18px;
- overflow:auto;
+  position:absolute;
+  z-index:5;
+  background:rgba(14,17,21,.94);
+  border:1px solid #30363d;
+  border-radius:20px;
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+  box-shadow:0 18px 60px rgba(0,0,0,.25);
 }
 
-#left{
- left:14px;
- top:14px;
- width:270px;
- max-height:calc(100vh - 28px);
- padding:16px;
+#leftPanel{
+  left:18px;
+  top:18px;
+  bottom:18px;
+  width:318px;
+  padding:20px;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
 }
 
-#right{
- right:14px;
- top:14px;
- width:370px;
- max-height:calc(100vh - 28px);
- padding:16px;
+#rightPanel{
+  right:18px;
+  top:18px;
+  width:420px;
+  max-height:calc(100vh - 36px);
+  padding:20px;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
 }
 
 h1{
- margin:0;
- font-size:20px;
+  margin:0;
+  font-size:25px;
+  letter-spacing:-.5px;
 }
 
-.sub{
- font-size:11px;
- color:#8e98a4;
- margin:5px 0 10px;
+.subtitle{
+  margin-top:5px;
+  font-size:13px;
+  color:#9199a4;
 }
 
-#status{
- font-size:11px;
- color:#d7ad67;
+.status{
+  margin-top:12px;
+  padding-bottom:16px;
+  border-bottom:1px solid #292e35;
+  color:#e5b85f;
+  font-size:13px;
+}
+
+.status.ready{
+  color:#75d89a;
+}
+
+.status.error{
+  color:#ff7b72;
 }
 
 .section{
- border-top:1px solid rgba(255,255,255,.09);
- margin-top:12px;
- padding-top:12px;
+  margin-top:18px;
+  padding-top:0;
 }
 
-.title{
- font-size:10px;
- color:#8d96a1;
- font-weight:700;
- letter-spacing:1px;
- margin-bottom:8px;
+.section + .section{
+  border-top:1px solid #292e35;
+  padding-top:17px;
+}
+
+.sectionTitle{
+  color:#929ba7;
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:1.7px;
+  margin-bottom:12px;
 }
 
 button{
- border:1px solid rgba(255,255,255,.11);
- color:#d7dbe0;
- background:#24272d;
- border-radius:9px;
- padding:9px;
+  border:1px solid #3a414a;
+  background:#252a31;
+  color:#d8dce1;
+  border-radius:11px;
+  min-height:42px;
+  padding:9px 12px;
+  font-size:13px;
+  cursor:pointer;
 }
 
 button:active{
- transform:scale(.98);
+  transform:scale(.985);
 }
 
-.layer{
- width:100%;
- text-align:left;
- margin:3px 0;
+.systemBtn{
+  width:100%;
+  display:block;
+  text-align:left;
+  margin-bottom:8px;
 }
 
-.layer.on{
- background:#253b32;
- color:#b9f5cf;
- border-color:#3e6853;
+.systemBtn.on{
+  background:#214232;
+  border-color:#397357;
+  color:#a7e8c0;
 }
 
-.layer.loading{
- color:#e0b86c;
+.systemBtn.loading{
+  color:#e7bc67;
 }
 
-.row{
- display:flex;
- gap:6px;
+.twoButtons{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
 }
 
-.row button{
- flex:1;
+.fullButton{
+  width:100%;
+  margin-top:8px;
 }
 
-#stage{
- font-size:13px;
- font-weight:700;
+#depthName{
+  font-size:15px;
+  font-weight:700;
 }
 
-.small{
- font-size:10px;
- color:#919aa5;
- line-height:1.45;
+#depthDescription{
+  color:#89919b;
+  font-size:11px;
+  margin-top:4px;
 }
 
-.depth{
- display:flex;
- gap:3px;
- margin:9px 0;
+.depthBars{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:5px;
+  margin:12px 0;
 }
 
-.depth span{
- height:5px;
- flex:1;
- border-radius:4px;
- background:#343941;
+.depthBar{
+  height:6px;
+  border-radius:10px;
+  background:#353b43;
 }
 
-.depth span.active{
- background:#cb7165;
+.depthBar.active{
+  background:#e4867f;
 }
 
-input[type=range]{
- width:100%;
- accent-color:#d78477;
+/* =========================
+   JOINT CONTROLS
+========================= */
+
+.jointNotice{
+  color:#d3a84f;
+  font-size:11px;
+  margin-bottom:13px;
 }
 
-.joint{
- margin:10px 0;
+.sliderRow{
+  margin:13px 0;
 }
 
-.jtop{
- display:flex;
- justify-content:space-between;
- font-size:11px;
+.sliderLabel{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  margin-bottom:5px;
+  font-size:12px;
 }
 
-.val{
- color:#e59b8e;
+.sliderValue{
+  color:#ef9c91;
+  min-width:40px;
+  text-align:right;
 }
 
-#nameEN{
- font-size:21px;
- font-weight:750;
+input[type="range"]{
+  width:100%;
+  height:20px;
+  accent-color:#e98d84;
 }
 
-#nameZH{
- font-size:15px;
- color:#e39a8e;
- margin-top:2px;
+/* =========================
+   SEARCH
+========================= */
+
+.searchWrap{
+  display:flex;
+  gap:7px;
 }
 
-#typeBadge{
- display:inline-block;
- margin-top:7px;
- padding:4px 7px;
- border-radius:7px;
- background:#26323e;
- color:#b8d8f7;
- font-size:10px;
+#searchInput{
+  width:100%;
+  background:#11151a;
+  border:1px solid #343b44;
+  border-radius:10px;
+  color:white;
+  padding:10px;
+  outline:none;
+  font-size:13px;
 }
 
-.card{
- border-top:1px solid rgba(255,255,255,.09);
- padding-top:10px;
- margin-top:12px;
+/* =========================
+   RIGHT PANEL
+========================= */
+
+.tutorLabel{
+  color:#929ba7;
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:1.4px;
 }
 
-.cardTitle{
- font-size:11px;
- font-weight:750;
- color:#e08d80;
+#structureName{
+  margin:11px 0 2px;
+  font-size:25px;
+  line-height:1.15;
 }
 
-.cardBody{
- margin-top:5px;
- font-size:12px;
- line-height:1.55;
- color:#d6d9dd;
+#structureChinese{
+  color:#e58c82;
+  font-size:15px;
+  margin-bottom:10px;
 }
 
-.cardBody div{
- margin:4px 0;
+.badge{
+  display:inline-block;
+  background:#263442;
+  color:#a8c5df;
+  border-radius:8px;
+  padding:6px 9px;
+  font-size:11px;
+  margin-bottom:13px;
 }
 
-#search{
- width:100%;
- padding:9px;
- border-radius:8px;
- border:1px solid rgba(255,255,255,.12);
- background:#202329;
- color:#fff;
+.structureButtons{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin-bottom:8px;
 }
 
-#results{
- max-height:130px;
- overflow:auto;
- margin-top:5px;
+#resetIndividual{
+  width:100%;
+  margin-bottom:15px;
 }
 
-.result{
- padding:7px;
- margin:3px 0;
- border-radius:7px;
- background:#202329;
- font-size:10px;
+.infoDivider{
+  border-top:1px solid #292e35;
+  margin:14px 0;
 }
 
-#hint{
- position:fixed;
- z-index:10;
- left:50%;
- bottom:14px;
- transform:translateX(-50%);
- background:rgba(15,17,21,.87);
- border:1px solid rgba(255,255,255,.1);
- color:#99a1aa;
- padding:8px 14px;
- border-radius:20px;
- font-size:10px;
+.infoField{
+  margin:14px 0;
 }
+
+.infoHeading{
+  color:#9ba4af;
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:.8px;
+  margin-bottom:4px;
+}
+
+.infoText{
+  color:#e2e5e8;
+  font-size:13px;
+  line-height:1.55;
+}
+
+.infoZh{
+  color:#aeb5bd;
+  font-size:12px;
+  line-height:1.5;
+  margin-top:3px;
+}
+
+.placeholder{
+  color:#b9bec5;
+  font-size:13px;
+  line-height:1.65;
+}
+
+/* =========================
+   ERROR
+========================= */
 
 #errorBox{
- display:none;
- margin-top:8px;
- padding:8px;
- border-radius:8px;
- background:#3b2222;
- color:#ffb7b7;
- font-size:10px;
- line-height:1.4;
+  display:none;
+  position:absolute;
+  z-index:20;
+  left:50%;
+  bottom:30px;
+  transform:translateX(-50%);
+  max-width:620px;
+  width:calc(100% - 60px);
+  background:#381a1d;
+  border:1px solid #8b3a42;
+  color:#ffb8bd;
+  border-radius:12px;
+  padding:12px 15px;
+  font-size:12px;
 }
 
-@media(max-width:950px){
- #left{width:230px}
- #right{width:310px}
+/* =========================
+   HELP
+========================= */
+
+#help{
+  position:absolute;
+  z-index:4;
+  bottom:20px;
+  left:50%;
+  transform:translateX(-50%);
+  border:1px solid #292e35;
+  background:rgba(12,15,18,.82);
+  border-radius:30px;
+  padding:9px 16px;
+  color:#969da6;
+  font-size:11px;
+  pointer-events:none;
 }
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media(max-width:1000px){
+  #leftPanel{
+    width:300px;
+  }
+
+  #rightPanel{
+    width:360px;
+  }
+}
+
 </style>
 
 <script type="importmap">
 {
- "imports":{
-  "three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
-  "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
- }
+  "imports":{
+    "three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+    "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+  }
 }
 </script>
 </head>
 
 <body>
 
-<div id="left" class="panel">
+<div id="app">
 
-<h1>MJ Anatomy 3D</h1>
-<div class="sub">Interactive Anatomy Learning System</div>
+  <div id="viewer"></div>
 
-<div id="status">● Starting...</div>
-<div id="errorBox"></div>
+  <!-- LEFT -->
+  <div id="leftPanel" class="panel">
 
-<div class="section">
+    <h1>MJ Anatomy 3D</h1>
+    <div class="subtitle">Interactive Anatomy Learning System</div>
 
-<div class="title">ANATOMICAL SYSTEMS</div>
+    <div id="status" class="status">● Starting...</div>
 
-<button class="layer on" data-layer="skeleton">
-Skeleton｜骨骼
-</button>
+    <div class="section">
+      <div class="sectionTitle">ANATOMICAL SYSTEMS</div>
 
-<button class="layer on" data-layer="muscular">
-Muscles｜肌肉
-</button>
+      <button class="systemBtn on" data-layer="skeleton">
+        Skeleton｜骨骼
+      </button>
 
-<button class="layer" data-layer="nervous">
-Nervous System｜神經
-</button>
+      <button class="systemBtn on" data-layer="muscular">
+        Muscles｜肌肉
+      </button>
 
-<button class="layer" data-layer="cardiovascular">
-Cardiovascular｜心血管
-</button>
+      <button class="systemBtn" data-layer="nervous">
+        Nervous System｜神經
+      </button>
 
-<button class="layer" data-layer="visceral">
-Viscera｜內臟
-</button>
+      <button class="systemBtn" data-layer="cardiovascular">
+        Cardiovascular｜心血管
+      </button>
 
-</div>
+      <button class="systemBtn" data-layer="visceral">
+        Viscera｜內臟
+      </button>
+    </div>
 
+    <div class="section">
 
-<div class="section">
+      <div class="sectionTitle">
+        MUSCLE DISSECTION｜肌肉分層
+      </div>
 
-<div class="title">
-MUSCLE DISSECTION｜肌肉分層
-</div>
+      <div id="depthName">Full musculature｜完整肌肉</div>
+      <div id="depthDescription">完整肌肉顯示</div>
 
-<div id="stage">
-Full musculature｜完整肌肉
-</div>
+      <div class="depthBars">
+        <div class="depthBar active"></div>
+        <div class="depthBar active"></div>
+        <div class="depthBar active"></div>
+        <div class="depthBar active"></div>
+      </div>
 
-<div class="small" id="stageText">
-完整肌肉顯示
-</div>
+      <div class="twoButtons">
+        <button id="muscleMinus">− Muscle</button>
+        <button id="musclePlus">+ Muscle</button>
+      </div>
 
-<div class="depth">
-<span id="d1" class="active"></span>
-<span id="d2" class="active"></span>
-<span id="d3" class="active"></span>
-<span id="d4" class="active"></span>
-</div>
+      <button id="restoreAll" class="fullButton">
+        Restore all｜恢復全部
+      </button>
 
-<div class="row">
-<button id="minus">− Muscle</button>
-<button id="plus">+ Muscle</button>
-</div>
+    </div>
 
-<button id="restore"
-style="width:100%;margin-top:6px">
-Restore all｜恢復全部
-</button>
+    <div class="section">
 
-</div>
+      <div class="sectionTitle">
+        RIGHT UPPER LIMB JOINTS｜右上肢關節
+      </div>
 
+      <div class="jointNotice">
+        Coupled anatomy rig｜骨骼＋肌肉＋神經＋血管同步
+      </div>
 
-<div class="section">
+      <div class="sliderRow">
+        <div class="sliderLabel">
+          <span>Shoulder flexion｜肩屈曲</span>
+          <span class="sliderValue" id="sfValue">0°</span>
+        </div>
+        <input id="shoulderFlex"
+               type="range"
+               min="-40"
+               max="150"
+               value="0">
+      </div>
 
-<div class="title">
-RIGHT UPPER LIMB JOINTS｜右上肢關節
-</div>
+      <div class="sliderRow">
+        <div class="sliderLabel">
+          <span>Shoulder abduction｜肩外展</span>
+          <span class="sliderValue" id="saValue">0°</span>
+        </div>
+        <input id="shoulderAbduction"
+               type="range"
+               min="0"
+               max="120"
+               value="0">
+      </div>
 
-<div class="small" style="margin-bottom:10px;color:#d7ad67">
-Joint prototype｜骨骼關節控制
-</div>
+      <div class="sliderRow">
+        <div class="sliderLabel">
+          <span>Shoulder rotation｜肩旋轉</span>
+          <span class="sliderValue" id="srValue">0°</span>
+        </div>
+        <input id="shoulderRotation"
+               type="range"
+               min="-60"
+               max="70"
+               value="0">
+      </div>
 
+      <div class="sliderRow">
+        <div class="sliderLabel">
+          <span>Elbow flexion｜屈肘</span>
+          <span class="sliderValue" id="elbowValue">0°</span>
+        </div>
+        <input id="elbowFlexion"
+               type="range"
+               min="0"
+               max="145"
+               value="0">
+      </div>
 
-<div class="joint">
-<div class="jtop">
-<span>Shoulder flexion｜肩屈曲</span>
-<span id="vsf" class="val">0°</span>
-</div>
-<input id="sf"
-type="range"
-min="-40"
-max="150"
-value="0">
-</div>
+      <div class="sliderRow">
+        <div class="sliderLabel">
+          <span>Pronation / Supination｜旋前／旋後</span>
+          <span class="sliderValue" id="forearmValue">0°</span>
+        </div>
+        <input id="forearmRotation"
+               type="range"
+               min="-80"
+               max="80"
+               value="0">
+      </div>
 
+      <div class="sliderRow">
+        <div class="sliderLabel">
+          <span>Wrist flex/ext｜腕屈伸</span>
+          <span class="sliderValue" id="wristValue">0°</span>
+        </div>
+        <input id="wristFlexion"
+               type="range"
+               min="-60"
+               max="60"
+               value="0">
+      </div>
 
-<div class="joint">
-<div class="jtop">
-<span>Shoulder abduction｜肩外展</span>
-<span id="vsa" class="val">0°</span>
-</div>
-<input id="sa"
-type="range"
-min="0"
-max="120"
-value="0">
-</div>
+      <button id="resetJoints" class="fullButton">
+        Reset joints｜關節歸零
+      </button>
 
+    </div>
 
-<div class="joint">
-<div class="jtop">
-<span>Shoulder rotation｜肩旋轉</span>
-<span id="vsr" class="val">0°</span>
-</div>
-<input id="sr"
-type="range"
-min="-60"
-max="70"
-value="0">
-</div>
+    <div class="section">
 
+      <div class="sectionTitle">
+        SEARCH｜搜尋
+      </div>
 
-<div class="joint">
-<div class="jtop">
-<span>Elbow flexion｜屈肘</span>
-<span id="ve" class="val">0°</span>
-</div>
-<input id="elbow"
-type="range"
-min="0"
-max="145"
-value="0">
-</div>
+      <div class="searchWrap">
+        <input id="searchInput"
+               placeholder="Deltoid / Humerus / 三角肌">
+        <button id="searchButton">Search</button>
+      </div>
 
+    </div>
 
-<div class="joint">
-<div class="jtop">
-<span>Pronation / Supination｜旋前／旋後</span>
-<span id="vf" class="val">0°</span>
-</div>
-<input id="forearm"
-type="range"
-min="-80"
-max="80"
-value="0">
-</div>
+  </div>
 
+  <!-- RIGHT -->
+  <div id="rightPanel" class="panel">
 
-<div class="joint">
-<div class="jtop">
-<span>Wrist flex/ext｜腕屈伸</span>
-<span id="vw" class="val">0°</span>
-</div>
-<input id="wrist"
-type="range"
-min="-60"
-max="60"
-value="0">
-</div>
+    <div class="tutorLabel">
+      ANATOMY TUTOR｜解剖教學
+    </div>
 
+    <h2 id="structureName">Select a structure</h2>
+    <div id="structureChinese">點擊肌肉或骨骼</div>
 
-<button id="resetPose"
-style="width:100%">
-Reset Pose｜重設姿勢
-</button>
+    <div id="structureBadge" class="badge">
+      3D SELECT
+    </div>
 
-</div>
+    <div id="selectionControls" style="display:none">
 
+      <div class="structureButtons">
+        <button id="hideSelected">Hide｜隱藏</button>
+        <button id="isolateSelected">Isolate｜獨立顯示</button>
+      </div>
 
-<div class="section">
+      <button id="resetIndividual">
+        Reset individual controls｜恢復個別控制
+      </button>
 
-<div class="title">
-SEARCH｜搜尋
-</div>
+    </div>
 
-<input id="search"
-placeholder="Humerus / Biceps / 肱骨...">
+    <div class="infoDivider"></div>
 
-<div id="results"></div>
+    <div id="infoContent" class="placeholder">
+      直接點擊人體。<br><br>
+      肌肉：Origin / Insertion / Action /
+      Innervation / Blood supply。<br><br>
+      骨骼：Type / Articulations / Landmarks /
+      Muscle attachments / Clinical anatomy。
+    </div>
 
-</div>
+  </div>
 
-</div>
+  <div id="help">
+    點擊肌肉或骨骼學習 · 單指旋轉 · 雙指縮放 / 移動
+  </div>
 
-
-
-<div id="right" class="panel">
-
-<div class="title">
-ANATOMY TUTOR｜解剖教學
-</div>
-
-<div id="nameEN">
-Select a structure
-</div>
-
-<div id="nameZH">
-點擊肌肉或骨骼
-</div>
-
-<div id="typeBadge">
-3D SELECT
-</div>
-
-
-<div id="controls"
-style="display:none;margin-top:12px">
-
-<div class="row">
-<button id="hide">
-Hide｜隱藏
-</button>
-
-<button id="isolate">
-Isolate｜獨立顯示
-</button>
-</div>
-
-<button id="resetIndividual"
-style="width:100%;margin-top:6px">
-Reset individual controls｜恢復個別控制
-</button>
+  <div id="errorBox"></div>
 
 </div>
-
-
-<div id="lesson">
-
-<div class="card">
-<div class="cardBody">
-
-直接點擊人體。<br><br>
-
-肌肉：Origin / Insertion / Action /
-Innervation / Blood supply。<br><br>
-
-骨骼：Type / Articulations / Landmarks /
-Muscle attachments / Clinical anatomy。
-
-</div>
-</div>
-
-</div>
-
-</div>
-
-
-<div id="hint">
-點擊肌肉或骨骼學習 · 單指旋轉 · 雙指縮放 / 移動
-</div>
-
 
 <script type="module">
 
 import * as THREE from "three";
+import { OrbitControls }
+  from "three/addons/controls/OrbitControls.js";
+import { GLTFLoader }
+  from "three/addons/loaders/GLTFLoader.js";
+import { DRACOLoader }
+  from "three/addons/loaders/DRACOLoader.js";
 
-import {OrbitControls}
-from "three/addons/controls/OrbitControls.js";
+import { findMuscle, MUSCLES }
+  from "./data/muscles.js";
 
-import {GLTFLoader}
-from "three/addons/loaders/GLTFLoader.js";
+import { findBone, BONES }
+  from "./data/bones.js";
 
-import {DRACOLoader}
-from "three/addons/loaders/DRACOLoader.js";
+/* =========================================================
+   BASIC SETUP
+========================================================= */
 
-import {findMuscle}
-from "./data/muscles.js";
+const viewer = document.getElementById("viewer");
+const statusEl = document.getElementById("status");
+const errorBox = document.getElementById("errorBox");
 
-import {findBone}
-from "./data/bones.js";
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x080b0e);
 
-
-/* =====================================================
-   DOM
-===================================================== */
-
-const statusEl =
- document.getElementById("status");
-
-const errorBox =
- document.getElementById("errorBox");
-
-
-function setStatus(text,color="#d7ad67"){
- statusEl.textContent="● "+text;
- statusEl.style.color=color;
-}
-
-
-function showError(text){
-
- errorBox.style.display="block";
-
- errorBox.innerHTML +=
-  `<div>${text}</div>`;
-}
-
-
-/* =====================================================
-   SCENE
-===================================================== */
-
-const scene =
- new THREE.Scene();
-
-scene.background =
- new THREE.Color(0x07090c);
-
-
-const camera =
- new THREE.PerspectiveCamera(
-  35,
-  innerWidth/innerHeight,
-  .01,
+const camera = new THREE.PerspectiveCamera(
+  34,
+  window.innerWidth / window.innerHeight,
+  0.01,
   10000
- );
-
-
-const renderer =
- new THREE.WebGLRenderer({
-  antialias:true,
-  powerPreference:"high-performance"
- });
-
-
-renderer.setSize(
- innerWidth,
- innerHeight
 );
+
+const renderer = new THREE.WebGLRenderer({
+  antialias:true,
+  alpha:false,
+  powerPreference:"high-performance"
+});
 
 renderer.setPixelRatio(
- Math.min(
-  window.devicePixelRatio || 1,
-  1.5
- )
+  Math.min(window.devicePixelRatio || 1, 1.5)
 );
 
-
-renderer.outputColorSpace =
- THREE.SRGBColorSpace;
-
-renderer.toneMapping =
- THREE.ACESFilmicToneMapping;
-
-renderer.toneMappingExposure =
- .72;
-
-
-document.body.appendChild(
- renderer.domElement
+renderer.setSize(
+  window.innerWidth,
+  window.innerHeight
 );
 
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 0.72;
 
-/* =====================================================
-   LIGHTING
-===================================================== */
+viewer.appendChild(renderer.domElement);
 
-scene.add(
- new THREE.HemisphereLight(
-  0xe9eff8,
-  0x261717,
-  1.15
- )
-);
-
-
-const keyLight =
- new THREE.DirectionalLight(
-  0xffe5d7,
-  1.65
- );
-
-keyLight.position.set(
- 4,6,6
-);
-
-scene.add(keyLight);
-
-
-const fillLight =
- new THREE.DirectionalLight(
-  0xc8d8ff,
-  .55
- );
-
-fillLight.position.set(
- -5,1,4
-);
-
-scene.add(fillLight);
-
-
-/* =====================================================
-   ORBIT
-===================================================== */
-
-const orbit =
- new OrbitControls(
+const controls = new OrbitControls(
   camera,
   renderer.domElement
- );
-
-orbit.enableDamping=true;
-orbit.dampingFactor=.06;
-
-orbit.enablePan=true;
-orbit.enableZoom=true;
-
-
-/* =====================================================
-   LOADERS
-===================================================== */
-
-const draco =
- new DRACOLoader();
-
-draco.setDecoderPath(
- "https://www.gstatic.com/draco/v1/decoders/"
 );
 
-draco.preload();
+controls.enableDamping = true;
+controls.dampingFactor = 0.07;
 
+controls.enablePan = true;
+controls.minDistance = 0.1;
+controls.maxDistance = 5000;
 
-const loader =
- new GLTFLoader();
+/* =========================================================
+   LIGHTING
+========================================================= */
 
-loader.setDRACOLoader(
- draco
+scene.add(
+  new THREE.HemisphereLight(
+    0xffffff,
+    0x29303a,
+    2.0
+  )
 );
 
+const keyLight = new THREE.DirectionalLight(
+  0xffffff,
+  2.2
+);
 
-/* =====================================================
-   HUMAN
-===================================================== */
+keyLight.position.set(3,5,6);
+scene.add(keyLight);
 
-const human =
- new THREE.Group();
+const fillLight = new THREE.DirectionalLight(
+  0xb8d8ff,
+  1.1
+);
 
+fillLight.position.set(-4,2,3);
+scene.add(fillLight);
+
+const rimLight = new THREE.DirectionalLight(
+  0xffc7ba,
+  0.7
+);
+
+rimLight.position.set(2,3,-5);
+scene.add(rimLight);
+
+/* =========================================================
+   ROOT
+========================================================= */
+
+const human = new THREE.Group();
+human.name = "MJ_HUMAN_ROOT";
 scene.add(human);
 
-
-const layers={};
-
-const layerReady={
- skeleton:false,
- muscular:false,
- nervous:false,
- cardiovascular:false,
- visceral:false
+const layers = {
+  skeleton:null,
+  muscular:null,
+  nervous:null,
+  cardiovascular:null,
+  visceral:null
 };
 
-
-const files={
- skeleton:"./models/skeleton.glb",
- muscular:"./models/muscular.glb",
- nervous:"./models/nervous.glb",
- cardiovascular:"./models/cardiovascular.glb",
- visceral:"./models/visceral.glb"
+const layerReady = {
+  skeleton:false,
+  muscular:false,
+  nervous:false,
+  cardiovascular:false,
+  visceral:false
 };
 
+const layerVisibility = {
+  skeleton:true,
+  muscular:true,
+  nervous:false,
+  cardiovascular:false,
+  visceral:false
+};
 
-let muscleMeshes=[];
-let boneMeshes=[];
+const files = {
+  skeleton:"./models/skeleton.glb",
+  muscular:"./models/muscular.glb",
+  nervous:"./models/nervous.glb",
+  cardiovascular:"./models/cardiovascular.glb",
+  visceral:"./models/visceral.glb"
+};
 
-let selected=null;
-let selectedType=null;
+/* =========================================================
+   LOADERS
+========================================================= */
 
-let stage=4;
+const dracoLoader = new DRACOLoader();
 
-const overrides=
- new Map();
+dracoLoader.setDecoderPath(
+  "https://www.gstatic.com/draco/v1/decoders/"
+);
 
+const loader = new GLTFLoader();
+loader.setDRACOLoader(dracoLoader);
 
-/* =====================================================
-   HELPERS
-===================================================== */
+/* =========================================================
+   STATUS
+========================================================= */
 
-function hierarchyName(obj,root){
+function setStatus(text,type="normal"){
 
- const parts=[];
+  statusEl.textContent = "● " + text;
 
- let p=obj;
+  statusEl.classList.remove(
+    "ready",
+    "error"
+  );
 
- while(p && p!==root){
+  if(type === "ready"){
+    statusEl.classList.add("ready");
+  }
 
-  if(p.name)
-   parts.push(p.name);
-
-  p=p.parent;
- }
-
- return parts.join(" ");
+  if(type === "error"){
+    statusEl.classList.add("error");
+  }
 }
 
+function showError(message){
+
+  console.error(message);
+
+  errorBox.textContent = message;
+  errorBox.style.display = "block";
+
+  setTimeout(()=>{
+    errorBox.style.display = "none";
+  },8000);
+}
+
+/* =========================================================
+   HELPERS
+========================================================= */
+
+function sleep(ms){
+  return new Promise(resolve=>setTimeout(resolve,ms));
+}
+
+function deg(v){
+  return THREE.MathUtils.degToRad(Number(v));
+}
+
+function worldBox(object){
+  return new THREE.Box3().setFromObject(object);
+}
+
+function worldCenter(object){
+
+  const c = new THREE.Vector3();
+
+  worldBox(object).getCenter(c);
+
+  return c;
+}
 
 function cleanName(name=""){
 
- return name
-  .replace(/[ijgrl]\d+$/i,"")
-  .replace(/_muscle/gi,"")
-  .replace(/_bone/gi,"")
-  .replace(/_/g," ")
-  .trim();
+  return String(name)
+    .replace(/[_]+/g," ")
+    .replace(/[lr]001$/i,"")
+    .replace(/001$/i,"")
+    .replace(/\s+/g," ")
+    .trim();
 }
 
+function allMeshes(root){
 
-function sideFromName(name=""){
+  const arr=[];
 
- const n=name.toLowerCase();
+  if(!root) return arr;
 
- if(/l001$/.test(n))
-  return {
-   en:"Left",
-   zh:"左"
-  };
-
- if(/r001$/.test(n))
-  return {
-   en:"Right",
-   zh:"右"
-  };
-
- return null;
-}
-
-
-/* =====================================================
-   ACCESSORY STRUCTURES
-===================================================== */
-
-function accessory(name){
-
- const n=
-  name.toLowerCase();
-
- return [
-  "fascia",
-  "bursa",
-  "retinaculum",
-  "tendon_sheath",
-  "ligament",
-  "aponeurosis",
-  "intermuscular_septum",
-  "muscular_system"
- ].some(
-  x=>n.includes(x)
- );
-}
-
-
-/* =====================================================
-   MUSCLE DEPTH
-===================================================== */
-
-function muscleDepth(name){
-
- const n=
-  name.toLowerCase();
-
-
- if([
-  "subscapularis",
-  "supraspinatus",
-  "infraspinatus",
-  "teres_minor",
-  "transversus_abdominis",
-  "deep_part_of",
-  "gluteus_minimus",
-  "multifidus",
-  "rotatores",
-  "pronator_quadratus",
-  "flexor_digitorum_profundus",
-  "tibialis_posterior",
-  "obturator_internus",
-  "quadratus_femoris",
-  "gemellus"
- ].some(x=>n.includes(x)))
-  return 1;
-
-
- if([
-  "pectoralis_minor",
-  "internal_abdominal_oblique",
-  "rhomboid",
-  "levator_scapulae",
-  "serratus_anterior",
-  "gluteus_medius",
-  "soleus",
-  "brachialis",
-  "adductor_magnus",
-  "semispinalis",
-  "splenius"
- ].some(x=>n.includes(x)))
-  return 2;
-
-
- if([
-  "biceps_brachii",
-  "triceps_brachii",
-  "rectus_femoris",
-  "vastus",
-  "flexor_carpi",
-  "extensor_carpi",
-  "adductor_longus",
-  "semitendinosus",
-  "semimembranosus",
-  "biceps_femoris"
- ].some(x=>n.includes(x)))
-  return 3;
-
-
- if([
-  "deltoid",
-  "pectoralis_major",
-  "trapezius",
-  "latissimus_dorsi",
-  "external_abdominal_oblique",
-  "rectus_abdominis",
-  "gluteus_maximus",
-  "gastrocnemius",
-  "sternocleidomastoid",
-  "sartorius",
-  "platysma"
- ].some(x=>n.includes(x)))
-  return 4;
-
-
- return 3;
-}
-
-
-/* =====================================================
-   PROCEDURAL MUSCLE FIBRE TEXTURE
-===================================================== */
-
-function createFibreTexture(){
-
- const canvas =
-  document.createElement("canvas");
-
- canvas.width=256;
- canvas.height=256;
-
-
- const ctx =
-  canvas.getContext("2d");
-
- const img =
-  ctx.createImageData(
-   256,
-   256
-  );
-
-
- for(
-  let y=0;
-  y<256;
-  y++
- ){
-
-  for(
-   let x=0;
-   x<256;
-   x++
-  ){
-
-   const wave1 =
-    Math.sin(
-     y*.45 +
-     Math.sin(x*.055)*1.8
-    );
-
-   const wave2 =
-    Math.sin(
-     y*1.3 +
-     x*.025
-    );
-
-   const noise =
-    (Math.random()-.5)*8;
-
-
-   let value =
-    128 +
-    wave1*15 +
-    wave2*5 +
-    noise;
-
-
-   value =
-    Math.max(
-     0,
-     Math.min(
-      255,
-      value
-     )
-    );
-
-
-   const i =
-    (y*256+x)*4;
-
-
-   img.data[i]=value;
-   img.data[i+1]=value;
-   img.data[i+2]=value;
-   img.data[i+3]=255;
-  }
- }
-
-
- ctx.putImageData(
-  img,
-  0,
-  0
- );
-
-
- const texture =
-  new THREE.CanvasTexture(
-   canvas
-  );
-
-
- texture.wrapS =
-  THREE.RepeatWrapping;
-
- texture.wrapT =
-  THREE.RepeatWrapping;
-
-
- texture.repeat.set(
-  3,
-  10
- );
-
-
- texture.anisotropy =
-  Math.min(
-   renderer.capabilities
-    .getMaxAnisotropy(),
-   8
-  );
-
-
- return texture;
-}
-
-
-const fibreTexture =
- createFibreTexture();
-
-
-function improveMuscle(mesh){
-
- if(!mesh.material)
-  return;
-
-
- const originalMaterials =
-  Array.isArray(mesh.material)
-  ? mesh.material
-  : [mesh.material];
-
-
- const newMaterials =
-  originalMaterials.map(
-   original=>{
-
-    if(!original)
-     return original;
-
-
-    const material =
-     original.clone();
-
-
-    if(
-     material.isMeshStandardMaterial ||
-     material.isMeshPhysicalMaterial
-    ){
-
-     material.roughness=.76;
-     material.metalness=0;
-
-
-     if(
-      mesh.geometry &&
-      mesh.geometry.attributes &&
-      mesh.geometry.attributes.uv
-     ){
-
-      material.bumpMap=
-       fibreTexture;
-
-      material.bumpScale=
-       .004;
-     }
-
-
-     if(
-      "clearcoat" in material
-     ){
-
-      material.clearcoat=
-       .02;
-
-      material.clearcoatRoughness=
-       .9;
-     }
-
-
-     if(
-      "envMapIntensity"
-      in material
-     ){
-
-      material.envMapIntensity=
-       .45;
-     }
-
-
-     material.needsUpdate=true;
+  root.traverse(o=>{
+    if(o.isMesh){
+      arr.push(o);
     }
+  });
 
-
-    return material;
-   }
-  );
-
-
- mesh.material =
-  Array.isArray(mesh.material)
-  ? newMaterials
-  : newMaterials[0];
+  return arr;
 }
 
+/* =========================================================
+   MODEL LOAD
+========================================================= */
 
-/* =====================================================
-   PREPARE MUSCLES
-===================================================== */
+function loadGLB(url){
 
-function prepareMuscles(root){
+  return new Promise((resolve,reject)=>{
 
- muscleMeshes=[];
-
-
- root.traverse(
-  obj=>{
-
-   if(!obj.isMesh)
-    return;
-
-
-   const fullName =
-    hierarchyName(
-     obj,
-     root
+    loader.load(
+      url,
+      gltf=>resolve(gltf.scene),
+      undefined,
+      reject
     );
 
-
-   obj.userData.system=
-    "muscle";
-
-   obj.userData.fullName=
-    fullName;
-
-
-   if(
-    accessory(fullName+" "+obj.name)
-   ){
-
-    obj.visible=false;
-
-    obj.userData.accessory=
-     true;
-
-    return;
-   }
-
-
-   obj.userData.accessory=
-    false;
-
-
-   obj.userData.depth =
-    muscleDepth(
-     fullName+
-     " "+
-     obj.name
-    );
-
-
-   improveMuscle(obj);
-
-
-   muscleMeshes.push(obj);
-  }
- );
+  });
 }
-
-
-/* =====================================================
-   PREPARE BONES
-===================================================== */
-
-function prepareBones(root){
-
- boneMeshes=[];
-
-
- root.traverse(
-  obj=>{
-
-   if(!obj.isMesh)
-    return;
-
-
-   const n=
-    obj.name.toLowerCase();
-
-
-   if(
-    n.includes(
-     "skeletal_system"
-    )
-   ){
-
-    obj.visible=false;
-    return;
-   }
-
-
-   obj.userData.system=
-    "bone";
-
-
-   obj.userData.fullName=
-    hierarchyName(
-     obj,
-     root
-    );
-
-
-   boneMeshes.push(obj);
-  }
- );
-}
-
-
-/* =====================================================
-   LOAD ONE MODEL
-===================================================== */
 
 async function loadOne(key){
 
- if(layerReady[key])
-  return layers[key];
+  const model = await loadGLB(files[key]);
 
+  model.name = key;
 
- setStatus(
-  "Loading "+
-  key+
-  "..."
- );
-
-
- try{
-
-  const gltf =
-   await loader.loadAsync(
-    files[key]
-   );
-
-
-  const model =
-   gltf.scene;
-
-
-  model.name =
-   key+"_layer";
-
-
-  layers[key]=model;
+  layers[key] = model;
+  layerReady[key] = true;
 
   human.add(model);
 
+  model.visible = layerVisibility[key];
 
-  if(key==="skeleton")
-   prepareBones(model);
+  if(key === "skeleton"){
+    prepareSkeleton(model);
+  }
 
+  if(key === "muscular"){
+    prepareMuscles(model);
+  }
 
-  if(key==="muscular")
-   prepareMuscles(model);
-
-
-  layerReady[key]=true;
-
+  tagLayerMeshes(model,key);
 
   return model;
-
- }
- catch(error){
-
-  console.error(
-   "Failed loading:",
-   key,
-   error
-  );
-
-
-  showError(
-   "Failed to load "+
-   key+
-   "."
-  );
-
-
-  throw error;
- }
 }
 
+async function loadOptionalLayer(key,label){
 
-/* =====================================================
-   MUSCLE DISPLAY
-===================================================== */
+  try{
 
-function updateMuscles(){
+    setStatus("Loading " + label + "...");
 
- if(!layerReady.muscular)
-  return;
+    await loadOne(key);
 
+    /*
+      IMPORTANT:
+      Any newly loaded soft-tissue layer must be registered
+      into the already-created right upper-limb rig.
+    */
+    registerSoftTissueLayer(key);
 
- layers.muscular.visible =
-  stage>0;
+    updateSystemButtons();
 
+    await sleep(120);
 
- muscleMeshes.forEach(
-  mesh=>{
+    return true;
 
-   if(
-    mesh.userData.accessory
-   ){
+  }catch(err){
 
-    mesh.visible=false;
-    return;
-   }
+    console.error(key,err);
 
-
-   const override =
-    overrides.get(
-     mesh.uuid
+    showError(
+      label + " failed to load. Core anatomy remains available."
     );
 
-
-   if(override===true){
-
-    mesh.visible=true;
-    return;
-   }
-
-
-   if(override===false){
-
-    mesh.visible=false;
-    return;
-   }
-
-
-   mesh.visible =
-    mesh.userData.depth
-    <= stage;
+    return false;
   }
- );
-
-
- const stageNames=[
-  "Skeleton｜骨骼",
-  "Deep muscles｜深層肌肉",
-  "Intermediate deep｜中深層",
-  "Intermediate superficial｜中淺層",
-  "Full musculature｜完整肌肉"
- ];
-
-
- document.getElementById(
-  "stage"
- ).textContent =
-  stageNames[stage];
-
-
- document.getElementById(
-  "stageText"
- ).textContent =
-  stage===0
-  ? "肌肉已隱藏"
-  : "可分層，亦可逐塊獨立 Hide / Isolate";
-
-
- for(
-  let i=1;
-  i<=4;
-  i++
- ){
-
-  document.getElementById(
-   "d"+i
-  ).classList.toggle(
-   "active",
-   i<=stage
-  );
- }
-
-
- const muscleButton =
-  document.querySelector(
-   '[data-layer="muscular"]'
-  );
-
-
- if(muscleButton){
-
-  muscleButton.classList.toggle(
-   "on",
-   stage>0
-  );
- }
 }
 
+/* =========================================================
+   MODEL TAGGING
+========================================================= */
 
-/* =====================================================
-   MUSCLE +/- BUTTONS
-===================================================== */
+function tagLayerMeshes(root,key){
 
-document.getElementById(
- "minus"
-).onclick=()=>{
+  root.traverse(obj=>{
 
- if(stage>0){
+    if(!obj.isMesh) return;
 
-  stage--;
+    obj.userData.anatomyLayer = key;
 
-  updateMuscles();
- }
-};
+    obj.userData.originalVisible =
+      obj.visible;
 
-
-document.getElementById(
- "plus"
-).onclick=()=>{
-
- if(stage<4){
-
-  stage++;
-
-  updateMuscles();
- }
-};
-
-
-document.getElementById(
- "restore"
-).onclick=()=>{
-
- stage=4;
-
- overrides.clear();
-
- boneMeshes.forEach(
-  bone=>{
-   bone.visible=true;
-  }
- );
-
- updateMuscles();
-};
-
-
-/* =====================================================
-   TUTOR CARDS
-===================================================== */
-
-function card(
- title,
- items
-){
-
- if(
-  !items ||
-  !items.length
- )
-  return "";
-
-
- return `
- <div class="card">
-
-  <div class="cardTitle">
-   ${title}
-  </div>
-
-  <div class="cardBody">
-
-   ${
-    items.map(
-     item=>
-      `<div>• ${item}</div>`
-    ).join("")
-   }
-
-  </div>
-
- </div>
- `;
+  });
 }
 
+/* =========================================================
+   MATERIALS
+========================================================= */
 
-/* =====================================================
-   MUSCLE TUTOR
-===================================================== */
+function prepareSkeleton(root){
 
-function showMuscle(mesh){
+  root.traverse(obj=>{
 
- const raw =
-  mesh.userData.fullName+
-  " "+
-  mesh.name;
+    if(!obj.isMesh) return;
 
-
- const info =
-  findMuscle(raw);
-
-
- const side =
-  sideFromName(
-   mesh.name
-  );
-
-
- document.getElementById(
-  "typeBadge"
- ).textContent =
-  "MUSCLE｜肌肉";
-
-
- if(info){
-
-  document.getElementById(
-   "nameEN"
-  ).textContent =
-   (
-    side
-    ? side.en+" "
-    : ""
-   )+
-   info.en;
-
-
-  document.getElementById(
-   "nameZH"
-  ).textContent =
-   (
-    side
-    ? side.zh
-    : ""
-   )+
-   info.zh;
-
-
-  document.getElementById(
-   "lesson"
-  ).innerHTML =
-
-   card(
-    "ORIGIN｜起點",
-    info.origin
-   )+
-
-   card(
-    "INSERTION｜止點",
-    info.insertion
-   )+
-
-   card(
-    "ACTION｜作用",
-    info.action
-   )+
-
-   card(
-    "INNERVATION｜神經支配",
-    info.nerve
-   )+
-
-   card(
-    "BLOOD SUPPLY｜血液供應",
-    info.blood
-   );
-
- }
- else{
-
-  document.getElementById(
-   "nameEN"
-  ).textContent =
-   cleanName(
-    mesh.name
-   );
-
-
-  document.getElementById(
-   "nameZH"
-  ).textContent =
-   "肌肉";
-
-
-  document.getElementById(
-   "lesson"
-  ).innerHTML = `
-
-   <div class="card">
-
-    <div class="cardTitle">
-     MODEL STRUCTURE
-    </div>
-
-    <div class="cardBody">
-
-     ${mesh.name}
-
-     <br><br>
-
-     呢一塊肌肉已經可以獨立選取、
-     Hide 同 Isolate。
-
-     <br><br>
-
-     暫時未有對應教學資料。
-
-    </div>
-
-   </div>
-  `;
- }
-}
-
-
-/* =====================================================
-   BONE TUTOR
-===================================================== */
-
-function showBone(mesh){
-
- const raw =
-  mesh.userData.fullName+
-  " "+
-  mesh.name;
-
-
- const info =
-  findBone(raw);
-
-
- const side =
-  sideFromName(
-   mesh.name
-  );
-
-
- document.getElementById(
-  "typeBadge"
- ).textContent =
-  "BONE｜骨骼";
-
-
- if(info){
-
-  document.getElementById(
-   "nameEN"
-  ).textContent =
-   (
-    side
-    ? side.en+" "
-    : ""
-   )+
-   info.en;
-
-
-  document.getElementById(
-   "nameZH"
-  ).textContent =
-   (
-    side
-    ? side.zh
-    : ""
-   )+
-   info.zh;
-
-
-  document.getElementById(
-   "lesson"
-  ).innerHTML =
-
-   card(
-    "TYPE｜骨分類",
-    [info.type]
-   )+
-
-   card(
-    "ARTICULATIONS｜關節連接",
-    info.articulations
-   )+
-
-   card(
-    "LANDMARKS｜骨性標誌",
-    info.landmarks
-   )+
-
-   card(
-    "MUSCLE ATTACHMENTS｜肌肉附著",
-    info.attachments
-   )+
-
-   card(
-    "CLINICAL ANATOMY｜臨床解剖",
-    info.clinical
-   );
-
- }
- else{
-
-  document.getElementById(
-   "nameEN"
-  ).textContent =
-   cleanName(
-    mesh.name
-   );
-
-
-  document.getElementById(
-   "nameZH"
-  ).textContent =
-   "骨骼";
-
-
-  document.getElementById(
-   "lesson"
-  ).innerHTML = `
-
-   <div class="card">
-
-    <div class="cardTitle">
-     MODEL STRUCTURE
-    </div>
-
-    <div class="cardBody">
-
-     ${mesh.name}
-
-     <br><br>
-
-     呢塊骨已經可以獨立選取、
-     Hide 同 Isolate。
-
-     <br><br>
-
-     暫時未有對應骨學資料。
-
-    </div>
-
-   </div>
-  `;
- }
-}
-
-
-/* =====================================================
-   SELECT STRUCTURE
-===================================================== */
-
-function selectStructure(mesh){
-
- selected=mesh;
-
- selectedType =
-  mesh.userData.system;
-
-
- document.getElementById(
-  "controls"
- ).style.display =
-  "block";
-
-
- if(
-  selectedType==="muscle"
- )
-  showMuscle(mesh);
-
-
- if(
-  selectedType==="bone"
- )
-  showBone(mesh);
-}
-
-
-/* =====================================================
-   INDIVIDUAL CONTROL
-===================================================== */
-
-document.getElementById(
- "hide"
-).onclick=()=>{
-
- if(!selected)
-  return;
-
-
- overrides.set(
-  selected.uuid,
-  false
- );
-
-
- selected.visible=false;
-};
-
-
-document.getElementById(
- "isolate"
-).onclick=()=>{
-
- if(!selected)
-  return;
-
-
- const list =
-  selectedType==="muscle"
-  ? muscleMeshes
-  : boneMeshes;
-
-
- list.forEach(
-  obj=>{
-
-   const visible =
-    obj===selected;
-
-
-   overrides.set(
-    obj.uuid,
-    visible
-   );
-
-
-   obj.visible=
-    visible;
-  }
- );
-};
-
-
-document.getElementById(
- "resetIndividual"
-).onclick=()=>{
-
- overrides.clear();
-
-
- boneMeshes.forEach(
-  bone=>{
-   bone.visible=true;
-  }
- );
-
-
- updateMuscles();
-};
-
-
-/* =====================================================
-   RAYCAST
-===================================================== */
-
-const raycaster =
- new THREE.Raycaster();
-
-const pointer =
- new THREE.Vector2();
-
-
-let downX=0;
-let downY=0;
-
-
-renderer.domElement.addEventListener(
- "pointerdown",
- event=>{
-
-  downX=
-   event.clientX;
-
-  downY=
-   event.clientY;
- }
-);
-
-
-renderer.domElement.addEventListener(
- "pointerup",
- event=>{
-
-  const movement =
-   Math.hypot(
-    event.clientX-downX,
-    event.clientY-downY
-   );
-
-
-  if(movement>7)
-   return;
-
-
-  pointer.x =
-   (
-    event.clientX /
-    innerWidth
-   )*2-1;
-
-
-  pointer.y =
-   -(
-    event.clientY /
-    innerHeight
-   )*2+1;
-
-
-  raycaster.setFromCamera(
-   pointer,
-   camera
-  );
-
-
-  const selectable = [
-   ...muscleMeshes.filter(
-    obj=>
-     obj.visible &&
-     obj.parent
-   ),
-
-   ...boneMeshes.filter(
-    obj=>
-     obj.visible &&
-     obj.parent
-   )
-  ];
-
-
-  const hits =
-   raycaster.intersectObjects(
-    selectable,
-    false
-   );
-
-
-  if(hits.length){
-
-   selectStructure(
-    hits[0].object
-   );
-  }
- }
-);
-
-
-/* =====================================================
-   SYSTEM BUTTONS
-===================================================== */
-
-document.querySelectorAll(
- ".layer"
-).forEach(
- button=>{
-
-  button.onclick=()=>{
-
-   const key =
-    button.dataset.layer;
-
-
-   if(key==="muscular"){
-
-    if(!layerReady.muscular)
-     return;
-
-
-    stage =
-     stage===0
-     ? 4
-     : 0;
-
-
-    updateMuscles();
-
-    return;
-   }
-
-
-   if(
-    !layerReady[key]
-   ){
-
-    return;
-   }
-
-
-   layers[key].visible =
-    !layers[key].visible;
-
-
-   button.classList.toggle(
-    "on",
-    layers[key].visible
-   );
-  };
- }
-);
-
-
-/* =====================================================
-   SEARCH
-===================================================== */
-
-const search =
- document.getElementById(
-  "search"
- );
-
-const results =
- document.getElementById(
-  "results"
- );
-
-
-search.addEventListener(
- "input",
- ()=>{
-
-  const originalQuery =
-   search.value.trim();
-
-
-  const query =
-   originalQuery.toLowerCase();
-
-
-  results.innerHTML="";
-
-
-  if(!query)
-   return;
-
-
-  const all = [
-   ...muscleMeshes,
-   ...boneMeshes
-  ];
-
-
-  const found =
-   all.filter(
-    obj=>{
-
-     const raw =
-      (
-       obj.userData.fullName+
-       " "+
-       obj.name
-      ).toLowerCase();
-
-
-     const muscleInfo =
-      findMuscle(raw);
-
-
-     const boneInfo =
-      findBone(raw);
-
-
-     return (
-
-      raw.includes(query)
-
-      ||
-
-      (
-       muscleInfo &&
-       (
-        muscleInfo.en
-         .toLowerCase()
-         .includes(query)
-
-        ||
-
-        muscleInfo.zh
-         .includes(originalQuery)
-       )
-      )
-
-      ||
-
-      (
-       boneInfo &&
-       (
-        boneInfo.en
-         .toLowerCase()
-         .includes(query)
-
-        ||
-
-        boneInfo.zh
-         .includes(originalQuery)
-       )
-      )
-     );
+    if(
+      /Skeletal_system/i.test(obj.name)
+    ){
+      obj.visible=false;
+      return;
     }
-   )
-   .slice(0,20);
 
+    const mats =
+      Array.isArray(obj.material)
+      ? obj.material
+      : [obj.material];
 
-  found.forEach(
-   obj=>{
+    const newMats = mats.map(mat=>{
 
-    const div =
-     document.createElement(
-      "div"
-     );
+      if(!mat) return mat;
 
+      const m = mat.clone();
 
-    div.className =
-     "result";
+      if("roughness" in m){
+        m.roughness=.68;
+      }
 
+      if("metalness" in m){
+        m.metalness=0;
+      }
 
-    const raw =
-     obj.userData.fullName+
-     " "+
-     obj.name;
+      return m;
+    });
 
-
-    const info =
-     obj.userData.system
-      ==="muscle"
-
-     ? findMuscle(raw)
-
-     : findBone(raw);
-
-
-    div.textContent =
-     info
-
-     ? info.en+
-       "｜"+
-       info.zh
-
-     : cleanName(
-        obj.name
-       );
-
-
-    div.onclick=()=>{
-
-     if(
-      obj.userData.system
-      ==="muscle"
-     ){
-
-      if(stage===0)
-       stage=1;
-
-
-      overrides.set(
-       obj.uuid,
-       true
-      );
-
-
-      updateMuscles();
-     }
-
-
-     obj.visible=true;
-
-
-     selectStructure(obj);
-    };
-
-
-    results.appendChild(div);
-   }
-  );
- }
-);
-
-
-/* =====================================================
-   JOINT RIG
-===================================================== */
-
-const rig={};
-
-
-function skeletonObject(name){
-
- if(!layers.skeleton)
-  return null;
-
-
- return layers.skeleton
-  .getObjectByName(name);
+    obj.material =
+      Array.isArray(obj.material)
+      ? newMats
+      : newMats[0];
+  });
 }
 
+/* =========================================================
+   MUSCLE TEXTURE
+========================================================= */
 
-function getBox(obj){
+function makeMuscleTexture(){
 
- return new THREE.Box3()
-  .setFromObject(obj);
-}
+  const size=256;
 
+  const canvas=document.createElement("canvas");
 
-function getCentre(box){
+  canvas.width=size;
+  canvas.height=size;
 
- return box.getCenter(
-  new THREE.Vector3()
- );
-}
+  const ctx=canvas.getContext("2d");
 
+  ctx.fillStyle="rgb(128,128,128)";
+  ctx.fillRect(0,0,size,size);
 
-function createPivot(
- name,
- worldPosition,
- parent
-){
+  /*
+    Subtle longitudinal striation.
+    Cosmetic only — not fascicle-level anatomical simulation.
+  */
 
- const group =
-  new THREE.Group();
+  for(let i=0;i<650;i++){
 
+    const x=Math.random()*size;
+    const y=Math.random()*size;
 
- group.name=name;
+    const length=
+      10 + Math.random()*55;
 
+    const shade=
+      105 + Math.random()*55;
 
- parent.add(group);
+    ctx.strokeStyle =
+      `rgba(${shade},${shade},${shade},${0.08+Math.random()*0.15})`;
 
+    ctx.lineWidth =
+      .4 + Math.random()*1.1;
 
- const localPosition =
-  parent.worldToLocal(
-   worldPosition.clone()
-  );
+    ctx.beginPath();
 
+    ctx.moveTo(x,y);
 
- group.position.copy(
-  localPosition
- );
+    ctx.lineTo(
+      x + Math.sin(y*.05)*2,
+      y + length
+    );
 
-
- return group;
-}
-
-
-function isRightHandBone(name){
-
- const n=
-  name.toLowerCase();
-
-
- if(
-  !n.endsWith("r001")
- )
-  return false;
-
-
- return [
-  "metacarpal",
-  "phalan",
-  "capitate",
-  "hamate",
-  "lunate",
-  "pisiform",
-  "scaphoid",
-  "trapezium",
-  "trapezoid",
-  "triquetrum"
- ].some(
-  part=>
-   n.includes(part)
- );
-}
-
-
-/* =====================================================
-   BUILD RIGHT ARM JOINT RIG
-===================================================== */
-
-function buildRig(){
-
- const root =
-  layers.skeleton;
-
-
- if(!root)
-  return;
-
-
- const humerus =
-  skeletonObject(
-   "Humerusr001"
-  );
-
-
- const radius =
-  skeletonObject(
-   "Radiusr001"
-  );
-
-
- const ulna =
-  skeletonObject(
-   "Ulnar001"
-  );
-
-
- if(
-  !humerus ||
-  !radius ||
-  !ulna
- ){
-
-  console.warn(
-   "Right upper limb bones not found."
-  );
-
-  showError(
-   "Joint rig: right upper limb bone names were not found."
-  );
-
-  return;
- }
-
-
- root.updateMatrixWorld(true);
-
-
- const hb =
-  getBox(humerus);
-
- const rb =
-  getBox(radius);
-
- const ub =
-  getBox(ulna);
-
-
- const hc =
-  getCentre(hb);
-
- const rc =
-  getCentre(rb);
-
- const uc =
-  getCentre(ub);
-
-
- /*
-   Model is standing upright.
-   Y therefore gives a useful
-   proximal/distal estimate.
- */
-
-
- const shoulder =
-  new THREE.Vector3(
-   hc.x,
-   hb.max.y,
-   hc.z
-  );
-
-
- const elbow =
-  new THREE.Vector3(
-
-   (
-    hc.x+
-    rc.x+
-    uc.x
-   )/3,
-
-   (
-    hb.min.y+
-    Math.max(
-     rb.max.y,
-     ub.max.y
-    )
-   )/2,
-
-   (
-    hc.z+
-    rc.z+
-    uc.z
-   )/3
-  );
-
-
- const wrist =
-  new THREE.Vector3(
-
-   (
-    rc.x+
-    uc.x
-   )/2,
-
-   Math.min(
-    rb.min.y,
-    ub.min.y
-   ),
-
-   (
-    rc.z+
-    uc.z
-   )/2
-  );
-
-
- rig.shoulderFlex =
-  createPivot(
-   "ShoulderFlex",
-   shoulder,
-   root
-  );
-
-
- rig.shoulderAbduction =
-  createPivot(
-   "ShoulderAbduction",
-   shoulder,
-   rig.shoulderFlex
-  );
-
-
- rig.shoulderRotation =
-  createPivot(
-   "ShoulderRotation",
-   shoulder,
-   rig.shoulderAbduction
-  );
-
-
- rig.elbow =
-  createPivot(
-   "ElbowFlexion",
-   elbow,
-   rig.shoulderRotation
-  );
-
-
- rig.forearm =
-  createPivot(
-   "ForearmRotation",
-   elbow,
-   rig.elbow
-  );
-
-
- rig.wrist =
-  createPivot(
-   "WristFlexion",
-   wrist,
-   rig.forearm
-  );
-
-
- /*
-   attach() keeps the current
-   world transform.
- */
-
-
- rig.shoulderRotation.attach(
-  humerus
- );
-
-
- rig.forearm.attach(
-  radius
- );
-
-
- rig.forearm.attach(
-  ulna
- );
-
-
- const handBones=[];
-
-
- root.traverse(
-  obj=>{
-
-   if(
-    obj.isMesh &&
-    isRightHandBone(
-     obj.name
-    )
-   ){
-
-    handBones.push(obj);
-   }
+    ctx.stroke();
   }
- );
 
+  const texture =
+    new THREE.CanvasTexture(canvas);
 
- handBones.forEach(
-  obj=>{
+  texture.wrapS=THREE.RepeatWrapping;
+  texture.wrapT=THREE.RepeatWrapping;
 
-   rig.wrist.attach(obj);
-  }
- );
+  texture.repeat.set(3,10);
 
-
- root.updateMatrixWorld(true);
+  return texture;
 }
 
+const muscleTexture =
+  makeMuscleTexture();
 
-/* =====================================================
-   JOINT UPDATE
-===================================================== */
+function prepareMuscles(root){
 
-function rad(value){
+  root.traverse(obj=>{
 
- return THREE.MathUtils
-  .degToRad(
-   Number(value)
-  );
+    if(!obj.isMesh) return;
+
+    const mats =
+      Array.isArray(obj.material)
+      ? obj.material
+      : [obj.material];
+
+    const output=mats.map(mat=>{
+
+      if(!mat) return mat;
+
+      const m=mat.clone();
+
+      if("roughness" in m){
+        m.roughness=.74;
+      }
+
+      if("metalness" in m){
+        m.metalness=0;
+      }
+
+      /*
+        Only use bump texture when UVs exist.
+      */
+      if(
+        obj.geometry &&
+        obj.geometry.attributes &&
+        obj.geometry.attributes.uv &&
+        "bumpMap" in m
+      ){
+        m.bumpMap=muscleTexture;
+        m.bumpScale=.0045;
+      }
+
+      return m;
+    });
+
+    obj.material =
+      Array.isArray(obj.material)
+      ? output
+      : output[0];
+
+  });
+
 }
 
-
-function updatePose(){
-
- if(!rig.shoulderFlex)
-  return;
-
-
- const sf =
-  +document.getElementById(
-   "sf"
-  ).value;
-
-
- const sa =
-  +document.getElementById(
-   "sa"
-  ).value;
-
-
- const sr =
-  +document.getElementById(
-   "sr"
-  ).value;
-
-
- const elbow =
-  +document.getElementById(
-   "elbow"
-  ).value;
-
-
- const forearm =
-  +document.getElementById(
-   "forearm"
-  ).value;
-
-
- const wrist =
-  +document.getElementById(
-   "wrist"
-  ).value;
-
-
- rig.shoulderFlex.rotation.set(
-  rad(sf),
-  0,
-  0
- );
-
-
- rig.shoulderAbduction.rotation.set(
-  0,
-  0,
-  rad(-sa)
- );
-
-
- rig.shoulderRotation.rotation.set(
-  0,
-  rad(sr),
-  0
- );
-
-
- rig.elbow.rotation.set(
-  rad(-elbow),
-  0,
-  0
- );
-
-
- rig.forearm.rotation.set(
-  0,
-  rad(forearm),
-  0
- );
-
-
- rig.wrist.rotation.set(
-  rad(wrist),
-  0,
-  0
- );
-
-
- document.getElementById(
-  "vsf"
- ).textContent =
-  sf+"°";
-
-
- document.getElementById(
-  "vsa"
- ).textContent =
-  sa+"°";
-
-
- document.getElementById(
-  "vsr"
- ).textContent =
-  sr+"°";
-
-
- document.getElementById(
-  "ve"
- ).textContent =
-  elbow+"°";
-
-
- document.getElementById(
-  "vf"
- ).textContent =
-  forearm+"°";
-
-
- document.getElementById(
-  "vw"
- ).textContent =
-  wrist+"°";
-}
-
-
-[
- "sf",
- "sa",
- "sr",
- "elbow",
- "forearm",
- "wrist"
-].forEach(
- id=>{
-
-  document.getElementById(id)
-   .addEventListener(
-    "input",
-    updatePose
-   );
- }
-);
-
-
-document.getElementById(
- "resetPose"
-).onclick=()=>{
-
- [
-  "sf",
-  "sa",
-  "sr",
-  "elbow",
-  "forearm",
-  "wrist"
- ].forEach(
-  id=>{
-
-   document.getElementById(
-    id
-   ).value=0;
-  }
- );
-
-
- updatePose();
-};
-
-
-/* =====================================================
-   CAMERA
-===================================================== */
+/* =========================================================
+   CAMERA FIT
+========================================================= */
 
 function fitCamera(size){
 
- const verticalFov =
-  THREE.MathUtils
-   .degToRad(
-    camera.fov
-   );
+  const maxDim =
+    Math.max(
+      size.x,
+      size.y,
+      size.z
+    );
 
+  const fov =
+    THREE.MathUtils.degToRad(
+      camera.fov
+    );
 
- const verticalDistance =
-  size.y /
-  (
-   2*
-   Math.tan(
-    verticalFov/2
-   )
+  let distance =
+    maxDim /
+    (2*Math.tan(fov/2));
+
+  distance *= 1.30;
+
+  camera.position.set(
+    0,
+    maxDim*.02,
+    distance
   );
 
-
- const horizontalFov =
-  2*
-  Math.atan(
-   Math.tan(
-    verticalFov/2
-   )*
-   camera.aspect
-  );
-
-
- const horizontalDistance =
-  size.x /
-  (
-   2*
-   Math.tan(
-    horizontalFov/2
-   )
-  );
-
-
- const distance =
-  Math.max(
-   verticalDistance,
-   horizontalDistance
-  )*1.18;
-
-
- camera.position.set(
-  0,
-  0,
-  distance
- );
-
-
- orbit.target.set(
-  0,
-  0,
-  0
- );
-
-
- orbit.minDistance =
-  distance*.08;
-
-
- orbit.maxDistance =
-  distance*6;
-
-
- camera.near =
-  Math.max(
-   distance/10000,
-   .001
-  );
-
-
- camera.far =
-  distance*100;
-
-
- camera.updateProjectionMatrix();
-
- orbit.update();
-}
-
-
-/* =====================================================
-   CORE LOAD
-===================================================== */
-
-async function loadCoreAnatomy(){
-
- /*
-   IMPORTANT:
-   Sequential loading instead
-   of Promise.all().
- */
-
-
- setStatus(
-  "Loading skeleton..."
- );
-
-
- await loadOne(
-  "skeleton"
- );
-
-
- /*
-   Fit camera immediately after
-   skeleton is available.
- */
-
-
- layers.skeleton
-  .updateMatrixWorld(true);
-
-
- const skeletonBox =
-  new THREE.Box3()
-   .setFromObject(
-    layers.skeleton
-   );
-
-
- const centre =
-  skeletonBox.getCenter(
-   new THREE.Vector3()
-  );
-
-
- const size =
-  skeletonBox.getSize(
-   new THREE.Vector3()
-  );
-
-
- /*
-   Centre the complete human group.
-   All later models use the same
-   original coordinates.
- */
-
-
- human.position.sub(
-  centre
- );
-
-
- fitCamera(size);
-
-
- /*
-   Build joint rig only after
-   skeleton exists.
- */
-
-
- buildRig();
-
-
- setStatus(
-  "Loading muscles..."
- );
-
-
- await loadOne(
-  "muscular"
- );
-
-
- layers.skeleton.visible=true;
- layers.muscular.visible=true;
-
-
- updateMuscles();
- updatePose();
-
-
- setStatus(
-  "Core anatomy ready",
-  "#7cdda0"
- );
-}
-
-
-/* =====================================================
-   OPTIONAL LAYERS
-===================================================== */
-
-async function loadOptionalLayer(key){
-
- const button =
-  document.querySelector(
-   `[data-layer="${key}"]`
-  );
-
-
- if(button)
-   button.classList.add(
-    "loading"
-   );
-
-
- try{
-
-  setStatus(
-   "Loading "+
-   key+
-   "..."
-  );
-
-
-  await loadOne(key);
-
-
-  /*
-   Optional systems should not
-   suddenly appear after loading.
-  */
-
-
-  layers[key].visible=false;
-
-
-  if(button){
-
-   button.classList.remove(
-    "loading"
-   );
-
-   button.classList.remove(
-    "on"
-   );
-  }
-
-
-  return true;
-
- }
- catch(error){
-
-  if(button)
-   button.classList.remove(
-    "loading"
-   );
-
-
-  return false;
- }
-}
-
-
-/* =====================================================
-   COMPLETE INIT
-===================================================== */
-
-async function init(){
-
- try{
-
-  /*
-   1. Skeleton
-   2. Muscles
-
-   These are the important
-   interactive layers.
-  */
-
-
-  await loadCoreAnatomy();
-
-
-  /*
-   Human is already usable here.
-   Now load the remaining systems
-   ONE AT A TIME.
-  */
-
-
-  await new Promise(
-   resolve=>
-    setTimeout(
-     resolve,
-     150
-    )
-  );
-
-
-  await loadOptionalLayer(
-   "nervous"
-  );
-
-
-  await new Promise(
-   resolve=>
-    setTimeout(
-     resolve,
-     150
-    )
-  );
-
-
-  await loadOptionalLayer(
-   "cardiovascular"
-  );
-
-
-  await new Promise(
-   resolve=>
-    setTimeout(
-     resolve,
-     150
-    )
-  );
-
-
-  await loadOptionalLayer(
-   "visceral"
-  );
-
-
-  setStatus(
-   "Anatomy loaded",
-   "#7cdda0"
-  );
-
- }
- catch(error){
-
-  console.error(
-   "Core anatomy error:",
-   error
-  );
-
-
-  /*
-   Core skeleton/muscle failure
-   is different from an optional
-   layer failure.
-  */
-
-
-  setStatus(
-   "Core model loading failed",
-   "#ff8c8c"
-  );
-
-
-  showError(
-   "Skeleton 或 Muscles 載入失敗。請重新整理頁面；如果仍然失敗，查看 browser console。"
-  );
- }
-}
-
-
-/* =====================================================
-   RESIZE
-===================================================== */
-
-window.addEventListener(
- "resize",
- ()=>{
-
-  camera.aspect =
-   innerWidth/
-   innerHeight;
-
+  camera.near =
+    Math.max(maxDim/10000,.001);
+
+  camera.far =
+    maxDim*30;
 
   camera.updateProjectionMatrix();
 
+  controls.target.set(0,0,0);
+  controls.update();
+}
 
-  renderer.setSize(
-   innerWidth,
-   innerHeight
+/* =========================================================
+   BONE FINDING
+========================================================= */
+
+function findSkeletonMesh(exactName){
+
+  if(!layers.skeleton) return null;
+
+  let result=null;
+
+  layers.skeleton.traverse(obj=>{
+
+    if(
+      !result &&
+      obj.isMesh &&
+      obj.name === exactName
+    ){
+      result=obj;
+    }
+
+  });
+
+  return result;
+}
+
+/*
+  IMPORTANT FIX:
+  No generic "phalanx = hand" rule.
+
+  A right hand bone MUST explicitly carry the right-side
+  model suffix / name pattern.
+*/
+
+function isRightHandBone(mesh){
+
+  const n=mesh.name || "";
+
+  const right =
+    /r001$/i.test(n);
+
+  if(!right) return false;
+
+  const handPattern =
+    /(metacarpal|capitate|hamate|lunate|pisiform|scaphoid|trapezium|trapezoid|triquetrum|phalan|phalange)/i;
+
+  return handPattern.test(n);
+}
+
+/* =========================================================
+   RIGHT UPPER-LIMB RIG
+========================================================= */
+
+const rig = {
+  ready:false,
+
+  shoulderFlex:null,
+  shoulderAbduction:null,
+  shoulderRotation:null,
+
+  elbow:null,
+  forearm:null,
+  wrist:null,
+
+  rightHumerus:null,
+  rightRadius:null,
+  rightUlna:null,
+
+  leftHumerus:null,
+  leftRadius:null,
+  leftUlna:null,
+
+  refs:null
+};
+
+/*
+  Create pivot while preserving world position.
+*/
+
+function createPivotAt(worldPosition,parent,name){
+
+  const group =
+    new THREE.Group();
+
+  group.name=name;
+
+  parent.add(group);
+
+  const local =
+    worldPosition.clone();
+
+  parent.worldToLocal(local);
+
+  group.position.copy(local);
+
+  return group;
+}
+
+/*
+  Distance from point to line segment.
+*/
+
+function pointSegmentDistance(p,a,b){
+
+  const ab =
+    b.clone().sub(a);
+
+  const len2 =
+    ab.lengthSq();
+
+  if(len2===0){
+    return p.distanceTo(a);
+  }
+
+  const t =
+    THREE.MathUtils.clamp(
+      p.clone().sub(a).dot(ab)/len2,
+      0,
+      1
+    );
+
+  const q =
+    a.clone().add(
+      ab.multiplyScalar(t)
+    );
+
+  return p.distanceTo(q);
+}
+
+/* =========================================================
+   BUILD SKELETAL RIG
+========================================================= */
+
+function buildRig(){
+
+  const humerus =
+    findSkeletonMesh("Humerusr001");
+
+  const radius =
+    findSkeletonMesh("Radiusr001");
+
+  const ulna =
+    findSkeletonMesh("Ulnar001");
+
+  const leftHumerus =
+    findSkeletonMesh("Humerusl001");
+
+  const leftRadius =
+    findSkeletonMesh("Radiusl001");
+
+  const leftUlna =
+    findSkeletonMesh("Ulnal001");
+
+  if(!humerus || !radius || !ulna){
+
+    showError(
+      "Right upper-limb bones could not be identified."
+    );
+
+    return;
+  }
+
+  rig.rightHumerus=humerus;
+  rig.rightRadius=radius;
+  rig.rightUlna=ulna;
+
+  rig.leftHumerus=leftHumerus;
+  rig.leftRadius=leftRadius;
+  rig.leftUlna=leftUlna;
+
+  scene.updateMatrixWorld(true);
+
+  const humBox=worldBox(humerus);
+  const radBox=worldBox(radius);
+  const ulnaBox=worldBox(ulna);
+
+  const humCenter=new THREE.Vector3();
+  const humSize=new THREE.Vector3();
+
+  humBox.getCenter(humCenter);
+  humBox.getSize(humSize);
+
+  const radCenter=worldCenter(radius);
+  const ulnaCenter=worldCenter(ulna);
+
+  /*
+    We determine which end of the humerus is shoulder
+    by checking which end is farther from the forearm.
+
+    This avoids assuming Y direction.
+  */
+
+  const humMinY =
+    new THREE.Vector3(
+      humCenter.x,
+      humBox.min.y,
+      humCenter.z
+    );
+
+  const humMaxY =
+    new THREE.Vector3(
+      humCenter.x,
+      humBox.max.y,
+      humCenter.z
+    );
+
+  const forearmCenter =
+    radCenter.clone()
+      .add(ulnaCenter)
+      .multiplyScalar(.5);
+
+  const shoulder =
+    humMinY.distanceTo(forearmCenter) >
+    humMaxY.distanceTo(forearmCenter)
+      ? humMinY
+      : humMaxY;
+
+  const elbowHumerus =
+    shoulder===humMinY
+      ? humMaxY
+      : humMinY;
+
+  /*
+    Find forearm end nearest humerus = elbow,
+    opposite end = wrist.
+  */
+
+  const combinedForearm =
+    radBox.clone().union(ulnaBox);
+
+  const foreCenter =
+    new THREE.Vector3();
+
+  combinedForearm.getCenter(foreCenter);
+
+  const foreMin =
+    new THREE.Vector3(
+      foreCenter.x,
+      combinedForearm.min.y,
+      foreCenter.z
+    );
+
+  const foreMax =
+    new THREE.Vector3(
+      foreCenter.x,
+      combinedForearm.max.y,
+      foreCenter.z
+    );
+
+  const elbowForearm =
+    foreMin.distanceTo(elbowHumerus) <
+    foreMax.distanceTo(elbowHumerus)
+      ? foreMin
+      : foreMax;
+
+  const wrist =
+    elbowForearm===foreMin
+      ? foreMax
+      : foreMin;
+
+  const elbow =
+    elbowHumerus.clone()
+      .add(elbowForearm)
+      .multiplyScalar(.5);
+
+  /*
+    Joint hierarchy:
+
+    shoulder flex
+       ↓
+    shoulder abduction
+       ↓
+    shoulder rotation
+       ↓
+    humerus
+       ↓
+    elbow
+       ↓
+    forearm rotation
+       ↓
+    radius + ulna
+       ↓
+    wrist
+       ↓
+    hand
+  */
+
+  rig.shoulderFlex =
+    createPivotAt(
+      shoulder,
+      human,
+      "RIGHT_SHOULDER_FLEX"
+    );
+
+  rig.shoulderAbduction =
+    createPivotAt(
+      shoulder,
+      rig.shoulderFlex,
+      "RIGHT_SHOULDER_ABDUCTION"
+    );
+
+  rig.shoulderRotation =
+    createPivotAt(
+      shoulder,
+      rig.shoulderAbduction,
+      "RIGHT_SHOULDER_ROTATION"
+    );
+
+  rig.elbow =
+    createPivotAt(
+      elbow,
+      rig.shoulderRotation,
+      "RIGHT_ELBOW"
+    );
+
+  rig.forearm =
+    createPivotAt(
+      elbow,
+      rig.elbow,
+      "RIGHT_FOREARM_ROTATION"
+    );
+
+  rig.wrist =
+    createPivotAt(
+      wrist,
+      rig.forearm,
+      "RIGHT_WRIST"
+    );
+
+  /*
+    Humerus belongs to shoulder.
+  */
+
+  rig.shoulderRotation.attach(
+    humerus
   );
- }
+
+  /*
+    Radius and ulna belong to forearm.
+  */
+
+  rig.forearm.attach(radius);
+  rig.forearm.attach(ulna);
+
+  /*
+    RIGHT HAND ONLY.
+
+    No foot phalanges can enter this group because
+    explicit right-hand naming is required.
+  */
+
+  const handBones=[];
+
+  layers.skeleton.traverse(obj=>{
+
+    if(
+      obj.isMesh &&
+      isRightHandBone(obj)
+    ){
+      handBones.push(obj);
+    }
+
+  });
+
+  handBones.forEach(mesh=>{
+    rig.wrist.attach(mesh);
+  });
+
+  /*
+    Anatomical reference geometry used to classify
+    muscles, nerves and vessels.
+  */
+
+  const upperArmLength =
+    shoulder.distanceTo(elbow);
+
+  const forearmLength =
+    elbow.distanceTo(wrist);
+
+  /*
+    Estimate hand centre using actual right hand bones.
+  */
+
+  let handCenter =
+    wrist.clone();
+
+  if(handBones.length){
+
+    const hb =
+      new THREE.Box3();
+
+    handBones.forEach((mesh,i)=>{
+
+      const b=worldBox(mesh);
+
+      if(i===0){
+        hb.copy(b);
+      }else{
+        hb.union(b);
+      }
+
+    });
+
+    hb.getCenter(handCenter);
+  }
+
+  /*
+    Left-side references are used as a safety comparison.
+    A structure must be closer to the RIGHT arm than
+    corresponding LEFT arm before it can be attached.
+
+    This prevents contralateral structures entering
+    the right-arm rig.
+  */
+
+  const leftShoulder =
+    leftHumerus
+      ? worldCenter(leftHumerus)
+      : null;
+
+  const leftForearm =
+    leftRadius && leftUlna
+      ? worldCenter(leftRadius)
+          .add(worldCenter(leftUlna))
+          .multiplyScalar(.5)
+      : null;
+
+  rig.refs={
+    shoulder,
+    elbow,
+    wrist,
+    handCenter,
+
+    upperArmLength,
+    forearmLength,
+
+    leftShoulder,
+    leftForearm
+  };
+
+  rig.ready=true;
+
+  /*
+    Skeleton itself is now rigged.
+    Muscles / nerves / vessels loaded later will be
+    registered with registerSoftTissueLayer().
+  */
+
+  applyJointPose();
+}
+
+/* =========================================================
+   SOFT TISSUE CLASSIFICATION
+========================================================= */
+
+/*
+  This is deliberately spatial rather than name-only.
+
+  Why:
+  Nervous / cardiovascular GLBs often use different naming
+  conventions.
+
+  A mesh is assigned according to its actual 3D position
+  relative to the RIGHT humerus / forearm / hand.
+
+  Large structures crossing into the trunk are rejected
+  to prevent the aorta, spinal cord, etc. from being
+  dragged by the shoulder.
+*/
+
+function classifyRightUpperLimbMesh(mesh){
+
+  if(!rig.ready) return null;
+
+  scene.updateMatrixWorld(true);
+
+  const box=worldBox(mesh);
+
+  if(box.isEmpty()){
+    return null;
+  }
+
+  const center =
+    new THREE.Vector3();
+
+  const size =
+    new THREE.Vector3();
+
+  box.getCenter(center);
+  box.getSize(size);
+
+  const r=rig.refs;
+
+  const upperDist =
+    pointSegmentDistance(
+      center,
+      r.shoulder,
+      r.elbow
+    );
+
+  const foreDist =
+    pointSegmentDistance(
+      center,
+      r.elbow,
+      r.wrist
+    );
+
+  const handDist =
+    center.distanceTo(
+      r.handCenter
+    );
+
+  /*
+    Conservative radii.
+
+    Prevent torso / opposite limb / toes from being
+    accidentally classified as arm structures.
+  */
+
+  const upperRadius =
+    r.upperArmLength*.38;
+
+  const foreRadius =
+    r.forearmLength*.38;
+
+  const handRadius =
+    r.forearmLength*.42;
+
+  /*
+    Reject huge whole-body meshes.
+  */
+
+  const maxDimension =
+    Math.max(
+      size.x,
+      size.y,
+      size.z
+    );
+
+  if(
+    maxDimension >
+    Math.max(
+      r.upperArmLength,
+      r.forearmLength
+    ) * 1.35
+  ){
+    return null;
+  }
+
+  /*
+    RIGHT-vs-LEFT safety check.
+  */
+
+  if(r.leftShoulder){
+
+    const rightDistance =
+      Math.min(
+        upperDist,
+        foreDist,
+        handDist
+      );
+
+    const leftDistance =
+      center.distanceTo(
+        r.leftShoulder
+      );
+
+    if(
+      leftDistance <
+      rightDistance
+    ){
+      return null;
+    }
+  }
+
+  /*
+    Hand takes priority.
+  */
+
+  if(
+    handDist < handRadius &&
+    handDist <= foreDist*1.15
+  ){
+    return "hand";
+  }
+
+  /*
+    Forearm.
+  */
+
+  if(
+    foreDist < foreRadius &&
+    foreDist <= upperDist
+  ){
+    return "forearm";
+  }
+
+  /*
+    Upper arm.
+  */
+
+  if(
+    upperDist < upperRadius
+  ){
+    return "upperArm";
+  }
+
+  return null;
+}
+
+/* =========================================================
+   REGISTER MUSCLE / NERVE / VESSEL LAYERS
+========================================================= */
+
+function registerSoftTissueLayer(key){
+
+  if(!rig.ready) return;
+
+  const root=layers[key];
+
+  if(!root) return;
+
+  /*
+    Viscera are deliberately NOT rigged to the arm.
+  */
+
+  if(key==="visceral"){
+    return;
+  }
+
+  const meshes =
+    allMeshes(root);
+
+  /*
+    Classification must be completed BEFORE reparenting,
+    otherwise world geometry changes while traversing.
+  */
+
+  const assignments=[];
+
+  for(const mesh of meshes){
+
+    const segment =
+      classifyRightUpperLimbMesh(mesh);
+
+    if(segment){
+
+      assignments.push({
+        mesh,
+        segment
+      });
+
+    }
+  }
+
+  for(const item of assignments){
+
+    const {
+      mesh,
+      segment
+    }=item;
+
+    mesh.userData.rigSegment =
+      segment;
+
+    mesh.userData.riggedRightUpperLimb =
+      true;
+
+    if(segment==="upperArm"){
+
+      /*
+        Upper-arm soft tissues move with shoulder,
+        but remain proximal to elbow.
+      */
+
+      rig.shoulderRotation.attach(
+        mesh
+      );
+
+    }
+
+    else if(segment==="forearm"){
+
+      /*
+        Forearm soft tissues:
+        shoulder → elbow → pronation/supination.
+      */
+
+      rig.forearm.attach(
+        mesh
+      );
+
+    }
+
+    else if(segment==="hand"){
+
+      /*
+        Hand soft tissues:
+        shoulder → elbow → forearm rotation → wrist.
+      */
+
+      rig.wrist.attach(
+        mesh
+      );
+
+    }
+
+  }
+
+  console.log(
+    `${key}: ${assignments.length} right upper-limb meshes rigged`
+  );
+}
+
+/* =========================================================
+   JOINT POSE
+========================================================= */
+
+function applyJointPose(){
+
+  if(!rig.ready) return;
+
+  const sf =
+    Number(
+      document.getElementById(
+        "shoulderFlex"
+      ).value
+    );
+
+  const sa =
+    Number(
+      document.getElementById(
+        "shoulderAbduction"
+      ).value
+    );
+
+  const sr =
+    Number(
+      document.getElementById(
+        "shoulderRotation"
+      ).value
+    );
+
+  const elbow =
+    Number(
+      document.getElementById(
+        "elbowFlexion"
+      ).value
+    );
+
+  const forearm =
+    Number(
+      document.getElementById(
+        "forearmRotation"
+      ).value
+    );
+
+  const wrist =
+    Number(
+      document.getElementById(
+        "wristFlexion"
+      ).value
+    );
+
+  /*
+    Prototype anatomical axes.
+
+    Because the source GLB has no authored skeletal rig,
+    these axes are mapped to the model coordinate system.
+
+    The hierarchy itself is now correct:
+    downstream structures inherit upstream movement.
+  */
+
+  rig.shoulderFlex.rotation.set(
+    deg(sf),
+    0,
+    0
+  );
+
+  rig.shoulderAbduction.rotation.set(
+    0,
+    0,
+    deg(-sa)
+  );
+
+  rig.shoulderRotation.rotation.set(
+    0,
+    deg(sr),
+    0
+  );
+
+  rig.elbow.rotation.set(
+    deg(-elbow),
+    0,
+    0
+  );
+
+  rig.forearm.rotation.set(
+    0,
+    deg(forearm),
+    0
+  );
+
+  rig.wrist.rotation.set(
+    deg(wrist),
+    0,
+    0
+  );
+
+  document.getElementById(
+    "sfValue"
+  ).textContent=sf+"°";
+
+  document.getElementById(
+    "saValue"
+  ).textContent=sa+"°";
+
+  document.getElementById(
+    "srValue"
+  ).textContent=sr+"°";
+
+  document.getElementById(
+    "elbowValue"
+  ).textContent=elbow+"°";
+
+  document.getElementById(
+    "forearmValue"
+  ).textContent=forearm+"°";
+
+  document.getElementById(
+    "wristValue"
+  ).textContent=wrist+"°";
+}
+
+/* =========================================================
+   JOINT EVENTS
+========================================================= */
+
+[
+  "shoulderFlex",
+  "shoulderAbduction",
+  "shoulderRotation",
+  "elbowFlexion",
+  "forearmRotation",
+  "wristFlexion"
+].forEach(id=>{
+
+  document.getElementById(id)
+    .addEventListener(
+      "input",
+      applyJointPose
+    );
+
+});
+
+document.getElementById(
+  "resetJoints"
+).addEventListener("click",()=>{
+
+  document.getElementById(
+    "shoulderFlex"
+  ).value=0;
+
+  document.getElementById(
+    "shoulderAbduction"
+  ).value=0;
+
+  document.getElementById(
+    "shoulderRotation"
+  ).value=0;
+
+  document.getElementById(
+    "elbowFlexion"
+  ).value=0;
+
+  document.getElementById(
+    "forearmRotation"
+  ).value=0;
+
+  document.getElementById(
+    "wristFlexion"
+  ).value=0;
+
+  applyJointPose();
+});
+
+/* =========================================================
+   MUSCLE DEPTH
+========================================================= */
+
+let muscleDepth=4;
+
+const accessoryRegex =
+  /(fascia|bursa|retinac|ligament|tendon|aponeuros|septum|sheath)/i;
+
+function getHierarchyName(object){
+
+  const parts=[];
+
+  let p=object;
+
+  while(
+    p &&
+    p!==layers.muscular
+  ){
+
+    if(p.name){
+      parts.push(p.name);
+    }
+
+    p=p.parent;
+  }
+
+  return parts.join(" ");
+}
+
+function muscleDepthFor(mesh){
+
+  const n =
+    getHierarchyName(mesh)
+      .toLowerCase();
+
+  /*
+    Accessory connective structures are excluded
+    from muscle-depth logic.
+  */
+
+  if(accessoryRegex.test(n)){
+    return -1;
+  }
+
+  /* DEEPEST */
+
+  if(
+    /(subscapularis|supraspinatus|infraspinatus|teres minor|multifidus|rotatores|interspinal|transversus abdominis|gluteus minimus|pronator quadratus|supinator)/i.test(n)
+  ){
+    return 1;
+  }
+
+  /* DEEP / INTERMEDIATE */
+
+  if(
+    /(internal oblique|rhomboid|pectoralis minor|serratus anterior|gluteus medius|vastus intermedius|flexor digitorum profundus|tibialis posterior)/i.test(n)
+  ){
+    return 2;
+  }
+
+  /* SUPERFICIAL */
+
+  if(
+    /(trapezius|latissimus|pectoralis major|deltoid|biceps|triceps|sternocleidomastoid|rectus abdominis|external oblique|gluteus maximus|sartorius|rectus femoris|vastus lateralis|vastus medialis|gastrocnemius|tibialis anterior)/i.test(n)
+  ){
+    return 4;
+  }
+
+  return 3;
+}
+
+function updateMuscleDepth(){
+
+  if(!layers.muscular) return;
+
+  const muscleLayerOn =
+    layerVisibility.muscular;
+
+  layers.muscular.traverse(obj=>{
+
+    if(!obj.isMesh) return;
+
+    const depth =
+      muscleDepthFor(obj);
+
+    if(depth===-1){
+
+      obj.visible =
+        muscleLayerOn &&
+        muscleDepth>0;
+
+      return;
+    }
+
+    obj.visible =
+      muscleLayerOn &&
+      depth<=muscleDepth;
+
+  });
+
+  const names={
+    4:[
+      "Full musculature｜完整肌肉",
+      "完整肌肉顯示"
+    ],
+    3:[
+      "Superficial dissection｜表層解剖",
+      "移除最表層肌肉"
+    ],
+    2:[
+      "Intermediate｜中層",
+      "顯示較深層肌肉"
+    ],
+    1:[
+      "Deep muscles｜深層肌肉",
+      "深層肌肉顯示"
+    ],
+    0:[
+      "Skeleton｜骨骼",
+      "肌肉已隱藏"
+    ]
+  };
+
+  document.getElementById(
+    "depthName"
+  ).textContent=
+    names[muscleDepth][0];
+
+  document.getElementById(
+    "depthDescription"
+  ).textContent=
+    names[muscleDepth][1];
+
+  const bars =
+    document.querySelectorAll(
+      ".depthBar"
+    );
+
+  bars.forEach((bar,index)=>{
+
+    bar.classList.toggle(
+      "active",
+      index < muscleDepth
+    );
+
+  });
+
+}
+
+document.getElementById(
+  "muscleMinus"
+).addEventListener("click",()=>{
+
+  muscleDepth =
+    Math.max(
+      0,
+      muscleDepth-1
+    );
+
+  updateMuscleDepth();
+});
+
+document.getElementById(
+  "musclePlus"
+).addEventListener("click",()=>{
+
+  muscleDepth =
+    Math.min(
+      4,
+      muscleDepth+1
+    );
+
+  updateMuscleDepth();
+});
+
+/* =========================================================
+   LAYER BUTTONS
+========================================================= */
+
+function updateSystemButtons(){
+
+  document
+    .querySelectorAll(".systemBtn")
+    .forEach(btn=>{
+
+      const key =
+        btn.dataset.layer;
+
+      btn.classList.toggle(
+        "on",
+        !!layerVisibility[key]
+      );
+
+      btn.classList.toggle(
+        "loading",
+        !layerReady[key]
+      );
+
+    });
+}
+
+document
+  .querySelectorAll(".systemBtn")
+  .forEach(btn=>{
+
+    btn.addEventListener(
+      "click",
+      ()=>{
+
+        const key =
+          btn.dataset.layer;
+
+        if(!layerReady[key]){
+          return;
+        }
+
+        layerVisibility[key] =
+          !layerVisibility[key];
+
+        /*
+          Since rigged meshes are no longer necessarily
+          children of the original layer root, toggle
+          using userData anatomyLayer across the HUMAN tree.
+        */
+
+        human.traverse(obj=>{
+
+          if(
+            obj.isMesh &&
+            obj.userData.anatomyLayer===key
+          ){
+            obj.visible =
+              layerVisibility[key];
+          }
+
+        });
+
+        if(
+          key==="muscular" &&
+          layerVisibility.muscular
+        ){
+          updateMuscleDepth();
+        }
+
+        updateSystemButtons();
+      }
+    );
+
+  });
+
+/* =========================================================
+   SELECTION
+========================================================= */
+
+const raycaster =
+  new THREE.Raycaster();
+
+const pointer =
+  new THREE.Vector2();
+
+let selectedObject=null;
+
+const individualOverrides =
+  new Map();
+
+function selectableMeshes(){
+
+  const arr=[];
+
+  human.traverse(obj=>{
+
+    if(
+      obj.isMesh &&
+      obj.visible &&
+      (
+        obj.userData.anatomyLayer==="muscular" ||
+        obj.userData.anatomyLayer==="skeleton"
+      )
+    ){
+      arr.push(obj);
+    }
+
+  });
+
+  return arr;
+}
+
+function restoreOriginalMaterials(){
+
+  if(!selectedObject) return;
+
+  if(
+    selectedObject.userData
+      .selectionOriginalMaterial
+  ){
+
+    selectedObject.material =
+      selectedObject.userData
+        .selectionOriginalMaterial;
+
+    delete selectedObject.userData
+      .selectionOriginalMaterial;
+  }
+}
+
+function highlightObject(obj){
+
+  restoreOriginalMaterials();
+
+  selectedObject=obj;
+
+  obj.userData.selectionOriginalMaterial =
+    obj.material;
+
+  const mats =
+    Array.isArray(obj.material)
+      ? obj.material
+      : [obj.material];
+
+  const highlighted =
+    mats.map(mat=>{
+
+      if(!mat) return mat;
+
+      const m=mat.clone();
+
+      if(m.emissive){
+        m.emissive.set(0x4b241e);
+        m.emissiveIntensity=.45;
+      }
+
+      return m;
+    });
+
+  obj.material =
+    Array.isArray(obj.material)
+      ? highlighted
+      : highlighted[0];
+}
+
+/* =========================================================
+   TEACHING PANEL
+========================================================= */
+
+function fieldHTML(
+  title,
+  en,
+  zh
+){
+
+  return `
+    <div class="infoField">
+      <div class="infoHeading">${title}</div>
+      <div class="infoText">${en || "—"}</div>
+      <div class="infoZh">${zh || ""}</div>
+    </div>
+  `;
+}
+
+function showMuscleInfo(obj){
+
+  const modelName =
+    cleanName(obj.name);
+
+  const data =
+    findMuscle(
+      getHierarchyName(obj)
+    ) ||
+    findMuscle(modelName);
+
+  document.getElementById(
+    "structureBadge"
+  ).textContent="MUSCLE｜肌肉";
+
+  if(!data){
+
+    document.getElementById(
+      "structureName"
+    ).textContent=modelName || "Muscle";
+
+    document.getElementById(
+      "structureChinese"
+    ).textContent="肌肉";
+
+    document.getElementById(
+      "infoContent"
+    ).innerHTML=
+      `<div class="placeholder">
+       模型已辨識此結構為肌肉，但暫時未有對應教學資料。<br><br>
+       Model mesh: ${obj.name}
+       </div>`;
+
+    return;
+  }
+
+  const side =
+    /l001$/i.test(obj.name)
+      ? "Left "
+      : /r001$/i.test(obj.name)
+        ? "Right "
+        : "";
+
+  const sideZh =
+    /l001$/i.test(obj.name)
+      ? "左"
+      : /r001$/i.test(obj.name)
+        ? "右"
+        : "";
+
+  document.getElementById(
+    "structureName"
+  ).textContent=
+    side + data.en;
+
+  document.getElementById(
+    "structureChinese"
+  ).textContent=
+    sideZh + data.zh;
+
+  document.getElementById(
+    "infoContent"
+  ).innerHTML=
+
+    fieldHTML(
+      "ORIGIN｜起點",
+      data.origin,
+      data.originZh
+    ) +
+
+    fieldHTML(
+      "INSERTION｜止點",
+      data.insertion,
+      data.insertionZh
+    ) +
+
+    fieldHTML(
+      "ACTION｜作用",
+      data.action,
+      data.actionZh
+    ) +
+
+    fieldHTML(
+      "INNERVATION｜神經支配",
+      data.nerve,
+      data.nerveZh
+    ) +
+
+    fieldHTML(
+      "BLOOD SUPPLY｜血液供應",
+      data.blood,
+      data.bloodZh
+    );
+}
+
+function showBoneInfo(obj){
+
+  const modelName =
+    cleanName(obj.name);
+
+  const data =
+    findBone(modelName);
+
+  document.getElementById(
+    "structureBadge"
+  ).textContent="BONE｜骨骼";
+
+  if(!data){
+
+    document.getElementById(
+      "structureName"
+    ).textContent=
+      modelName || "Bone";
+
+    document.getElementById(
+      "structureChinese"
+    ).textContent="骨骼";
+
+    document.getElementById(
+      "infoContent"
+    ).innerHTML=
+      `<div class="placeholder">
+       此骨骼已被選取，但目前資料庫未有完整教學資料。<br><br>
+       Model mesh: ${obj.name}
+       </div>`;
+
+    return;
+  }
+
+  const side =
+    /l001$/i.test(obj.name)
+      ? "Left "
+      : /r001$/i.test(obj.name)
+        ? "Right "
+        : "";
+
+  const sideZh =
+    /l001$/i.test(obj.name)
+      ? "左"
+      : /r001$/i.test(obj.name)
+        ? "右"
+        : "";
+
+  document.getElementById(
+    "structureName"
+  ).textContent=
+    side + data.en;
+
+  document.getElementById(
+    "structureChinese"
+  ).textContent=
+    sideZh + data.zh;
+
+  document.getElementById(
+    "infoContent"
+  ).innerHTML=
+
+    fieldHTML(
+      "TYPE｜骨分類",
+      data.type,
+      data.typeZh
+    ) +
+
+    fieldHTML(
+      "ARTICULATIONS｜關節連接",
+      data.articulations,
+      data.articulationsZh
+    ) +
+
+    fieldHTML(
+      "LANDMARKS｜骨性標誌",
+      data.landmarks,
+      data.landmarksZh
+    ) +
+
+    fieldHTML(
+      "MUSCLE ATTACHMENTS｜肌肉附著",
+      data.attachments,
+      data.attachmentsZh
+    ) +
+
+    fieldHTML(
+      "CLINICAL ANATOMY｜臨床解剖",
+      data.clinical,
+      data.clinicalZh
+    );
+}
+
+function selectObject(obj){
+
+  highlightObject(obj);
+
+  document.getElementById(
+    "selectionControls"
+  ).style.display="block";
+
+  if(
+    obj.userData.anatomyLayer===
+    "muscular"
+  ){
+    showMuscleInfo(obj);
+  }
+
+  else if(
+    obj.userData.anatomyLayer===
+    "skeleton"
+  ){
+    showBoneInfo(obj);
+  }
+}
+
+/* =========================================================
+   POINTER
+========================================================= */
+
+renderer.domElement.addEventListener(
+  "pointerup",
+  event=>{
+
+    /*
+      Ignore obvious multi-touch gestures.
+    */
+
+    if(event.pointerType==="touch"){
+      // pointerup remains usable for tap selection
+    }
+
+    const rect =
+      renderer.domElement
+        .getBoundingClientRect();
+
+    pointer.x =
+      ((event.clientX-rect.left)/rect.width)*2-1;
+
+    pointer.y =
+      -((event.clientY-rect.top)/rect.height)*2+1;
+
+    raycaster.setFromCamera(
+      pointer,
+      camera
+    );
+
+    const hits =
+      raycaster.intersectObjects(
+        selectableMeshes(),
+        false
+      );
+
+    if(hits.length){
+      selectObject(hits[0].object);
+    }
+
+  }
 );
 
+/* =========================================================
+   HIDE / ISOLATE
+========================================================= */
 
-/* =====================================================
+document.getElementById(
+  "hideSelected"
+).addEventListener("click",()=>{
+
+  if(!selectedObject) return;
+
+  restoreOriginalMaterials();
+
+  selectedObject.visible=false;
+
+  individualOverrides.set(
+    selectedObject,
+    "hidden"
+  );
+
+  selectedObject=null;
+});
+
+document.getElementById(
+  "isolateSelected"
+).addEventListener("click",()=>{
+
+  if(!selectedObject) return;
+
+  const layer =
+    selectedObject.userData
+      .anatomyLayer;
+
+  human.traverse(obj=>{
+
+    if(
+      obj.isMesh &&
+      obj.userData.anatomyLayer===layer
+    ){
+      obj.visible =
+        obj===selectedObject;
+    }
+
+  });
+
+});
+
+function resetIndividualControls(){
+
+  restoreOriginalMaterials();
+
+  selectedObject=null;
+
+  individualOverrides.clear();
+
+  human.traverse(obj=>{
+
+    if(!obj.isMesh) return;
+
+    const key =
+      obj.userData.anatomyLayer;
+
+    if(!key) return;
+
+    obj.visible =
+      !!layerVisibility[key];
+
+  });
+
+  updateMuscleDepth();
+
+  document.getElementById(
+    "structureName"
+  ).textContent=
+    "Select a structure";
+
+  document.getElementById(
+    "structureChinese"
+  ).textContent=
+    "點擊肌肉或骨骼";
+
+  document.getElementById(
+    "structureBadge"
+  ).textContent=
+    "3D SELECT";
+
+  document.getElementById(
+    "selectionControls"
+  ).style.display="none";
+
+  document.getElementById(
+    "infoContent"
+  ).innerHTML=
+    `直接點擊人體。<br><br>
+     肌肉：Origin / Insertion / Action /
+     Innervation / Blood supply。<br><br>
+     骨骼：Type / Articulations / Landmarks /
+     Muscle attachments / Clinical anatomy。`;
+}
+
+document.getElementById(
+  "resetIndividual"
+).addEventListener(
+  "click",
+  resetIndividualControls
+);
+
+document.getElementById(
+  "restoreAll"
+).addEventListener(
+  "click",
+  ()=>{
+
+    muscleDepth=4;
+
+    layerVisibility.skeleton=true;
+    layerVisibility.muscular=true;
+
+    human.traverse(obj=>{
+
+      if(!obj.isMesh) return;
+
+      const key =
+        obj.userData.anatomyLayer;
+
+      if(key){
+        obj.visible =
+          !!layerVisibility[key];
+      }
+
+    });
+
+    updateMuscleDepth();
+    updateSystemButtons();
+    resetIndividualControls();
+  }
+);
+
+/* =========================================================
+   SEARCH
+========================================================= */
+
+function searchStructure(){
+
+  const q =
+    document.getElementById(
+      "searchInput"
+    ).value
+      .trim()
+      .toLowerCase();
+
+  if(!q) return;
+
+  let found=null;
+
+  human.traverse(obj=>{
+
+    if(
+      found ||
+      !obj.isMesh
+    ){
+      return;
+    }
+
+    const layer =
+      obj.userData.anatomyLayer;
+
+    if(
+      layer!=="muscular" &&
+      layer!=="skeleton"
+    ){
+      return;
+    }
+
+    const modelName =
+      getHierarchyName(obj)
+        .toLowerCase();
+
+    const clean =
+      cleanName(obj.name)
+        .toLowerCase();
+
+    if(
+      modelName.includes(q) ||
+      clean.includes(q)
+    ){
+      found=obj;
+    }
+
+  });
+
+  /*
+    Teaching database English / Chinese search.
+  */
+
+  if(!found){
+
+    const muscle =
+      MUSCLES.find(m=>
+        m.en.toLowerCase().includes(q) ||
+        m.zh.includes(q)
+      );
+
+    if(muscle){
+
+      human.traverse(obj=>{
+
+        if(
+          found ||
+          !obj.isMesh ||
+          obj.userData.anatomyLayer!=="muscular"
+        ){
+          return;
+        }
+
+        if(
+          findMuscle(
+            getHierarchyName(obj)
+          )?.id===muscle.id
+        ){
+          found=obj;
+        }
+
+      });
+
+    }
+  }
+
+  if(!found){
+
+    const bone =
+      BONES.find(b=>
+        b.en.toLowerCase().includes(q) ||
+        b.zh.includes(q)
+      );
+
+    if(bone){
+
+      human.traverse(obj=>{
+
+        if(
+          found ||
+          !obj.isMesh ||
+          obj.userData.anatomyLayer!=="skeleton"
+        ){
+          return;
+        }
+
+        if(
+          findBone(
+            cleanName(obj.name)
+          )?.id===bone.id
+        ){
+          found=obj;
+        }
+
+      });
+
+    }
+  }
+
+  if(found){
+
+    found.visible=true;
+
+    selectObject(found);
+
+    const box =
+      worldBox(found);
+
+    const c =
+      new THREE.Vector3();
+
+    const s =
+      new THREE.Vector3();
+
+    box.getCenter(c);
+    box.getSize(s);
+
+    controls.target.copy(c);
+
+    const max =
+      Math.max(
+        s.x,
+        s.y,
+        s.z,
+        rig.refs
+          ? rig.refs.upperArmLength*.15
+          : 1
+      );
+
+    const direction =
+      camera.position
+        .clone()
+        .sub(controls.target)
+        .normalize();
+
+    camera.position.copy(
+      c.clone().add(
+        direction.multiplyScalar(
+          max*6
+        )
+      )
+    );
+
+    controls.update();
+
+  }else{
+
+    showError(
+      "No matching visible structure found｜找不到對應結構"
+    );
+  }
+}
+
+document.getElementById(
+  "searchButton"
+).addEventListener(
+  "click",
+  searchStructure
+);
+
+document.getElementById(
+  "searchInput"
+).addEventListener(
+  "keydown",
+  e=>{
+
+    if(e.key==="Enter"){
+      searchStructure();
+    }
+
+  }
+);
+
+/* =========================================================
+   INITIAL LOADING
+========================================================= */
+
+async function init(){
+
+  try{
+
+    /*
+      1. SKELETON
+    */
+
+    setStatus(
+      "Loading skeleton..."
+    );
+
+    await loadOne(
+      "skeleton"
+    );
+
+    scene.updateMatrixWorld(true);
+
+    /*
+      Center entire human using skeleton only.
+      This prevents label geometry in other GLBs from
+      corrupting camera fit.
+    */
+
+    const box =
+      new THREE.Box3()
+        .setFromObject(
+          layers.skeleton
+        );
+
+    const center =
+      new THREE.Vector3();
+
+    const size =
+      new THREE.Vector3();
+
+    box.getCenter(center);
+    box.getSize(size);
+
+    human.position.sub(center);
+
+    scene.updateMatrixWorld(true);
+
+    fitCamera(size);
+
+    /*
+      2. BUILD RIGHT ARM SKELETAL RIG
+    */
+
+    buildRig();
+
+    updateSystemButtons();
+
+    await sleep(100);
+
+    /*
+      3. MUSCLES
+    */
+
+    setStatus(
+      "Loading muscles..."
+    );
+
+    await loadOne(
+      "muscular"
+    );
+
+    /*
+      Attach right upper-limb muscle meshes
+      to shoulder/elbow/wrist hierarchy.
+    */
+
+    registerSoftTissueLayer(
+      "muscular"
+    );
+
+    updateMuscleDepth();
+
+    setStatus(
+      "Core anatomy ready",
+      "ready"
+    );
+
+    updateSystemButtons();
+
+    /*
+      Allow Safari to render before decoding
+      another large GLB.
+    */
+
+    await sleep(250);
+
+    /*
+      4. NERVOUS
+    */
+
+    await loadOptionalLayer(
+      "nervous",
+      "nervous system"
+    );
+
+    await sleep(200);
+
+    /*
+      5. CARDIOVASCULAR
+    */
+
+    await loadOptionalLayer(
+      "cardiovascular",
+      "cardiovascular system"
+    );
+
+    await sleep(200);
+
+    /*
+      6. VISCERA
+
+      Viscera loads normally but is not attached to
+      the right-arm joint rig.
+    */
+
+    await loadOptionalLayer(
+      "visceral",
+      "viscera"
+    );
+
+    setStatus(
+      "Anatomy loaded",
+      "ready"
+    );
+
+    updateSystemButtons();
+
+  }catch(err){
+
+    console.error(err);
+
+    setStatus(
+      "Loading error",
+      "error"
+    );
+
+    showError(
+      "Core anatomy failed to load: " +
+      (err?.message || err)
+    );
+  }
+}
+
+/* =========================================================
+   RESIZE
+========================================================= */
+
+window.addEventListener(
+  "resize",
+  ()=>{
+
+    camera.aspect =
+      window.innerWidth /
+      window.innerHeight;
+
+    camera.updateProjectionMatrix();
+
+    renderer.setSize(
+      window.innerWidth,
+      window.innerHeight
+    );
+
+  }
+);
+
+/* =========================================================
    RENDER LOOP
-===================================================== */
+========================================================= */
 
 function animate(){
 
- requestAnimationFrame(
-  animate
- );
+  requestAnimationFrame(
+    animate
+  );
 
+  controls.update();
 
- orbit.update();
-
-
- renderer.render(
-  scene,
-  camera
- );
+  renderer.render(
+    scene,
+    camera
+  );
 }
-
 
 animate();
 
-
-/* =====================================================
-   START
-===================================================== */
+updateSystemButtons();
 
 init();
 
