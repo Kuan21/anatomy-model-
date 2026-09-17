@@ -554,6 +554,10 @@ input[type="range"]{
         Reset joints｜關節歸零
       </button>
 
+      <div class="jointNotice" style="margin-top:10px;line-height:1.45;">
+        Stability mode｜穩定模式：暫停關節變形，避免未綁骨模型的手指／軟組織飛離。
+      </div>
+
     </div>
 
     <div class="section">
@@ -745,7 +749,7 @@ const layerReady = {
   nervous:false,
   cardiovascular:false,
   visceral:false,
-  skin:false
+  skin:true
 };
 
 const layerVisibility = {
@@ -924,7 +928,8 @@ async function loadOptionalLayer(key,label){
       Any newly loaded soft-tissue layer must be registered
       into the already-created right upper-limb rig.
     */
-    registerSoftTissueLayer(key);
+    // Phase 1: keep every GLB in its original hierarchy/alignment.
+    // registerSoftTissueLayer(key);
 
     updateSystemButtons();
 
@@ -960,8 +965,8 @@ function prepareSkin(model){
       roughness: 0.72,
       metalness: 0.0,
       transparent: true,
-      opacity: 0.34,
-      depthWrite: false,
+      opacity: 0.82,
+      depthWrite: true,
       side: THREE.DoubleSide
     });
 
@@ -2095,6 +2100,22 @@ function applyJointPose(){
 
 });
 
+// Source anatomy GLBs have no armature/skin weights. Disable the old
+// destructive runtime joint controls until Phase 2 segmented rig is installed.
+[
+  "shoulderFlex",
+  "shoulderAbduction",
+  "shoulderRotation",
+  "elbowFlexion",
+  "forearmRotation",
+  "wristFlexion"
+].forEach(id=>{
+  const el=document.getElementById(id);
+  if(el){ el.value=0; el.disabled=true; }
+});
+
+document.getElementById("resetJoints").disabled=true;
+
 document.getElementById(
   "resetJoints"
 ).addEventListener("click",()=>{
@@ -3128,7 +3149,9 @@ async function init(){
       2. BUILD RIGHT ARM SKELETAL RIG
     */
 
-    buildRig();
+    // Phase 1 stability fix: source GLBs are unrigged.
+    // Do not re-parent individual anatomy meshes at runtime; this caused detached hands/fingers.
+    // buildRig();
 
     updateSystemButtons();
 
@@ -3151,9 +3174,8 @@ async function init(){
       to shoulder/elbow/wrist hierarchy.
     */
 
-    registerSoftTissueLayer(
-      "muscular"
-    );
+    // Disabled until the articulated rig uses authored segment mappings.
+    // registerSoftTissueLayer("muscular");
 
     updateMuscleDepth();
 
