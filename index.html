@@ -554,10 +554,6 @@ input[type="range"]{
         Reset joints｜關節歸零
       </button>
 
-      <div class="jointNotice" style="margin-top:10px;line-height:1.45;">
-        Stability mode｜穩定模式：暫停關節變形，避免未綁骨模型的手指／軟組織飛離。
-      </div>
-
     </div>
 
     <div class="section">
@@ -749,7 +745,7 @@ const layerReady = {
   nervous:false,
   cardiovascular:false,
   visceral:false,
-  skin:true
+  skin:false
 };
 
 const layerVisibility = {
@@ -923,14 +919,9 @@ async function loadOptionalLayer(key,label){
 
     await loadOne(key);
 
-    /*
-      IMPORTANT:
-      Any newly loaded soft-tissue layer must be registered
-      into the already-created right upper-limb rig.
-    */
-    // Phase 1: keep every GLB in its original hierarchy/alignment.
-    // registerSoftTissueLayer(key);
-
+    // Keep every anatomical system in its original GLB hierarchy.
+    // Re-parenting static meshes into the prototype arm rig corrupts
+    // nerves/vessels and can move structures away from the body.
     updateSystemButtons();
 
     await sleep(120);
@@ -965,8 +956,8 @@ function prepareSkin(model){
       roughness: 0.72,
       metalness: 0.0,
       transparent: true,
-      opacity: 0.82,
-      depthWrite: true,
+      opacity: 0.34,
+      depthWrite: false,
       side: THREE.DoubleSide
     });
 
@@ -2100,22 +2091,6 @@ function applyJointPose(){
 
 });
 
-// Source anatomy GLBs have no armature/skin weights. Disable the old
-// destructive runtime joint controls until Phase 2 segmented rig is installed.
-[
-  "shoulderFlex",
-  "shoulderAbduction",
-  "shoulderRotation",
-  "elbowFlexion",
-  "forearmRotation",
-  "wristFlexion"
-].forEach(id=>{
-  const el=document.getElementById(id);
-  if(el){ el.value=0; el.disabled=true; }
-});
-
-document.getElementById("resetJoints").disabled=true;
-
 document.getElementById(
   "resetJoints"
 ).addEventListener("click",()=>{
@@ -2195,7 +2170,7 @@ function muscleDepthFor(mesh){
   /* DEEPEST */
 
   if(
-    /(subscapularis|supraspinatus|infraspinatus|teres minor|multifidus|rotatores|interspinal|transversus abdominis|gluteus minimus|pronator quadratus|supinator)/i.test(n)
+    /(subscapularis|supraspinatus|infraspinatus|teres minor|multifidus|rotatores|interspinal|intertransvers|transversus abdominis|gluteus minimus|pronator quadratus|supinator|popliteus|quadratus femoris|obturator|gemellus|interossei|lumbrical|flexor hallucis brevis|adductor hallucis)/i.test(n)
   ){
     return 1;
   }
@@ -2211,12 +2186,14 @@ function muscleDepthFor(mesh){
   /* SUPERFICIAL */
 
   if(
-    /(trapezius|latissimus|pectoralis major|deltoid|biceps|triceps|sternocleidomastoid|rectus abdominis|external oblique|gluteus maximus|sartorius|rectus femoris|vastus lateralis|vastus medialis|gastrocnemius|tibialis anterior)/i.test(n)
+    /(trapezius|latissimus|pectoralis major|deltoid|biceps|triceps|sternocleidomastoid|frontalis|occipitalis|temporoparietalis|orbicularis|zygomaticus|risorius|platysma|masseter|rectus abdominis|external oblique|gluteus maximus|sartorius|rectus femoris|vastus lateralis|vastus medialis|gastrocnemius|soleus|tibialis anterior|brachioradialis|palmaris longus)/i.test(n)
   ){
     return 4;
   }
 
-  return 3;
+  // Unclassified muscles are treated as intermediate rather than
+  // superficial. This makes each minus-step visibly peel a layer.
+  return 2;
 }
 
 function updateMuscleDepth(){
@@ -2225,6 +2202,8 @@ function updateMuscleDepth(){
 
   const muscleLayerOn =
     layerVisibility.muscular;
+
+  layers.muscular.visible = muscleLayerOn;
 
   layers.muscular.traverse(obj=>{
 
@@ -2367,28 +2346,14 @@ document
         layerVisibility[key] =
           !layerVisibility[key];
 
-        /*
-          Since rigged meshes are no longer necessarily
-          children of the original layer root, toggle
-          using userData anatomyLayer across the HUMAN tree.
-        */
+        // Each anatomical system is an independent GLB root.
+        // Toggle the root so nerves, vessels, viscera and skin work
+        // independently from skeleton/muscle visibility.
+        if(layers[key]){
+          layers[key].visible = !!layerVisibility[key];
+        }
 
-        human.traverse(obj=>{
-
-          if(
-            obj.isMesh &&
-            obj.userData.anatomyLayer===key
-          ){
-            obj.visible =
-              layerVisibility[key];
-          }
-
-        });
-
-        if(
-          key==="muscular" &&
-          layerVisibility.muscular
-        ){
+        if(key==="muscular"){
           updateMuscleDepth();
         }
 
@@ -2879,6 +2844,11 @@ document.getElementById(
     layerVisibility.skeleton=true;
     layerVisibility.muscular=true;
 
+    // Restore means the two core layers; optional systems keep their
+    // current on/off state instead of being accidentally overwritten.
+    if(layers.skeleton) layers.skeleton.visible=true;
+    if(layers.muscular) layers.muscular.visible=true;
+
     human.traverse(obj=>{
 
       if(!obj.isMesh) return;
@@ -3149,9 +3119,7 @@ async function init(){
       2. BUILD RIGHT ARM SKELETAL RIG
     */
 
-    // Phase 1 stability fix: source GLBs are unrigged.
-    // Do not re-parent individual anatomy meshes at runtime; this caused detached hands/fingers.
-    // buildRig();
+    buildRig();
 
     updateSystemButtons();
 
@@ -3169,14 +3137,8 @@ async function init(){
       "muscular"
     );
 
-    /*
-      Attach right upper-limb muscle meshes
-      to shoulder/elbow/wrist hierarchy.
-    */
-
-    // Disabled until the articulated rig uses authored segment mappings.
-    // registerSoftTissueLayer("muscular");
-
+    // Do NOT attach static muscle meshes to the prototype arm rig.
+    // The source GLB is not skinned/rigged; re-parenting breaks anatomy.
     updateMuscleDepth();
 
     setStatus(
