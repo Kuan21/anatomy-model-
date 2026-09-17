@@ -12,6 +12,7 @@
   <title>MJ Anatomy 3D</title>
 
   <style>
+
     * {
       box-sizing: border-box;
     }
@@ -22,7 +23,8 @@
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background: #050607;
+
+      background: #08090b;
       color: white;
 
       font-family:
@@ -39,102 +41,392 @@
       touch-action: none;
     }
 
+
+    /* =========================
+       MAIN PANEL
+    ========================= */
+
     #panel {
       position: fixed;
-      top: 25px;
-      left: 25px;
-      z-index: 10;
 
-      min-width: 280px;
-      padding: 18px 22px;
+      top: 20px;
+      left: 20px;
 
-      background: rgba(18, 20, 23, 0.82);
-      border: 1px solid #34383e;
-      border-radius: 16px;
+      z-index: 20;
 
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
+      width: 285px;
+      max-height: calc(100vh - 40px);
+
+      overflow-y: auto;
+
+      padding: 18px;
+
+      background: rgba(17, 19, 23, 0.90);
+
+      border:
+        1px solid rgba(255,255,255,0.12);
+
+      border-radius: 18px;
+
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+
+      box-shadow:
+        0 12px 40px rgba(0,0,0,0.35);
     }
 
-    #panel h2 {
-      margin: 0 0 6px 0;
-      font-size: 22px;
-    }
 
-    #panel p {
+    #panel h1 {
       margin: 0;
-      color: #9ba0a8;
-      font-size: 14px;
+
+      font-size: 21px;
+      font-weight: 700;
     }
+
+
+    #subtitle {
+      margin-top: 5px;
+
+      color: #969da7;
+
+      font-size: 13px;
+    }
+
 
     #status {
       margin-top: 12px;
+
       color: #f0c36a;
+
       font-size: 12px;
     }
 
+
+    .divider {
+      height: 1px;
+
+      margin: 16px 0;
+
+      background:
+        rgba(255,255,255,0.10);
+    }
+
+
+    .section-title {
+      margin-bottom: 10px;
+
+      color: #aeb5bf;
+
+      font-size: 11px;
+      font-weight: 700;
+
+      letter-spacing: 1px;
+
+      text-transform: uppercase;
+    }
+
+
+    /* =========================
+       LAYER BUTTONS
+    ========================= */
+
+    .layer {
+      display: flex;
+
+      align-items: center;
+
+      width: 100%;
+
+      margin-bottom: 7px;
+
+      padding: 11px 12px;
+
+      border:
+        1px solid rgba(255,255,255,0.10);
+
+      border-radius: 11px;
+
+      background: #202329;
+
+      color: white;
+
+      font-size: 14px;
+
+      cursor: pointer;
+
+      -webkit-tap-highlight-color:
+        transparent;
+    }
+
+
+    .layer.active {
+      background: #303741;
+
+      border-color:
+        rgba(255,255,255,0.25);
+    }
+
+
+    .dot {
+      width: 10px;
+      height: 10px;
+
+      margin-right: 10px;
+
+      border-radius: 50%;
+    }
+
+
+    .bone-dot {
+      background: #e8dfca;
+    }
+
+    .muscle-dot {
+      background: #c95d5d;
+    }
+
+    .nerve-dot {
+      background: #e6c94c;
+    }
+
+    .cardio-dot {
+      background: #c84f58;
+    }
+
+    .viscera-dot {
+      background: #b98678;
+    }
+
+
+    .layer-state {
+      margin-left: auto;
+
+      color: #8f97a1;
+
+      font-size: 11px;
+    }
+
+
+    /* =========================
+       INFO
+    ========================= */
+
+    #info {
+      color: #8e959e;
+
+      font-size: 12px;
+
+      line-height: 1.5;
+    }
+
+
+    /* =========================
+       HELP
+    ========================= */
+
     #help {
       position: fixed;
+
       left: 50%;
-      bottom: 25px;
+      bottom: 20px;
 
-      transform: translateX(-50%);
+      z-index: 15;
 
-      z-index: 10;
+      transform:
+        translateX(-50%);
 
-      padding: 10px 16px;
+      padding: 9px 15px;
 
-      background: rgba(18, 20, 23, 0.82);
-      border: 1px solid #34383e;
+      background:
+        rgba(18,20,23,.86);
+
+      border:
+        1px solid rgba(255,255,255,.12);
+
       border-radius: 20px;
 
-      color: #aaa;
-      font-size: 13px;
+      color: #a5abb2;
+
+      font-size: 12px;
 
       white-space: nowrap;
     }
+
+
+    @media (max-width: 700px) {
+
+      #panel {
+        top: 12px;
+        left: 12px;
+
+        width: 245px;
+
+        padding: 14px;
+      }
+
+      #panel h1 {
+        font-size: 18px;
+      }
+
+      .layer {
+        padding: 9px 10px;
+      }
+
+    }
+
   </style>
 
 
-  <!-- THREE.JS IMPORT MAP -->
+  <!-- =========================
+       THREE.JS IMPORT MAP
+  ========================== -->
 
   <script type="importmap">
+
   {
     "imports": {
+
       "three":
-        "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+      "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
 
       "three/addons/":
-        "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+      "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+
     }
   }
+
   </script>
 
 </head>
 
 
+
 <body>
 
-  <!-- INFORMATION PANEL -->
+
+  <!-- =========================
+       CONTROL PANEL
+  ========================== -->
 
   <div id="panel">
 
-    <h2>
+    <h1>
       MJ Anatomy 3D
-    </h2>
+    </h1>
 
-    <p>
-      Human Skeletal System
-    </p>
+    <div id="subtitle">
+      Interactive Human Anatomy
+    </div>
 
     <div id="status">
-      ● Loading skeleton...
+      ● Loading anatomy...
+    </div>
+
+
+    <div class="divider"></div>
+
+
+    <div class="section-title">
+      Anatomy Layers
+    </div>
+
+
+    <button
+      class="layer active"
+      data-layer="skeleton"
+    >
+
+      <span class="dot bone-dot"></span>
+
+      Skeleton
+
+      <span class="layer-state">
+        ON
+      </span>
+
+    </button>
+
+
+    <button
+      class="layer"
+      data-layer="muscular"
+    >
+
+      <span class="dot muscle-dot"></span>
+
+      Muscles
+
+      <span class="layer-state">
+        OFF
+      </span>
+
+    </button>
+
+
+    <button
+      class="layer"
+      data-layer="nervous"
+    >
+
+      <span class="dot nerve-dot"></span>
+
+      Nervous System
+
+      <span class="layer-state">
+        OFF
+      </span>
+
+    </button>
+
+
+    <button
+      class="layer"
+      data-layer="cardiovascular"
+    >
+
+      <span class="dot cardio-dot"></span>
+
+      Cardiovascular
+
+      <span class="layer-state">
+        OFF
+      </span>
+
+    </button>
+
+
+    <button
+      class="layer"
+      data-layer="visceral"
+    >
+
+      <span class="dot viscera-dot"></span>
+
+      Viscera
+
+      <span class="layer-state">
+        OFF
+      </span>
+
+    </button>
+
+
+    <div class="divider"></div>
+
+
+    <div class="section-title">
+      Model
+    </div>
+
+
+    <div id="info">
+      五個人體系統會使用相同的解剖座標載入。
+      點擊上方按鈕可以顯示或隱藏不同系統。
     </div>
 
   </div>
 
 
-  <!-- TOUCH HELP -->
 
   <div id="help">
     單指旋轉 · 雙指縮放 / 移動
@@ -143,6 +435,7 @@
 
 
   <script type="module">
+
 
     // =====================================
     // IMPORTS
@@ -175,7 +468,7 @@
 
 
     // =====================================
-    // STATUS
+    // UI
     // =====================================
 
     const status =
@@ -195,7 +488,7 @@
 
     scene.background =
       new THREE.Color(
-        0x050607
+        0x08090b
       );
 
 
@@ -254,8 +547,11 @@
     renderer.setPixelRatio(
 
       Math.min(
+
         window.devicePixelRatio,
-        2
+
+        1.75
+
       )
 
     );
@@ -263,6 +559,14 @@
 
     renderer.outputColorSpace =
       THREE.SRGBColorSpace;
+
+
+    renderer.toneMapping =
+      THREE.ACESFilmicToneMapping;
+
+
+    renderer.toneMappingExposure =
+      0.72;
 
 
     document.body.appendChild(
@@ -280,9 +584,9 @@
 
         0xffffff,
 
-        0x202020,
+        0x25282d,
 
-        2.5
+        1.15
 
       );
 
@@ -293,40 +597,40 @@
 
 
 
-    const frontLight =
+    const keyLight =
       new THREE.DirectionalLight(
 
-        0xffffff,
+        0xfff6e8,
 
-        4
+        1.8
 
       );
 
 
-    frontLight.position.set(
+    keyLight.position.set(
       4,
       6,
-      8
+      7
     );
 
 
     scene.add(
-      frontLight
+      keyLight
     );
 
 
 
-    const leftLight =
+    const fillLight =
       new THREE.DirectionalLight(
 
-        0xc7dcff,
+        0xcbdcff,
 
-        2
+        0.65
 
       );
 
 
-    leftLight.position.set(
+    fillLight.position.set(
       -5,
       2,
       4
@@ -334,59 +638,36 @@
 
 
     scene.add(
-      leftLight
+      fillLight
     );
 
 
 
-    const rightLight =
-      new THREE.DirectionalLight(
-
-        0xffe8d0,
-
-        1.5
-
-      );
-
-
-    rightLight.position.set(
-      5,
-      1,
-      2
-    );
-
-
-    scene.add(
-      rightLight
-    );
-
-
-
-    const backLight =
+    const rimLight =
       new THREE.DirectionalLight(
 
         0xffffff,
 
-        1.5
+        0.55
 
       );
 
 
-    backLight.position.set(
+    rimLight.position.set(
       0,
-      4,
+      3,
       -5
     );
 
 
     scene.add(
-      backLight
+      rimLight
     );
 
 
 
     // =====================================
-    // ORBIT CONTROLS
+    // CONTROLS
     // =====================================
 
     const controls =
@@ -419,17 +700,9 @@
       true;
 
 
-    controls.minDistance =
-      0.5;
-
-
-    controls.maxDistance =
-      20;
-
-
 
     // =====================================
-    // DRACO DECODER
+    // DRACO
     // =====================================
 
     const dracoLoader =
@@ -445,7 +718,7 @@
 
 
     // =====================================
-    // GLTF LOADER
+    // GLTF
     // =====================================
 
     const loader =
@@ -459,110 +732,342 @@
 
 
     // =====================================
-    // LOAD HUMAN SKELETON
+    // HUMAN ROOT
+    //
+    // All anatomy systems live inside
+    // the same parent group.
+    //
+    // Later our joint system will be
+    // built underneath this hierarchy.
     // =====================================
 
-    loader.load(
-
-      "./models/skeleton.glb",
-
+    const human =
+      new THREE.Group();
 
 
-      // ===================================
-      // SUCCESS
-      // ===================================
-
-      function (gltf) {
-
-        const skeleton =
-          gltf.scene;
+    human.name =
+      "Human";
 
 
-        scene.add(
-          skeleton
-        );
+    scene.add(
+      human
+    );
 
 
 
-        // ---------------------------------
-        // Prepare meshes
-        // ---------------------------------
+    // =====================================
+    // LAYERS
+    // =====================================
 
-        skeleton.traverse(
+    const layers = {
 
-          function (object) {
+      skeleton: null,
 
-            if (object.isMesh) {
+      muscular: null,
 
-              object.frustumCulled =
+      nervous: null,
+
+      cardiovascular: null,
+
+      visceral: null
+
+    };
+
+
+
+    const modelFiles = {
+
+      skeleton:
+        "./models/skeleton.glb",
+
+      muscular:
+        "./models/muscular.glb",
+
+      nervous:
+        "./models/nervous.glb",
+
+      cardiovascular:
+        "./models/cardiovascular.glb",
+
+      visceral:
+        "./models/visceral.glb"
+
+    };
+
+
+
+    // Skeleton visible initially.
+    // Other layers initially hidden.
+
+    const initialVisibility = {
+
+      skeleton: true,
+
+      muscular: false,
+
+      nervous: false,
+
+      cardiovascular: false,
+
+      visceral: false
+
+    };
+
+
+
+    let loadedCount =
+      0;
+
+
+    const totalModels =
+      Object.keys(
+        modelFiles
+      ).length;
+
+
+
+    // =====================================
+    // PREPARE MODEL
+    // =====================================
+
+    function prepareModel(
+      model,
+      layerName
+    ) {
+
+      model.name =
+        layerName;
+
+
+      model.visible =
+        initialVisibility[
+          layerName
+        ];
+
+
+      model.traverse(
+
+        function (object) {
+
+          if (
+            object.isMesh
+          ) {
+
+            object.userData.anatomyLayer =
+              layerName;
+
+
+            object.frustumCulled =
+              true;
+
+
+            if (
+              object.material
+            ) {
+
+              object.material.side =
+                THREE.FrontSide;
+
+
+              object.material.needsUpdate =
                 true;
-
-
-              if (object.material) {
-
-                object.material.side =
-                  THREE.FrontSide;
-
-
-                object.material.needsUpdate =
-                  true;
-
-              }
 
             }
 
           }
 
-        );
+        }
+
+      );
+
+    }
 
 
 
-        // ---------------------------------
-        // Calculate original bounding box
-        // ---------------------------------
+    // =====================================
+    // LOAD ONE MODEL
+    // =====================================
 
-        const firstBox =
-          new THREE.Box3()
-          .setFromObject(
-            skeleton
+    function loadModel(
+      layerName,
+      file
+    ) {
+
+      return new Promise(
+
+        function (
+          resolve,
+          reject
+        ) {
+
+          loader.load(
+
+            file,
+
+
+            function (gltf) {
+
+              const model =
+                gltf.scene;
+
+
+              prepareModel(
+                model,
+                layerName
+              );
+
+
+              layers[
+                layerName
+              ] =
+                model;
+
+
+              human.add(
+                model
+              );
+
+
+              loadedCount++;
+
+
+              status.textContent =
+
+                "● Loading anatomy " +
+
+                loadedCount +
+
+                "/" +
+
+                totalModels;
+
+
+              console.log(
+                "Loaded:",
+                layerName,
+                model
+              );
+
+
+              resolve(
+                model
+              );
+
+            },
+
+
+            undefined,
+
+
+            function (error) {
+
+              console.error(
+                "Failed:",
+                layerName,
+                error
+              );
+
+
+              reject(
+                error
+              );
+
+            }
+
           );
 
+        }
 
-        const originalCenter =
-          new THREE.Vector3();
+      );
 
-
-        firstBox.getCenter(
-          originalCenter
-        );
+    }
 
 
 
-        // ---------------------------------
-        // Center skeleton
-        // ---------------------------------
+    // =====================================
+    // LOAD ALL ANATOMY
+    // =====================================
 
-        skeleton.position.x -=
-          originalCenter.x;
+    async function loadAnatomy() {
 
-
-        skeleton.position.y -=
-          originalCenter.y;
+      try {
 
 
-        skeleton.position.z -=
-          originalCenter.z;
+        await Promise.all([
+
+          loadModel(
+            "skeleton",
+            modelFiles.skeleton
+          ),
+
+          loadModel(
+            "muscular",
+            modelFiles.muscular
+          ),
+
+          loadModel(
+            "nervous",
+            modelFiles.nervous
+          ),
+
+          loadModel(
+            "cardiovascular",
+            modelFiles.cardiovascular
+          ),
+
+          loadModel(
+            "visceral",
+            modelFiles.visceral
+          )
+
+        ]);
 
 
 
-        // ---------------------------------
-        // Recalculate box after centering
-        // ---------------------------------
+        // =================================
+        // Calculate complete anatomy box
+        // =================================
 
         const box =
           new THREE.Box3()
           .setFromObject(
-            skeleton
+            human
+          );
+
+
+        const center =
+          new THREE.Vector3();
+
+
+        box.getCenter(
+          center
+        );
+
+
+
+        // =================================
+        // Move ALL layers together
+        //
+        // Important:
+        // Never centre layers individually.
+        // Otherwise anatomy alignment
+        // would be destroyed.
+        // =================================
+
+        human.position.sub(
+          center
+        );
+
+
+
+        // =================================
+        // Recalculate bounding box
+        // =================================
+
+        const centeredBox =
+          new THREE.Box3()
+          .setFromObject(
+            human
           );
 
 
@@ -570,168 +1075,24 @@
           new THREE.Vector3();
 
 
-        box.getSize(
+        centeredBox.getSize(
           size
         );
 
 
 
-        const maxDimension =
-          Math.max(
+        // =================================
+        // CAMERA FIT
+        // =================================
 
-            size.x,
-
-            size.y,
-
-            size.z
-
-          );
-
-
-
-        // ---------------------------------
-        // Calculate camera distance
-        // ---------------------------------
-
-        const verticalFOV =
-          THREE.MathUtils.degToRad(
-            camera.fov
-          );
-
-
-        const distanceForHeight =
-
-          size.y /
-
-          (
-            2 *
-            Math.tan(
-              verticalFOV / 2
-            )
-          );
-
-
-
-        const horizontalFOV =
-
-          2 *
-
-          Math.atan(
-
-            Math.tan(
-              verticalFOV / 2
-            )
-
-            *
-
-            camera.aspect
-
-          );
-
-
-
-        const distanceForWidth =
-
-          size.x /
-
-          (
-            2 *
-            Math.tan(
-              horizontalFOV / 2
-            )
-          );
-
-
-
-        let cameraDistance =
-
-          Math.max(
-
-            distanceForHeight,
-
-            distanceForWidth
-
-          );
-
-
-        cameraDistance *=
-          1.2;
-
-
-
-        // ---------------------------------
-        // Camera position
-        // ---------------------------------
-
-        camera.position.set(
-
-          0,
-
-          0,
-
-          cameraDistance
-
+        fitCamera(
+          size
         );
 
 
-        camera.near =
-          Math.max(
-
-            maxDimension /
-            1000,
-
-            0.001
-
-          );
-
-
-        camera.far =
-          Math.max(
-
-            maxDimension *
-            100,
-
-            cameraDistance *
-            10
-
-          );
-
-
-        camera.updateProjectionMatrix();
-
-
-
-        // ---------------------------------
-        // Orbit controls
-        // ---------------------------------
-
-        controls.target.set(
-          0,
-          0,
-          0
-        );
-
-
-        controls.minDistance =
-          cameraDistance *
-          0.1;
-
-
-        controls.maxDistance =
-          cameraDistance *
-          6;
-
-
-        controls.update();
-
-
-
-        // ---------------------------------
-        // Success message
-        // ---------------------------------
 
         status.textContent =
-          "● Skeleton loaded";
+          "● Anatomy loaded";
 
 
         status.style.color =
@@ -739,78 +1100,261 @@
 
 
         console.log(
-          "Skeleton successfully loaded"
+          "All anatomy loaded"
         );
 
 
         console.log(
-          "Skeleton size:",
+          "Human:",
+          human
+        );
+
+
+        console.log(
+          "Anatomy size:",
           size
         );
 
 
-        console.log(
-          "Skeleton:",
-          skeleton
-        );
+      }
 
-      },
-
-
-
-      // ===================================
-      // LOADING PROGRESS
-      // ===================================
-
-      function (xhr) {
-
-        if (
-          xhr.total &&
-          xhr.total > 0
-        ) {
-
-          const percent =
-            Math.round(
-
-              xhr.loaded /
-              xhr.total *
-              100
-
-            );
-
-
-          status.textContent =
-
-            "● Loading skeleton " +
-
-            percent +
-
-            "%";
-
-        }
-
-      },
-
-
-
-      // ===================================
-      // ERROR
-      // ===================================
-
-      function (error) {
+      catch (
+        error
+      ) {
 
         console.error(
-          "Skeleton loading error:",
           error
         );
 
 
         status.textContent =
-          "● Failed to load skeleton";
+          "● Anatomy loading error";
 
 
         status.style.color =
           "#ff6b6b";
+
+      }
+
+    }
+
+
+
+    // =====================================
+    // FIT CAMERA
+    // =====================================
+
+    function fitCamera(
+      size
+    ) {
+
+      const verticalFOV =
+        THREE.MathUtils.degToRad(
+          camera.fov
+        );
+
+
+      const distanceHeight =
+
+        size.y /
+
+        (
+          2 *
+
+          Math.tan(
+            verticalFOV / 2
+          )
+        );
+
+
+
+      const horizontalFOV =
+
+        2 *
+
+        Math.atan(
+
+          Math.tan(
+            verticalFOV / 2
+          )
+
+          *
+
+          camera.aspect
+
+        );
+
+
+
+      const distanceWidth =
+
+        size.x /
+
+        (
+          2 *
+
+          Math.tan(
+            horizontalFOV / 2
+          )
+        );
+
+
+
+      let distance =
+
+        Math.max(
+
+          distanceHeight,
+
+          distanceWidth
+
+        );
+
+
+      distance *=
+        1.18;
+
+
+
+      camera.position.set(
+
+        0,
+
+        0,
+
+        distance
+
+      );
+
+
+
+      const maxDimension =
+
+        Math.max(
+
+          size.x,
+
+          size.y,
+
+          size.z
+
+        );
+
+
+
+      camera.near =
+        Math.max(
+
+          maxDimension /
+          1000,
+
+          0.001
+
+        );
+
+
+      camera.far =
+        Math.max(
+
+          maxDimension *
+          100,
+
+          distance *
+          10
+
+        );
+
+
+      camera.updateProjectionMatrix();
+
+
+
+      controls.target.set(
+        0,
+        0,
+        0
+      );
+
+
+      controls.minDistance =
+        distance *
+        0.08;
+
+
+      controls.maxDistance =
+        distance *
+        6;
+
+
+      controls.update();
+
+    }
+
+
+
+    // =====================================
+    // LAYER BUTTONS
+    // =====================================
+
+    const layerButtons =
+      document.querySelectorAll(
+        ".layer"
+      );
+
+
+    layerButtons.forEach(
+
+      function (button) {
+
+        button.addEventListener(
+
+          "click",
+
+          function () {
+
+            const layerName =
+              button.dataset.layer;
+
+
+            const model =
+              layers[
+                layerName
+              ];
+
+
+            if (
+              !model
+            ) {
+
+              return;
+
+            }
+
+
+            model.visible =
+              !model.visible;
+
+
+            button.classList.toggle(
+              "active",
+              model.visible
+            );
+
+
+            const state =
+              button.querySelector(
+                ".layer-state"
+              );
+
+
+            state.textContent =
+              model.visible
+              ? "ON"
+              : "OFF";
+
+          }
+
+        );
 
       }
 
@@ -819,7 +1363,7 @@
 
 
     // =====================================
-    // WINDOW RESIZE
+    // RESIZE
     // =====================================
 
     window.addEventListener(
@@ -853,7 +1397,7 @@
 
 
     // =====================================
-    // ANIMATION LOOP
+    // RENDER LOOP
     // =====================================
 
     function animate() {
@@ -877,7 +1421,16 @@
     }
 
 
+
+    // =====================================
+    // START
+    // =====================================
+
     animate();
+
+
+    loadAnatomy();
+
 
   </script>
 
