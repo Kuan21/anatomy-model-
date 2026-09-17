@@ -434,8 +434,12 @@ input[type="range"]{
       </button>
 
       <button class="systemBtn" data-layer="cardiovascular">
-        Cardiovascular｜心血管
+        Arteries & Veins / 動靜脈
       </button>
+      <div id="vesselSubLayers" style="display:flex;gap:8px;margin-top:8px">
+        <button class="smallBtn vesselBtn on" data-vessel="artery" style="flex:1">Arteries / 動脈</button>
+        <button class="smallBtn vesselBtn on" data-vessel="vein" style="flex:1">Veins / 靜脈</button>
+      </div>
 
       <button class="systemBtn" data-layer="visceral">
         Viscera｜內臟
@@ -986,7 +990,12 @@ function prepareSkin(model){
     });
     o.castShadow=false; o.receiveShadow=true;
   });
-  alignSkinToSkeleton(model);
+  // All anatomy GLBs share the same source coordinate frame.
+  // Do NOT bbox-align skin after the skeleton has been re-parented into joints;
+  // that was shifting the whole skin away from the body.
+  model.position.set(0,0,0);
+  model.rotation.set(0,0,0);
+  model.scale.set(1,1,1);
 }
 
 function alignSkinToSkeleton(skin){
@@ -1768,115 +1777,59 @@ function classifyRightUpperLimbMesh(mesh){
    REGISTER MUSCLE / NERVE / VESSEL LAYERS
 ========================================================= */
 
+function rightSideName(mesh){
+  const n=getHierarchyName(mesh).toLowerCase();
+  return /(?:\.r(?:\.001)?\b|\br001\b)/i.test(n) && !/(?:\.l(?:\.001)?\b|\bl001\b)/i.test(n);
+}
+
+function anatomicalArmSegment(mesh){
+  if(!rightSideName(mesh)) return null;
+  const n=getHierarchyName(mesh).toLowerCase();
+
+  // IMPORTANT: only muscles whose bulk belongs to one moving segment are rigidly
+  // carried by that segment. Trunk/scapular muscles (serratus, pectorals, latissimus,
+  // trapezius, rotator-cuff, etc.) are deliberately excluded because a rigid attach
+  // would tear their thoracic/scapular origin away during shoulder flexion.
+  if(/serratus|pectoralis|latissimus|trapezius|rhomboid|subscapularis|supraspinatus|infraspinatus|teres major|teres minor|levator scapulae/i.test(n)) return null;
+
+  if(/biceps brachii|triceps brachii|brachialis|coracobrachialis|brachial fascia/i.test(n)) return "upperArm";
+
+  if(/brachioradialis|pronator teres|pronator quadratus|supinator|flexor carpi|extensor carpi|flexor digitorum|extensor digitorum|flexor pollicis longus|extensor pollicis|palmaris longus|antebrachial fascia/i.test(n)) {
+    // Exclude foot/leg homonyms explicitly.
+    if(/foot|halluc|tibial|ankle|crural|femor/i.test(n)) return null;
+    return "forearm";
+  }
+
+  if(/of hand|muscles of hand|palmar interossei|lumbrical muscles of hand|thenar|hypothenar|adductor pollicis|abductor pollicis brevis|opponens pollicis|flexor pollicis brevis|dorsal fascia of hand/i.test(n)) return "hand";
+  return null;
+}
+
 function registerSoftTissueLayer(key){
-
   if(!rig.ready) return;
-
   const root=layers[key];
-
   if(!root) return;
 
-  /*
-    Viscera are deliberately NOT rigged to the arm.
-  */
+  // Nerves, arteries/veins, viscera and skin remain in their complete source hierarchy.
+  // They are never pulled out of the body by a limb pivot.
+  if(key!=="muscular") return;
 
-  // V6 safety: viscera, nerves and vessels stay complete and in their source hierarchy.
-  // Their GLBs contain long continuous meshes crossing multiple body regions; re-parenting
-  // those meshes to one arm joint is what made most of the system disappear / tear apart.
-  if(key==="visceral" || key==="nervous" || key==="cardiovascular" || key==="skin"){
-    return;
-  }
-
-  const meshes =
-    allMeshes(root);
-
-  /*
-    Classification must be completed BEFORE reparenting,
-    otherwise world geometry changes while traversing.
-  */
-
+  const meshes=allMeshes(root);
   const assignments=[];
-
-  // Cache muscle anatomy metadata BEFORE any re-parenting changes world transforms.
-  if(key==="muscular"){
-    for(const mesh of meshes){
-      mesh.userData.muscleRegion = muscleRegionFor(mesh);
-      mesh.userData.muscleLayer = muscleLayerFor(mesh);
-    }
-  }
-
   for(const mesh of meshes){
-
-    const segment =
-      classifyRightUpperLimbMesh(mesh);
-
-    if(segment){
-
-      assignments.push({
-        mesh,
-        segment
-      });
-
-    }
+    mesh.userData.muscleRegion = muscleRegionFor(mesh);
+    mesh.userData.muscleLayer = muscleLayerFor(mesh);
+    const segment=anatomicalArmSegment(mesh);
+    if(segment) assignments.push({mesh,segment});
   }
 
-  for(const item of assignments){
-
-    const {
-      mesh,
-      segment
-    }=item;
-
-    mesh.userData.rigSegment =
-      segment;
-
-    mesh.userData.riggedRightUpperLimb =
-      true;
-
-    if(segment==="upperArm"){
-
-      /*
-        Upper-arm soft tissues move with shoulder,
-        but remain proximal to elbow.
-      */
-
-      rig.shoulderRotation.attach(
-        mesh
-      );
-
-    }
-
-    else if(segment==="forearm"){
-
-      /*
-        Forearm soft tissues:
-        shoulder → elbow → pronation/supination.
-      */
-
-      rig.forearm.attach(
-        mesh
-      );
-
-    }
-
-    else if(segment==="hand"){
-
-      /*
-        Hand soft tissues:
-        shoulder → elbow → forearm rotation → wrist.
-      */
-
-      rig.wrist.attach(
-        mesh
-      );
-
-    }
-
+  for(const {mesh,segment} of assignments){
+    mesh.userData.rigSegment=segment;
+    mesh.userData.riggedRightUpperLimb=true;
+    if(segment==="upperArm") rig.shoulderRotation.attach(mesh);
+    else if(segment==="forearm") rig.forearm.attach(mesh);
+    else if(segment==="hand") rig.wrist.attach(mesh);
   }
-
-  console.log(
-    `${key}: ${assignments.length} right upper-limb meshes rigged`
-  );
+  console.log(`muscular: ${assignments.length} anatomically whitelisted right-arm meshes rigged`);
 }
 
 /* =========================================================
@@ -2178,9 +2131,14 @@ document
           using userData anatomyLayer across the HUMAN tree.
         */
 
+        // V7: toggle BOTH the GLB root and its mesh registry. In V6 the optional
+        // layer root stayed invisible, so turning individual nerve/vessel/skin meshes
+        // on could never make them render.
+        if(layers[key]) layers[key].visible=layerVisibility[key];
         (layerMeshRegistry[key]||[]).forEach(obj=>{
           if(obj && obj.isMesh) obj.visible=layerVisibility[key];
         });
+        if(key==="cardiovascular" && layerVisibility[key]) updateVesselVisibility();
 
         if(
           key==="muscular" &&
@@ -2194,6 +2152,29 @@ document
     );
 
   });
+
+const vesselVisibility={artery:true,vein:true};
+function vesselTypeFor(mesh){
+  let parts=[],p=mesh;
+  while(p && p!==layers.cardiovascular){ if(p.name) parts.push(p.name); p=p.parent; }
+  const n=parts.join(" ").toLowerCase();
+  if(/vein|venous|sinus|vena cava|caval/i.test(n)) return "vein";
+  if(/artery|arterial|aorta|aortic|trunk/i.test(n)) return "artery";
+  return "other";
+}
+function updateVesselVisibility(){
+  const on=!!layerVisibility.cardiovascular;
+  if(layers.cardiovascular) layers.cardiovascular.visible=on;
+  (layerMeshRegistry.cardiovascular||[]).forEach(mesh=>{
+    const t=mesh.userData.vesselType || (mesh.userData.vesselType=vesselTypeFor(mesh));
+    mesh.visible=on && (t==="other" || vesselVisibility[t]);
+  });
+}
+document.querySelectorAll(".vesselBtn").forEach(btn=>btn.addEventListener("click",()=>{
+  const t=btn.dataset.vessel; vesselVisibility[t]=!vesselVisibility[t];
+  btn.classList.toggle("on",vesselVisibility[t]);
+  updateVesselVisibility();
+}));
 
 /* =========================================================
    SELECTION
@@ -3001,12 +2982,12 @@ async function init(){
     await sleep(200);
 
     /*
-      5. CARDIOVASCULAR
+      5. ARTERIES & VEINS
     */
 
     await loadOptionalLayer(
       "cardiovascular",
-      "cardiovascular system"
+      "arteries and veins"
     );
 
     await sleep(200);
