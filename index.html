@@ -12,7 +12,6 @@
   <title>MJ Anatomy 3D</title>
 
   <style>
-
     * {
       box-sizing: border-box;
     }
@@ -23,7 +22,6 @@
       width: 100%;
       height: 100%;
       overflow: hidden;
-
       background: #050607;
       color: white;
 
@@ -43,22 +41,15 @@
 
     #panel {
       position: fixed;
-
       top: 25px;
       left: 25px;
-
       z-index: 10;
 
       min-width: 280px;
-
       padding: 18px 22px;
 
-      background:
-        rgba(18, 20, 23, 0.82);
-
-      border:
-        1px solid #34383e;
-
+      background: rgba(18, 20, 23, 0.82);
+      border: 1px solid #34383e;
       border-radius: 16px;
 
       backdrop-filter: blur(16px);
@@ -72,37 +63,29 @@
 
     #panel p {
       margin: 0;
-
       color: #9ba0a8;
       font-size: 14px;
     }
 
     #status {
       margin-top: 12px;
-
       color: #f0c36a;
       font-size: 12px;
     }
 
     #help {
       position: fixed;
-
       left: 50%;
       bottom: 25px;
 
-      transform:
-        translateX(-50%);
+      transform: translateX(-50%);
 
       z-index: 10;
 
       padding: 10px 16px;
 
-      background:
-        rgba(18, 20, 23, 0.8);
-
-      border:
-        1px solid #34383e;
-
+      background: rgba(18, 20, 23, 0.82);
+      border: 1px solid #34383e;
       border-radius: 20px;
 
       color: #aaa;
@@ -110,20 +93,19 @@
 
       white-space: nowrap;
     }
-
   </style>
 
+
+  <!-- THREE.JS IMPORT MAP -->
 
   <script type="importmap">
   {
     "imports": {
-
       "three":
-      "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+        "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
 
       "three/addons/":
-      "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
-
+        "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
     }
   }
   </script>
@@ -132,6 +114,8 @@
 
 
 <body>
+
+  <!-- INFORMATION PANEL -->
 
   <div id="panel">
 
@@ -150,6 +134,8 @@
   </div>
 
 
+  <!-- TOUCH HELP -->
+
   <div id="help">
     單指旋轉 · 雙指縮放 / 移動
   </div>
@@ -159,7 +145,7 @@
   <script type="module">
 
     // =====================================
-    // IMPORT THREE.JS
+    // IMPORTS
     // =====================================
 
     import * as THREE
@@ -180,9 +166,16 @@
     "three/addons/loaders/GLTFLoader.js";
 
 
+    import {
+      DRACOLoader
+    }
+    from
+    "three/addons/loaders/DRACOLoader.js";
+
+
 
     // =====================================
-    // HTML STATUS
+    // STATUS
     // =====================================
 
     const status =
@@ -221,7 +214,7 @@
 
         0.01,
 
-        1000
+        10000
 
       );
 
@@ -261,11 +254,8 @@
     renderer.setPixelRatio(
 
       Math.min(
-
         window.devicePixelRatio,
-
         2
-
       )
 
     );
@@ -285,7 +275,7 @@
     // LIGHTING
     // =====================================
 
-    const ambientLight =
+    const hemisphereLight =
       new THREE.HemisphereLight(
 
         0xffffff,
@@ -298,7 +288,7 @@
 
 
     scene.add(
-      ambientLight
+      hemisphereLight
     );
 
 
@@ -345,6 +335,29 @@
 
     scene.add(
       leftLight
+    );
+
+
+
+    const rightLight =
+      new THREE.DirectionalLight(
+
+        0xffe8d0,
+
+        1.5
+
+      );
+
+
+    rightLight.position.set(
+      5,
+      1,
+      2
+    );
+
+
+    scene.add(
+      rightLight
     );
 
 
@@ -416,19 +429,49 @@
 
 
     // =====================================
-    // LOAD SKELETON
+    // DRACO DECODER
+    // =====================================
+
+    const dracoLoader =
+      new DRACOLoader();
+
+
+    dracoLoader.setDecoderPath(
+
+      "https://www.gstatic.com/draco/v1/decoders/"
+
+    );
+
+
+
+    // =====================================
+    // GLTF LOADER
     // =====================================
 
     const loader =
       new GLTFLoader();
 
 
+    loader.setDRACOLoader(
+      dracoLoader
+    );
+
+
+
+    // =====================================
+    // LOAD HUMAN SKELETON
+    // =====================================
+
     loader.load(
 
       "./models/skeleton.glb",
 
 
+
+      // ===================================
       // SUCCESS
+      // ===================================
+
       function (gltf) {
 
         const skeleton =
@@ -441,9 +484,80 @@
 
 
 
-        // -----------------------------
-        // Calculate model bounding box
-        // -----------------------------
+        // ---------------------------------
+        // Prepare meshes
+        // ---------------------------------
+
+        skeleton.traverse(
+
+          function (object) {
+
+            if (object.isMesh) {
+
+              object.frustumCulled =
+                true;
+
+
+              if (object.material) {
+
+                object.material.side =
+                  THREE.FrontSide;
+
+
+                object.material.needsUpdate =
+                  true;
+
+              }
+
+            }
+
+          }
+
+        );
+
+
+
+        // ---------------------------------
+        // Calculate original bounding box
+        // ---------------------------------
+
+        const firstBox =
+          new THREE.Box3()
+          .setFromObject(
+            skeleton
+          );
+
+
+        const originalCenter =
+          new THREE.Vector3();
+
+
+        firstBox.getCenter(
+          originalCenter
+        );
+
+
+
+        // ---------------------------------
+        // Center skeleton
+        // ---------------------------------
+
+        skeleton.position.x -=
+          originalCenter.x;
+
+
+        skeleton.position.y -=
+          originalCenter.y;
+
+
+        skeleton.position.z -=
+          originalCenter.z;
+
+
+
+        // ---------------------------------
+        // Recalculate box after centering
+        // ---------------------------------
 
         const box =
           new THREE.Box3()
@@ -456,41 +570,11 @@
           new THREE.Vector3();
 
 
-        const center =
-          new THREE.Vector3();
-
-
         box.getSize(
           size
         );
 
 
-        box.getCenter(
-          center
-        );
-
-
-
-        // -----------------------------
-        // Move skeleton to origin
-        // -----------------------------
-
-        skeleton.position.x -=
-          center.x;
-
-
-        skeleton.position.y -=
-          center.y;
-
-
-        skeleton.position.z -=
-          center.z;
-
-
-
-        // -----------------------------
-        // Calculate ideal camera
-        // -----------------------------
 
         const maxDimension =
           Math.max(
@@ -504,32 +588,80 @@
           );
 
 
-        const fov =
-          camera.fov *
-          Math.PI /
-          180;
+
+        // ---------------------------------
+        // Calculate camera distance
+        // ---------------------------------
+
+        const verticalFOV =
+          THREE.MathUtils.degToRad(
+            camera.fov
+          );
 
 
-        let cameraDistance =
+        const distanceForHeight =
 
-          maxDimension /
+          size.y /
 
           (
             2 *
             Math.tan(
-              fov / 2
+              verticalFOV / 2
             )
           );
 
 
+
+        const horizontalFOV =
+
+          2 *
+
+          Math.atan(
+
+            Math.tan(
+              verticalFOV / 2
+            )
+
+            *
+
+            camera.aspect
+
+          );
+
+
+
+        const distanceForWidth =
+
+          size.x /
+
+          (
+            2 *
+            Math.tan(
+              horizontalFOV / 2
+            )
+          );
+
+
+
+        let cameraDistance =
+
+          Math.max(
+
+            distanceForHeight,
+
+            distanceForWidth
+
+          );
+
+
         cameraDistance *=
-          1.25;
+          1.2;
 
 
 
-        // -----------------------------
-        // Position camera
-        // -----------------------------
+        // ---------------------------------
+        // Camera position
+        // ---------------------------------
 
         camera.position.set(
 
@@ -545,7 +677,7 @@
         camera.near =
           Math.max(
 
-            cameraDistance /
+            maxDimension /
             1000,
 
             0.001
@@ -554,17 +686,24 @@
 
 
         camera.far =
-          cameraDistance *
-          100;
+          Math.max(
+
+            maxDimension *
+            100,
+
+            cameraDistance *
+            10
+
+          );
 
 
         camera.updateProjectionMatrix();
 
 
 
-        // -----------------------------
-        // Set controls
-        // -----------------------------
+        // ---------------------------------
+        // Orbit controls
+        // ---------------------------------
 
         controls.target.set(
           0,
@@ -575,54 +714,21 @@
 
         controls.minDistance =
           cameraDistance *
-          0.15;
+          0.1;
 
 
         controls.maxDistance =
           cameraDistance *
-          5;
+          6;
 
 
         controls.update();
 
 
 
-        // -----------------------------
-        // Improve bone appearance
-        // -----------------------------
-
-        skeleton.traverse(
-
-          function (object) {
-
-            if (
-              object.isMesh
-            ) {
-
-              object.frustumCulled =
-                true;
-
-
-              if (
-                object.material
-              ) {
-
-                object.material.side =
-                  THREE.FrontSide;
-
-              }
-
-            }
-
-          }
-
-        );
-
-
-
-        // -----------------------------
-        // Update UI
-        // -----------------------------
+        // ---------------------------------
+        // Success message
+        // ---------------------------------
 
         status.textContent =
           "● Skeleton loaded";
@@ -633,7 +739,18 @@
 
 
         console.log(
-          "Skeleton loaded:",
+          "Skeleton successfully loaded"
+        );
+
+
+        console.log(
+          "Skeleton size:",
+          size
+        );
+
+
+        console.log(
+          "Skeleton:",
           skeleton
         );
 
@@ -641,10 +758,14 @@
 
 
 
-      // PROGRESS
+      // ===================================
+      // LOADING PROGRESS
+      // ===================================
+
       function (xhr) {
 
         if (
+          xhr.total &&
           xhr.total > 0
         ) {
 
@@ -659,8 +780,11 @@
 
 
           status.textContent =
+
             "● Loading skeleton " +
+
             percent +
+
             "%";
 
         }
@@ -669,7 +793,10 @@
 
 
 
+      // ===================================
       // ERROR
+      // ===================================
+
       function (error) {
 
         console.error(
@@ -751,7 +878,6 @@
 
 
     animate();
-
 
   </script>
 
