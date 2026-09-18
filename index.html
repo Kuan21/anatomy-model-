@@ -1,0 +1,3493 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<title>MJ Anatomy 3D</title>
+
+<style>
+*{
+  box-sizing:border-box;
+}
+
+html,body{
+  margin:0;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  background:#080b0e;
+  color:#f3f5f7;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",
+              "PingFang TC","Noto Sans TC",Arial,sans-serif;
+}
+
+body{
+  touch-action:none;
+}
+
+#app{
+  position:fixed;
+  inset:0;
+  overflow:hidden;
+}
+
+#viewer{
+  position:absolute;
+  inset:0;
+  z-index:0;
+}
+
+canvas{
+  display:block;
+  width:100%;
+  height:100%;
+}
+
+/* =========================
+   PANELS
+========================= */
+
+.panel{
+  position:absolute;
+  z-index:5;
+  background:rgba(14,17,21,.94);
+  border:1px solid #30363d;
+  border-radius:20px;
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+  box-shadow:0 18px 60px rgba(0,0,0,.25);
+}
+
+#leftPanel{
+  left:18px;
+  top:18px;
+  bottom:18px;
+  width:318px;
+  padding:20px;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+}
+
+#rightPanel{
+  right:18px;
+  top:18px;
+  width:420px;
+  max-height:calc(100vh - 36px);
+  padding:20px;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+}
+
+h1{
+  margin:0;
+  font-size:25px;
+  letter-spacing:-.5px;
+}
+
+.subtitle{
+  margin-top:5px;
+  font-size:13px;
+  color:#9199a4;
+}
+
+.status{
+  margin-top:12px;
+  padding-bottom:16px;
+  border-bottom:1px solid #292e35;
+  color:#e5b85f;
+  font-size:13px;
+}
+
+.status.ready{
+  color:#75d89a;
+}
+
+.status.error{
+  color:#ff7b72;
+}
+
+.section{
+  margin-top:18px;
+  padding-top:0;
+}
+
+.section + .section{
+  border-top:1px solid #292e35;
+  padding-top:17px;
+}
+
+.sectionTitle{
+  color:#929ba7;
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:1.7px;
+  margin-bottom:12px;
+}
+
+button{
+  border:1px solid #3a414a;
+  background:#252a31;
+  color:#d8dce1;
+  border-radius:11px;
+  min-height:42px;
+  padding:9px 12px;
+  font-size:13px;
+  cursor:pointer;
+}
+
+button:active{
+  transform:scale(.985);
+}
+
+.systemBtn{
+  width:100%;
+  display:block;
+  text-align:left;
+  margin-bottom:8px;
+}
+
+.systemBtn.on{
+  background:#214232;
+  border-color:#397357;
+  color:#a7e8c0;
+}
+
+.systemBtn.loading{
+  color:#e7bc67;
+}
+
+.twoButtons{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+}
+
+.fullButton{
+  width:100%;
+  margin-top:8px;
+}
+
+#depthName{
+  font-size:15px;
+  font-weight:700;
+}
+
+#depthDescription{
+  color:#89919b;
+  font-size:11px;
+  margin-top:4px;
+}
+
+.depthBars{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:5px;
+  margin:12px 0;
+}
+
+.depthBar{
+  height:6px;
+  border-radius:10px;
+  background:#353b43;
+}
+
+.depthBar.active{
+  background:#e4867f;
+}
+
+/* =========================
+   JOINT CONTROLS
+========================= */
+
+
+.regionBtn{padding:7px 4px;border:1px solid rgba(120,180,220,.35);border-radius:8px;background:rgba(25,55,85,.55);color:#dff4ff;font-size:11px;cursor:pointer}
+.regionBtn.active{background:#168b94;color:white;border-color:#54d7d2}
+#regionName{font-weight:700;color:#8fe7ff;margin-bottom:4px}
+
+.jointNotice{
+  color:#d3a84f;
+  font-size:11px;
+  margin-bottom:13px;
+}
+
+.sliderRow{
+  margin:13px 0;
+}
+
+.sliderLabel{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  margin-bottom:5px;
+  font-size:12px;
+}
+
+.sliderValue{
+  color:#ef9c91;
+  min-width:40px;
+  text-align:right;
+}
+
+input[type="range"]{
+  width:100%;
+  height:20px;
+  accent-color:#e98d84;
+}
+
+/* =========================
+   SEARCH
+========================= */
+
+.searchWrap{
+  display:flex;
+  gap:7px;
+}
+
+#searchInput{
+  width:100%;
+  background:#11151a;
+  border:1px solid #343b44;
+  border-radius:10px;
+  color:white;
+  padding:10px;
+  outline:none;
+  font-size:13px;
+}
+
+/* =========================
+   RIGHT PANEL
+========================= */
+
+.tutorLabel{
+  color:#929ba7;
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:1.4px;
+}
+
+#structureName{
+  margin:11px 0 2px;
+  font-size:25px;
+  line-height:1.15;
+}
+
+#structureChinese{
+  color:#e58c82;
+  font-size:15px;
+  margin-bottom:10px;
+}
+
+.badge{
+  display:inline-block;
+  background:#263442;
+  color:#a8c5df;
+  border-radius:8px;
+  padding:6px 9px;
+  font-size:11px;
+  margin-bottom:13px;
+}
+
+.structureButtons{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin-bottom:8px;
+}
+
+#resetIndividual{
+  width:100%;
+  margin-bottom:15px;
+}
+
+.infoDivider{
+  border-top:1px solid #292e35;
+  margin:14px 0;
+}
+
+.infoField{
+  margin:14px 0;
+}
+
+.infoHeading{
+  color:#9ba4af;
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:.8px;
+  margin-bottom:4px;
+}
+
+.infoText{
+  color:#e2e5e8;
+  font-size:13px;
+  line-height:1.55;
+}
+
+.infoZh{
+  color:#aeb5bd;
+  font-size:12px;
+  line-height:1.5;
+  margin-top:3px;
+}
+
+.placeholder{
+  color:#b9bec5;
+  font-size:13px;
+  line-height:1.65;
+}
+
+/* =========================
+   ERROR
+========================= */
+
+#errorBox{
+  display:none;
+  position:absolute;
+  z-index:20;
+  left:50%;
+  bottom:30px;
+  transform:translateX(-50%);
+  max-width:620px;
+  width:calc(100% - 60px);
+  background:#381a1d;
+  border:1px solid #8b3a42;
+  color:#ffb8bd;
+  border-radius:12px;
+  padding:12px 15px;
+  font-size:12px;
+}
+
+/* =========================
+   HELP
+========================= */
+
+#help{
+  position:absolute;
+  z-index:4;
+  bottom:20px;
+  left:50%;
+  transform:translateX(-50%);
+  border:1px solid #292e35;
+  background:rgba(12,15,18,.82);
+  border-radius:30px;
+  padding:9px 16px;
+  color:#969da6;
+  font-size:11px;
+  pointer-events:none;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media(max-width:1100px){
+  #leftPanel{width:280px;padding:14px;}
+  #rightPanel{width:330px;padding:14px;}
+}
+@media(max-width:760px){
+  #leftPanel{left:8px;top:8px;bottom:8px;width:240px;padding:12px;}
+  #rightPanel{right:8px;top:8px;width:260px;max-height:55vh;padding:12px;}
+  #help{display:none;}
+  h1{font-size:20px;}
+}
+
+</style>
+
+<script type="importmap">
+{
+  "imports":{
+    "three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+    "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+
+<body>
+
+<div id="app">
+
+  <div id="viewer"></div>
+
+  <!-- LEFT -->
+  <div id="leftPanel" class="panel">
+
+    <h1>MJ Anatomy 3D</h1>
+    <div class="subtitle">Interactive Anatomy Learning System · V15.2 · Anatomical Axis Fix</div>
+
+    <div id="status" class="status">● Starting...</div>
+
+    <div class="section">
+      <div class="sectionTitle">ANATOMICAL SYSTEMS</div>
+
+      <button class="systemBtn on" data-layer="skeleton">
+        Skeleton｜骨骼
+      </button>
+
+      <button class="systemBtn on" data-layer="muscular">
+        Muscles｜肌肉
+      </button>
+
+      <button class="systemBtn" data-layer="nervous">
+        Nervous System｜神經
+      </button>
+
+      <button class="systemBtn" data-layer="cardiovascular">
+        Arteries & Veins / 動靜脈
+      </button>
+      <div id="vesselSubLayers" style="display:flex;gap:8px;margin-top:8px">
+        <button class="smallBtn vesselBtn on" data-vessel="artery" style="flex:1">Arteries / 動脈</button>
+        <button class="smallBtn vesselBtn on" data-vessel="vein" style="flex:1">Veins / 靜脈</button>
+      </div>
+
+      <button class="systemBtn" data-layer="visceral">
+        Viscera｜內臟
+      </button>
+
+      <button class="systemBtn" data-layer="skin">
+        Skin｜皮膚
+      </button>
+    </div>
+
+    <div class="section">
+
+      <div class="sectionTitle">
+        MUSCLE DISSECTION｜肌肉分層
+      </div>
+
+      <div id="regionName">Full body｜全身</div>
+      <div class="regionGrid" id="regionGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:10px 0 12px">
+        <button class="regionBtn active" data-region="full">全身</button>
+        <button class="regionBtn" data-region="headneck">頭頸</button>
+        <button class="regionBtn" data-region="shoulder">肩</button>
+        <button class="regionBtn" data-region="arm">手和肘</button>
+        <button class="regionBtn" data-region="spine">脊柱</button>
+        <button class="regionBtn" data-region="chest">胸</button>
+        <button class="regionBtn" data-region="abdomen">腹</button>
+        <button class="regionBtn" data-region="pelvis">盆</button>
+        <button class="regionBtn" data-region="hip">髖</button>
+        <button class="regionBtn" data-region="leg">膝和足</button>
+      </div>
+      <div id="depthName">Muscle layers｜肌肉逐層</div>
+      <div id="depthDescription">按 − Muscle 逐層剝離；點擊任何肌肉可高亮</div>
+
+      <div class="depthBars">
+        <div class="depthBar active"></div>
+        <div class="depthBar active"></div>
+        <div class="depthBar active"></div>
+        <div class="depthBar active"></div>
+        <div class="depthBar active"></div>
+        <div class="depthBar active"></div>
+        <div class="depthBar active"></div>
+        <div class="depthBar active"></div>
+      </div>
+
+      <div class="twoButtons">
+        <button id="muscleMinus">− Muscle</button>
+        <button id="musclePlus">+ Muscle</button>
+      </div>
+
+      <button id="restoreAll" class="fullButton">
+        Restore all｜恢復全部
+      </button>
+
+    </div>
+
+    <div class="section">
+
+      <div class="sectionTitle">
+        RIGHT UPPER LIMB JOINTS｜右上肢關節
+      </div>
+
+      <div class="jointNotice">
+        Anatomical joint engine｜ROM 限制＋肩胛肱骨節律＋橈尺骨旋轉
+      </div>
+
+      <div class="sliderRow">
+        <div class="sliderLabel">
+          <span>Shoulder flexion｜肩屈曲</span>
+          <span class="sliderValue" id="sfValue">0°</span>
+        </div>
+        <input id="shoulderFlex"
+               type="range"
+               min="-30"
+               max="160"
+               value="0">
+      </div>
+
+      <div class="sliderRow">
+        <div class="sliderLabel">
+          <span>Shoulder abduction｜肩外展</span>
+          <span class="sliderValue" id="saValue">0°</span>
+        </div>
+        <input id="shoulderAbduction"
+               type="range"
+               min="0"
+               max="170"
+               value="0">
+      </div>
+
+      <div class="sliderRow">
+        <div class="sliderLabel">
+          <span>Shoulder rotation｜肩旋轉</span>
+          <span class="sliderValue" id="srValue">0°</span>
+        </div>
+        <input id="shoulderRotation"
+               type="range"
+               min="-60"
+               max="80"
+               value="0">
+      </div>
+
+      <div class="sliderRow">
+        <div class="sliderLabel">
+          <span>Elbow flexion｜屈肘</span>
+          <span class="sliderValue" id="elbowValue">0°</span>
+        </div>
+        <input id="elbowFlexion"
+               type="range"
+               min="0"
+               max="145"
+               value="0">
+      </div>
+
+      <div class="sliderRow">
+        <div class="sliderLabel">
+          <span>Pronation / Supination｜旋前／旋後</span>
+          <span class="sliderValue" id="forearmValue">0°</span>
+        </div>
+        <input id="forearmRotation"
+               type="range"
+               min="-80"
+               max="85"
+               value="0">
+      </div>
+
+      <div class="sliderRow">
+        <div class="sliderLabel">
+          <span>Wrist flex/ext｜腕屈伸</span>
+          <span class="sliderValue" id="wristValue">0°</span>
+        </div>
+        <input id="wristFlexion"
+               type="range"
+               min="-70"
+               max="80"
+               value="0">
+      </div>
+
+      <button id="resetJoints" class="fullButton">
+        Reset joints｜關節歸零
+      </button>
+
+    </div>
+
+    <div class="section">
+
+      <div class="sectionTitle">
+        SEARCH｜搜尋
+      </div>
+
+      <div class="searchWrap">
+        <input id="searchInput"
+               placeholder="Deltoid / Humerus / 三角肌">
+        <button id="searchButton">Search</button>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- RIGHT -->
+  <div id="rightPanel" class="panel">
+
+    <div class="tutorLabel">
+      ANATOMY TUTOR｜解剖教學
+    </div>
+
+    <h2 id="structureName">Select a structure</h2>
+    <div id="structureChinese">點擊肌肉或骨骼</div>
+
+    <div id="structureBadge" class="badge">
+      3D SELECT
+    </div>
+
+    <div id="selectionControls" style="display:none">
+
+      <div class="structureButtons">
+        <button id="hideSelected">Hide｜隱藏</button>
+        <button id="isolateSelected">Isolate｜獨立顯示</button>
+      </div>
+
+      <button id="resetIndividual">
+        Reset individual controls｜恢復個別控制
+      </button>
+
+    </div>
+
+    <div class="infoDivider"></div>
+
+    <div id="infoContent" class="placeholder">
+      直接點擊人體。V15 直接使用實際 GLB hierarchy；Muscles、Fasciae、Nerves、Arteries/Veins 分開處理。<br><br>
+      肌肉：Origin / Insertion / Action /
+      Innervation / Blood supply。<br><br>
+      骨骼：Type / Articulations / Landmarks /
+      Muscle attachments / Clinical anatomy。
+    </div>
+
+  </div>
+
+  <div id="help">
+    點擊肌肉或骨骼學習 · 單指旋轉 · 雙指縮放 / 移動
+  </div>
+
+  <div id="errorBox"></div>
+
+</div>
+
+<script type="module">
+
+import * as THREE from "three";
+import { OrbitControls }
+  from "three/addons/controls/OrbitControls.js";
+import { GLTFLoader }
+  from "three/addons/loaders/GLTFLoader.js";
+import { DRACOLoader }
+  from "three/addons/loaders/DRACOLoader.js";
+
+
+/* =========================================================
+   V13 EMBEDDED TEACHING DATABASE
+   CMU lecture-PPT aligned: Upper limb, Lower limb, Back.
+   Embedded here so missing ./data/*.js can no longer stop the viewer booting.
+========================================================= */
+const M=(id,en,zh,origin,insertion,action,nerve,blood="—",aliases=[])=>({id,en,zh,origin,insertion,action,nerve,blood,aliases});
+const MUSCLES=[
+M("trapezius","Trapezius","斜方肌","External occipital protuberance, medial superior nuchal line, ligamentum nuchae, spinous processes C7–T12","Lateral 1/3 clavicle, acromion, spine of scapula","Elevates, retracts and depresses scapula; upward rotation; assists extension of neck","Spinal accessory nerve (CN XI), with C3–C4 proprioceptive fibers","Transverse cervical artery",["trapezius muscle"]),
+M("deltoid","Deltoid","三角肌","Lateral third of clavicle; acromion; spine of scapula","Deltoid tuberosity of humerus","Anterior: flexes and medially rotates arm; middle: abducts arm; posterior: extends and laterally rotates arm","Axillary nerve (C5–C6)","Posterior circumflex humeral artery; deltoid branch of thoracoacromial artery"),
+M("supraspinatus","Supraspinatus","棘上肌","Supraspinous fossa of scapula","Superior facet of greater tubercle of humerus","Initiates abduction of arm; stabilizes humeral head in glenoid cavity","Suprascapular nerve (C5–C6)","Suprascapular artery"),
+M("infraspinatus","Infraspinatus","棘下肌","Infraspinous fossa of scapula","Middle facet of greater tubercle of humerus","Laterally rotates arm; stabilizes humeral head","Suprascapular nerve (C5–C6)","Suprascapular and circumflex scapular arteries"),
+M("teres_minor","Teres minor","小圓肌","Middle part of lateral border of scapula","Inferior facet of greater tubercle of humerus","Adducts and laterally rotates arm; stabilizes humeral head","Axillary nerve (C5–C6)","Circumflex scapular and posterior circumflex humeral arteries"),
+M("subscapularis","Subscapularis","肩胛下肌","Subscapular fossa","Lesser tubercle of humerus","Medially rotates and adducts arm; stabilizes humeral head","Upper and lower subscapular nerves (C5–C7)","Subscapular artery"),
+M("teres_major","Teres major","大圓肌","Posterior surface of inferior angle of scapula","Medial lip of intertubercular sulcus of humerus","Adducts and medially rotates arm; assists extension","Lower subscapular nerve (C5–C6)","Circumflex scapular and subscapular arteries"),
+M("latissimus_dorsi","Latissimus dorsi","背闊肌","Spinous processes T7–T12, thoracolumbar fascia, iliac crest, inferior ribs","Floor of intertubercular sulcus of humerus","Extends, adducts and medially rotates humerus","Thoracodorsal nerve (C6–C8)","Thoracodorsal artery"),
+M("levator_scapulae","Levator scapulae","提肩胛肌","Posterior tubercles of transverse processes C1–C4","Medial border of scapula superior to root of spine","Elevates and downwardly rotates scapula; ipsilateral neck flexion","Dorsal scapular nerve (C5) and C3–C4","Dorsal scapular artery"),
+M("rhomboid_major","Rhomboid major","大菱形肌","Spinous processes T2–T5","Medial border of scapula from spine to inferior angle","Retracts and downwardly rotates scapula; fixes scapula to thoracic wall","Dorsal scapular nerve (C4–C5)","Dorsal scapular artery"),
+M("rhomboid_minor","Rhomboid minor","小菱形肌","Ligamentum nuchae and spinous processes C7–T1","Medial end of spine of scapula","Retracts and downwardly rotates scapula; fixes scapula","Dorsal scapular nerve (C4–C5)","Dorsal scapular artery"),
+M("biceps_brachii","Biceps brachii","肱二頭肌","Long head: supraglenoid tubercle; short head: coracoid process","Radial tuberosity and bicipital aponeurosis","Supinates forearm and flexes elbow; assists shoulder flexion","Musculocutaneous nerve (C5–C6)","Brachial artery",["biceps"]),
+M("brachialis","Brachialis","肱肌","Distal half of anterior humerus","Coronoid process and tuberosity of ulna","Primary flexor of forearm at elbow","Musculocutaneous nerve (C5–C6); small radial nerve contribution","Brachial and radial recurrent arteries"),
+M("coracobrachialis","Coracobrachialis","喙肱肌","Coracoid process","Middle third of medial humerus","Flexes and adducts arm; resists shoulder dislocation","Musculocutaneous nerve (C5–C7)","Brachial artery"),
+M("triceps_brachii","Triceps brachii","肱三頭肌","Long: infraglenoid tubercle; lateral and medial heads: posterior humerus","Olecranon of ulna","Extends forearm; long head also extends/adducts arm","Radial nerve (C6–C8)","Profunda brachii artery",["triceps"]),
+M("anconeus","Anconeus","肘肌","Lateral epicondyle of humerus","Lateral olecranon and proximal posterior ulna","Assists elbow extension and stabilizes elbow","Radial nerve (C7–T1)","Middle collateral and recurrent interosseous arteries"),
+M("pronator_teres","Pronator teres","旋前圓肌","Medial epicondyle of humerus and coronoid process of ulna","Middle lateral surface of radius","Pronates forearm; weak elbow flexion","Median nerve (C6–C7)","Ulnar and radial recurrent arteries"),
+M("flexor_carpi_radialis","Flexor carpi radialis","橈側屈腕肌","Medial epicondyle of humerus","Bases of 2nd and 3rd metacarpals","Flexes and abducts wrist","Median nerve (C6–C7)","Radial artery"),
+M("palmaris_longus","Palmaris longus","掌長肌","Medial epicondyle of humerus","Flexor retinaculum and palmar aponeurosis","Flexes wrist; tenses palmar aponeurosis","Median nerve (C7–C8)","Ulnar artery"),
+M("flexor_carpi_ulnaris","Flexor carpi ulnaris","尺側屈腕肌","Medial epicondyle; olecranon and posterior ulna","Pisiform, hook of hamate, base of 5th metacarpal","Flexes and adducts wrist","Ulnar nerve (C7–T1)","Ulnar artery"),
+M("flexor_digitorum_superficialis","Flexor digitorum superficialis","屈指淺肌","Medial epicondyle/coronoid process and anterior radius","Middle phalanges of digits 2–5","Flexes PIP joints; also MCP joints and wrist","Median nerve (C7–T1)","Ulnar and radial arteries"),
+M("flexor_digitorum_profundus","Flexor digitorum profundus","屈指深肌","Proximal ulna and interosseous membrane","Distal phalanges of digits 2–5","Flexes DIP joints; assists wrist flexion","Medial half: ulnar nerve; lateral half: anterior interosseous nerve (C8–T1)","Anterior interosseous and ulnar arteries"),
+M("flexor_pollicis_longus","Flexor pollicis longus","屈拇長肌","Anterior radius and interosseous membrane","Distal phalanx of thumb","Flexes thumb","Anterior interosseous nerve (C8–T1)","Anterior interosseous artery"),
+M("pronator_quadratus","Pronator quadratus","旋前方肌","Distal anterior ulna","Distal anterior radius","Pronates forearm; binds radius and ulna","Anterior interosseous nerve (C8–T1)","Anterior interosseous artery"),
+M("brachioradialis","Brachioradialis","肱橈肌","Proximal lateral supracondylar ridge of humerus","Lateral distal radius near styloid process","Flexes elbow maximally in mid-prone position","Radial nerve (C5–C7)","Radial recurrent artery"),
+M("extensor_digitorum","Extensor digitorum","伸指肌","Lateral epicondyle of humerus","Extensor expansions of digits 2–5","Extends digits 2–5 and wrist","Posterior interosseous nerve (C7–C8)","Posterior interosseous artery"),
+M("supinator","Supinator","旋後肌","Lateral epicondyle, radial collateral/annular ligaments, supinator crest of ulna","Proximal third of radius","Supinates forearm","Deep branch of radial nerve (C7–C8)","Recurrent interosseous artery"),
+M("splenius_capitis","Splenius capitis","頭夾肌","Lower ligamentum nuchae and spinous processes C7–T3/4","Mastoid process and lateral superior nuchal line","Bilateral: extends head/neck; unilateral: ipsilateral rotation and lateral flexion","Posterior rami of cervical spinal nerves","Occipital and deep cervical arteries"),
+M("splenius_cervicis","Splenius cervicis","頸夾肌","Spinous processes T3–T6","Transverse processes C1–C3/4","Bilateral extension; unilateral ipsilateral rotation/lateral flexion","Posterior rami of cervical spinal nerves","Deep cervical artery"),
+M("pectineus","Pectineus","恥骨肌","Superior ramus of pubis (pectineal line)","Pectineal line of femur","Adducts and flexes thigh; assists medial rotation","Femoral nerve (L2–L3), sometimes obturator nerve","Medial circumflex femoral and obturator arteries"),
+M("psoas_major","Psoas major","腰大肌","Sides of T12–L5 vertebral bodies/discs and lumbar transverse processes","Lesser trochanter of femur","Flexes thigh; stabilizes hip; flexes trunk when femur fixed","Anterior rami L1–L3","Lumbar branch of iliolumbar artery"),
+M("psoas_minor","Psoas minor","腰小肌","Sides of T12–L1 vertebral bodies and disc","Iliopectineal arch / iliopubic eminence and pectineal line","Weak trunk/hip flexor; stabilizing role; absent in many people","Anterior ramus L1 (often listed L1–L2)","Lumbar branch of iliolumbar artery"),
+M("iliacus","Iliacus","髂肌","Iliac crest and fossa, ala of sacrum, anterior sacroiliac ligaments","Lesser trochanter with psoas major","Chief flexor of thigh with psoas major; stabilizes hip","Femoral nerve (L2–L3)","Iliac branch of iliolumbar artery"),
+M("sartorius","Sartorius","縫匠肌","ASIS and notch inferior to ASIS","Superior medial surface of tibia (pes anserinus)","Flexes, abducts and laterally rotates thigh; flexes knee; medially rotates flexed leg","Femoral nerve (L2–L3)","Femoral artery"),
+M("rectus_femoris","Rectus femoris","股直肌","AIIS (straight head) and ilium superior to acetabulum (reflected head)","Quadriceps tendon to patella, then patellar ligament to tibial tuberosity","Extends knee; flexes thigh; steadies hip","Femoral nerve (L2–L4)","Profunda femoris and lateral circumflex femoral arteries"),
+M("vastus_lateralis","Vastus lateralis","股外側肌","Greater trochanter and lateral lip of linea aspera","Quadriceps tendon to patella, then patellar ligament to tibial tuberosity","Extends leg at knee","Femoral nerve (L2–L4)","Lateral circumflex femoral and profunda femoris arteries"),
+M("vastus_medialis","Vastus medialis","股內側肌","Intertrochanteric line and medial lip of linea aspera","Quadriceps tendon to patella, then patellar ligament to tibial tuberosity","Extends leg; helps stabilize patella","Femoral nerve (L2–L4)","Femoral and profunda femoris arteries"),
+M("vastus_intermedius","Vastus intermedius","股中間肌","Anterior and lateral surfaces of femoral shaft","Quadriceps tendon to patella, then patellar ligament to tibial tuberosity","Extends leg at knee","Femoral nerve (L2–L4)","Lateral circumflex femoral and profunda femoris arteries"),
+M("adductor_longus","Adductor longus","長收肌","Body of pubis inferior to pubic crest","Middle third of linea aspera","Adducts thigh","Obturator nerve, anterior branch (L2–L4)","Profunda femoris and medial circumflex femoral arteries"),
+M("adductor_brevis","Adductor brevis","短收肌","Body and inferior ramus of pubis","Pectineal line and proximal linea aspera","Adducts thigh; assists flexion","Obturator nerve (L2–L4)","Obturator and profunda femoris arteries"),
+M("adductor_magnus","Adductor magnus","大收肌","Adductor part: inferior pubic/ischial rami; hamstring part: ischial tuberosity","Gluteal tuberosity, linea aspera, medial supracondylar line; hamstring part to adductor tubercle","Powerful adduction; adductor part flexes thigh; hamstring part extends thigh","Obturator nerve (L2–L4) and tibial division of sciatic nerve (L4)","Perforating branches of profunda femoris; obturator artery"),
+M("gracilis","Gracilis","股薄肌","Body and inferior ramus of pubis","Superior medial tibia (pes anserinus)","Adducts thigh; flexes knee; medially rotates flexed leg","Obturator nerve (L2–L3)","Obturator and medial circumflex femoral arteries"),
+M("obturator_externus","Obturator externus","閉孔外肌","Margins of obturator foramen and obturator membrane","Trochanteric fossa of femur","Laterally rotates thigh; steadies femoral head","Obturator nerve, posterior branch (L3–L4)","Obturator and medial circumflex femoral arteries"),
+M("semitendinosus","Semitendinosus","半腱肌","Ischial tuberosity","Medial surface of superior tibia","Extends thigh; flexes knee; medially rotates flexed leg; extends trunk when thigh/leg fixed","Sciatic nerve, tibial division (L5–S2)","Perforating branches of profunda femoris and medial circumflex femoral artery"),
+M("semimembranosus","Semimembranosus","半膜肌","Ischial tuberosity","Posterior medial condyle of tibia; reflected attachment contributes to oblique popliteal ligament","Extends thigh; flexes knee; medially rotates flexed leg; extends trunk when thigh/leg fixed","Sciatic nerve, tibial division (L5–S2)","Medial circumflex femoral and perforating branches of profunda femoris"),
+M("biceps_femoris","Biceps femoris","股二頭肌","Long head: ischial tuberosity; short head: linea aspera and lateral supracondylar line","Lateral side of head of fibula","Flexes knee; laterally rotates flexed leg; long head extends thigh","Long head: tibial division; short head: common fibular division of sciatic nerve (L5–S2)","Perforating branches of profunda femoris, inferior gluteal and medial circumflex femoral arteries"),
+M("gastrocnemius","Gastrocnemius","腓腸肌","Lateral and medial femoral condyles","Posterior calcaneus via calcaneal tendon","Plantarflexes ankle; flexes knee","Tibial nerve (S1–S2)","Sural branches of popliteal artery"),
+M("soleus","Soleus","比目魚肌","Posterior fibular head/proximal fibula and soleal line/medial tibia","Posterior calcaneus via calcaneal tendon","Powerful plantarflexion; postural muscle","Tibial nerve (S1–S2)","Posterior tibial and fibular arteries"),
+M("tibialis_anterior","Tibialis anterior","脛前肌","Lateral condyle and superior lateral tibia; interosseous membrane","Medial cuneiform and base of 1st metatarsal","Dorsiflexes ankle and inverts foot","Deep fibular nerve (L4–L5)","Anterior tibial artery"),
+M("fibularis_longus","Fibularis longus","腓骨長肌","Head and superior lateral fibula","Base of 1st metatarsal and medial cuneiform (plantar surface)","Everts foot; weak plantarflexion; supports transverse arch","Superficial fibular nerve (L5–S2)","Fibular artery"),
+M("tibialis_posterior","Tibialis posterior","脛後肌","Posterior tibia/fibula and interosseous membrane","Navicular tuberosity with expansions to cuneiforms/cuboid and metatarsal bases","Plantarflexes and inverts foot; supports medial arch","Tibial nerve (L4–L5)","Posterior tibial and fibular arteries")
+];
+function normName(v=""){return String(v).toLowerCase().replace(/[._-]+/g," ").replace(/\b(left|right|l|r)\b/g," ").replace(/\d+/g," ").replace(/\s+/g," ").trim();}
+function findMuscle(name=""){
+  const n=normName(name);
+  if(!n) return null;
+  return MUSCLES.find(m=>[m.en,m.zh,m.id,...(m.aliases||[])].some(a=>{const q=normName(a);return q && (n.includes(q)||q.includes(n));}))||null;
+}
+const B=(id,en,zh,type,articulations,landmarks,attachments,clinical,aliases=[])=>({id,en,zh,type,articulations,landmarks,attachments,clinical,aliases});
+const BONES=[
+B("clavicle","Clavicle","鎖骨","Long bone","Sternoclavicular and acromioclavicular joints","Sternal end, acromial end, conoid tubercle, trapezoid line, subclavian groove","Deltoid, trapezius, pectoralis major, sternocleidomastoid, subclavius; coracoclavicular/costoclavicular ligaments","Commonly fractured at junction of middle and lateral thirds"),
+B("scapula","Scapula","肩胛骨","Flat bone","Acromioclavicular and glenohumeral joints","Spine, acromion, coracoid process, glenoid cavity, supra-/infraspinous and subscapular fossae, supra-/infraglenoid tubercles, suprascapular notch","Rotator cuff, deltoid, trapezius, biceps/triceps long heads, rhomboids, serratus anterior","Suprascapular notch transmits suprascapular nerve; winging may follow long thoracic nerve injury"),
+B("humerus","Humerus","肱骨","Long bone","Glenohumeral joint; elbow with radius and ulna","Head, anatomical/surgical neck, greater/lesser tubercles, intertubercular sulcus, deltoid tuberosity, radial groove, capitulum, trochlea, epicondyles, olecranon/coronoid/radial fossae","Rotator cuff, deltoid, pectoralis major, latissimus dorsi, teres major, arm muscles","Surgical neck relates to axillary nerve; radial groove relates to radial nerve"),
+B("radius","Radius","橈骨","Long bone","Elbow, proximal/distal radioulnar, radiocarpal joints","Head, neck, radial tuberosity, styloid process, ulnar notch, dorsal tubercle","Biceps brachii, pronators, supinator and multiple forearm muscles","Distal radius is a common fracture site"),
+B("ulna","Ulna","尺骨","Long bone","Elbow and proximal/distal radioulnar joints","Olecranon, coronoid process, trochlear notch, radial notch, ulnar tuberosity, styloid process","Triceps, brachialis, anconeus and forearm flexor/extensor origins","Ulnar nerve passes posterior to medial epicondyle of humerus, close to proximal ulna region"),
+B("hip_bone","Hip bone","髖骨","Irregular bone formed by ilium, ischium and pubis","Sacroiliac joint, pubic symphysis, hip joint","Iliac crest/fossa, ASIS/AIIS, PSIS/PIIS, acetabulum, obturator foramen, ischial spine/tuberosity, pubic tubercle","Major attachment platform for gluteal, thigh, abdominal and pelvic muscles","Triradiate cartilage joins ilium, ischium and pubis during development",["os coxae","coxal bone"]),
+B("femur","Femur","股骨","Long bone; longest and heaviest bone","Hip joint with acetabulum; knee joint with tibia and patella","Head/neck, greater/lesser trochanters, intertrochanteric line/crest, linea aspera, supracondylar lines, condyles, adductor tubercle, patellar and popliteal surfaces","Iliopsoas, gluteals, adductors, quadriceps and hamstring-related attachments","Femoral neck fractures may endanger retinacular blood supply to femoral head"),
+B("patella","Patella","髕骨","Largest sesamoid bone","Patellofemoral articulation with femur","Base, apex, posterior articular surface","Embedded in quadriceps tendon; patellar ligament continues to tibial tuberosity","Improves quadriceps leverage and protects anterior knee"),
+B("tibia","Tibia","脛骨","Long, weight-bearing bone","Knee with femur; superior tibiofibular; ankle with talus","Medial/lateral condyles, tibial plateau, intercondylar areas, tibial tuberosity, anterior border, soleal line, medial malleolus","Patellar ligament, pes anserinus, soleus and many leg muscles","Anterior tibial border is subcutaneous and vulnerable to trauma"),
+B("fibula","Fibula","腓骨","Long bone; minimal weight bearing","Superior/inferior tibiofibular joints; ankle with talus","Head, neck, shaft, lateral malleolus","Major muscle attachment; biceps femoris inserts on head","Common fibular nerve winds around fibular neck and is vulnerable to injury"),
+B("vertebra","Vertebra","椎骨","Irregular bone","Intervertebral symphyses and zygapophysial joints","Body, vertebral arch, pedicles, laminae, spinous/transverse/articular processes, vertebral foramen","Deep back muscles and spinal ligaments","Intervertebral foramina transmit spinal nerves; disc disease can compress nerve roots",["cervical vertebra","thoracic vertebra","lumbar vertebra"])
+];
+function findBone(name=""){
+  const n=normName(name);
+  if(!n) return null;
+  return BONES.find(b=>[b.en,b.zh,b.id,...(b.aliases||[])].some(a=>{const q=normName(a);return q && (n.includes(q)||q.includes(n));}))||null;
+}
+
+
+/* =========================================================
+   BASIC SETUP
+========================================================= */
+
+const viewer = document.getElementById("viewer");
+const statusEl = document.getElementById("status");
+const errorBox = document.getElementById("errorBox");
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x080b0e);
+
+const camera = new THREE.PerspectiveCamera(
+  34,
+  window.innerWidth / window.innerHeight,
+  0.01,
+  10000
+);
+
+const renderer = new THREE.WebGLRenderer({
+  antialias:true,
+  alpha:false,
+  powerPreference:"high-performance"
+});
+
+renderer.setPixelRatio(
+  Math.min(window.devicePixelRatio || 1, 1.5)
+);
+
+renderer.setSize(
+  window.innerWidth,
+  window.innerHeight
+);
+
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 0.72;
+
+viewer.appendChild(renderer.domElement);
+
+const controls = new OrbitControls(
+  camera,
+  renderer.domElement
+);
+
+controls.enableDamping = true;
+controls.dampingFactor = 0.07;
+
+controls.enablePan = true;
+controls.minDistance = 0.1;
+controls.maxDistance = 5000;
+
+/* =========================================================
+   LIGHTING
+========================================================= */
+
+scene.add(
+  new THREE.HemisphereLight(
+    0xffffff,
+    0x29303a,
+    2.0
+  )
+);
+
+const keyLight = new THREE.DirectionalLight(
+  0xffffff,
+  2.2
+);
+
+keyLight.position.set(3,5,6);
+scene.add(keyLight);
+
+const fillLight = new THREE.DirectionalLight(
+  0xb8d8ff,
+  1.1
+);
+
+fillLight.position.set(-4,2,3);
+scene.add(fillLight);
+
+const rimLight = new THREE.DirectionalLight(
+  0xffc7ba,
+  0.7
+);
+
+rimLight.position.set(2,3,-5);
+scene.add(rimLight);
+
+/* =========================================================
+   ROOT
+========================================================= */
+
+const human = new THREE.Group();
+human.name = "MJ_HUMAN_ROOT";
+scene.add(human);
+
+const layers = {
+  skeleton:null,
+  muscular:null,
+  nervous:null,
+  cardiovascular:null,
+  visceral:null,
+  skin:null
+};
+
+const layerReady = {
+  skeleton:false,
+  muscular:false,
+  nervous:false,
+  cardiovascular:false,
+  visceral:false,
+  skin:false
+};
+
+const layerVisibility = {
+  skeleton:true,
+  muscular:true,
+  nervous:false,
+  cardiovascular:false,
+  visceral:false,
+  skin:false
+};
+
+// V5: stable mesh registries. Re-parented meshes leave their original GLB root,
+// so all visibility/dissection logic must use these registries, not root.traverse().
+const layerMeshRegistry = {skeleton:[],muscular:[],nervous:[],cardiovascular:[],visceral:[],skin:[]};
+let referenceSkeletonBox=null;
+
+
+const files = {
+  skeleton:["./models/skeleton.glb?v=15.2"],
+  muscular:["./models/muscular.glb?v=15.2"],
+  nervous:["./models/nervous.glb?v=15.2"],
+  cardiovascular:["./models/cardiovascular.glb?v=15.2"],
+  visceral:["./models/visceral.glb?v=15.2"],
+  skin:["./models/anatomy-skin.glb?v=15.2"]
+};
+
+/* =========================================================
+   LOADERS
+========================================================= */
+
+const dracoLoader = new DRACOLoader();
+
+dracoLoader.setDecoderPath(
+  "https://www.gstatic.com/draco/v1/decoders/"
+);
+
+const loader = new GLTFLoader();
+loader.setDRACOLoader(dracoLoader);
+
+/* =========================================================
+   STATUS
+========================================================= */
+
+function setStatus(text,type="normal"){
+
+  statusEl.textContent = "● " + text;
+
+  statusEl.classList.remove(
+    "ready",
+    "error"
+  );
+
+  if(type === "ready"){
+    statusEl.classList.add("ready");
+  }
+
+  if(type === "error"){
+    statusEl.classList.add("error");
+  }
+}
+
+function showError(message){
+
+  console.error(message);
+
+  errorBox.textContent = message;
+  errorBox.style.display = "block";
+
+  setTimeout(()=>{
+    errorBox.style.display = "none";
+  },8000);
+}
+
+/* =========================================================
+   HELPERS
+========================================================= */
+
+function sleep(ms){
+  return new Promise(resolve=>setTimeout(resolve,ms));
+}
+
+function deg(v){
+  return THREE.MathUtils.degToRad(Number(v));
+}
+
+function worldBox(object){
+  return new THREE.Box3().setFromObject(object);
+}
+
+function worldCenter(object){
+
+  const c = new THREE.Vector3();
+
+  worldBox(object).getCenter(c);
+
+  return c;
+}
+
+function cleanName(name=""){
+
+  return String(name)
+    .replace(/[_]+/g," ")
+    .replace(/[lr]001$/i,"")
+    .replace(/001$/i,"")
+    .replace(/\s+/g," ")
+    .trim();
+}
+
+function allMeshes(root){
+
+  const arr=[];
+
+  if(!root) return arr;
+
+  root.traverse(o=>{
+    if(o.isMesh){
+      arr.push(o);
+    }
+  });
+
+  return arr;
+}
+
+/* =========================================================
+   MODEL LOAD
+========================================================= */
+
+async function loadGLB(url){
+  // V13.1: iPad/Safari-safe loader. Do NOT kill a large GLB after a fixed 12 s.
+  // The watchdog is reset whenever bytes arrive; only a truly stalled transfer is aborted.
+  const filename=url.split("/").pop();
+  return await new Promise((resolve,reject)=>{
+    let settled=false, lastLoaded=0, watchdog=null;
+    const armWatchdog=()=>{
+      clearTimeout(watchdog);
+      watchdog=setTimeout(()=>{
+        if(settled) return;
+        settled=true;
+        reject(new Error(`No download progress for 60 s: ${filename}`));
+      },60000);
+    };
+    armWatchdog();
+    loader.load(url,(gltf)=>{
+      if(settled) return;
+      settled=true; clearTimeout(watchdog); resolve(gltf.scene);
+    },(xhr)=>{
+      if(settled || !xhr) return;
+      if(xhr.loaded>lastLoaded){ lastLoaded=xhr.loaded; armWatchdog(); }
+      if(xhr.total){
+        const pct=Math.max(0,Math.min(100,Math.round(xhr.loaded/xhr.total*100)));
+        setStatus(`Downloading ${filename}… ${pct}%`);
+      } else {
+        setStatus(`Downloading ${filename}… ${Math.round((xhr.loaded||0)/1048576)} MB`);
+      }
+    },(err)=>{
+      if(settled) return;
+      settled=true; clearTimeout(watchdog); reject(err || new Error(`GLTFLoader failed: ${url}`));
+    });
+  });
+}
+
+async function loadOne(key){
+  const candidates=Array.isArray(files[key]) ? files[key] : [files[key]];
+  let lastError=null, model=null, usedURL=null;
+  for(const url of candidates){
+    try{
+      setStatus(`Loading ${key} · ${url.split('/').pop()}…`);
+      model=await loadGLB(url); usedURL=url; break;
+    }catch(err){
+      lastError=err;
+      console.warn(`${key} candidate failed: ${url}`,err);
+    }
+  }
+  if(!model) throw lastError || new Error(`No usable model for ${key}`);
+  model.name=key; model.userData.sourceURL=usedURL;
+  layers[key]=model; layerReady[key]=true; human.add(model);
+  model.visible=layerVisibility[key];
+  if(key==="skeleton") prepareSkeleton(model);
+  if(key==="muscular") prepareMuscles(model);
+  if(key==="skin") prepareSkin(model);
+  tagLayerMeshes(model,key);
+  return model;
+}
+
+async function loadOptionalLayer(key,label){
+  try{
+    await loadOne(key);
+    registerSoftTissueLayer(key);
+    updateSystemButtons();
+    return true;
+  }catch(err){
+    console.error(key,err);
+    showError(`${label} failed to load — checked ${files[key].map(x=>x.split('/').pop()).join(', ')}.`);
+    return false;
+  }
+}
+
+/* =========================================================
+   SKIN PREPARATION + AUTOMATIC ALIGNMENT
+========================================================= */
+
+function prepareSkin(model){
+  model.traverse(o=>{
+    if(!o.isMesh) return;
+    if(o.geometry && !o.geometry.getAttribute("normal")) o.geometry.computeVertexNormals();
+
+    /*
+      V9 neutral body surface:
+      the supplied skin is a single unrigged male surface.  The viewer itself is
+      sex-neutral, so flatten the small central external-genital protrusion rather
+      than displaying external genital anatomy.  This edits only the decoded skin
+      vertices in memory; the source GLB is left untouched.
+    */
+    neutralizeExternalGenitalSurface(o.geometry);
+
+    o.material = new THREE.MeshStandardMaterial({
+      color:0xd8a184, roughness:0.82, metalness:0,
+      transparent:false, opacity:1, depthWrite:true,
+      side:THREE.FrontSide
+    });
+    o.castShadow=false; o.receiveShadow=true;
+  });
+
+  model.position.set(0,0,0);
+  model.rotation.set(0,0,0);
+  model.scale.set(1,1,1);
+
+  /*
+    IMPORTANT: align in the CURRENT world coordinate frame.  V8 compared a
+    pre-centering skeleton box with a post-centering skin box, which created the
+    second displaced human visible in the user's screenshot.
+  */
+  alignSkinToCurrentBody(model);
+}
+
+function neutralizeExternalGenitalSurface(geometry){
+  const pos=geometry?.getAttribute("position");
+  if(!pos || pos.count<10) return;
+  geometry.computeBoundingBox();
+  const b=geometry.boundingBox;
+  const sx=b.max.x-b.min.x, sy=b.max.y-b.min.y, sz=b.max.z-b.min.z;
+  if(!(sx>0 && sy>0 && sz>0)) return;
+  const cx=(b.min.x+b.max.x)*.5;
+
+  // Pelvic/perineal band: roughly 31–45% of body height from the feet.
+  // Use neighbouring groin vertices to estimate a neutral anterior surface.
+  const refs=[];
+  for(let i=0;i<pos.count;i++){
+    const x=pos.getX(i), y=pos.getY(i), z=pos.getZ(i);
+    const yn=(y-b.min.y)/sy, xn=Math.abs(x-cx)/sx;
+    if(yn>.32 && yn<.45 && xn>.07 && xn<.16) refs.push(z);
+  }
+  if(refs.length<20) return;
+  refs.sort((a,b)=>a-b);
+  const frontPositive=(b.max.z-(b.min.z+b.max.z)*.5) >= (((b.min.z+b.max.z)*.5)-b.min.z);
+  const q=frontPositive ? refs[Math.floor(refs.length*.82)] : refs[Math.floor(refs.length*.18)];
+
+  for(let i=0;i<pos.count;i++){
+    const x=pos.getX(i), y=pos.getY(i), z=pos.getZ(i);
+    const yn=(y-b.min.y)/sy, xn=Math.abs(x-cx)/sx;
+    if(yn>.315 && yn<.445 && xn<.075){
+      if(frontPositive && z>q) pos.setZ(i,q);
+      if(!frontPositive && z<q) pos.setZ(i,q);
+    }
+  }
+  pos.needsUpdate=true;
+  geometry.computeVertexNormals();
+  geometry.computeBoundingBox();
+  geometry.computeBoundingSphere();
+}
+
+function anatomicalBodyBox(root){
+  // Build a box from real anatomical meshes only.  The source GLBs contain
+  // text-label nodes (e.g. "SKELETAL SYSTEM" / "MUSCULAR SYSTEM") represented
+  // by tiny/degenerate geometry far to the left of the body.  Box3.setFromObject
+  // includes those labels and was the reason V10 moved the skin sideways.
+  const out=new THREE.Box3();
+  let found=false;
+  root?.traverse(o=>{
+    if(!o.isMesh || !o.geometry) return;
+    const n=(o.name||"").toLowerCase();
+    if(/system|label|text|annotation/.test(n)) return;
+    if(!o.geometry.boundingBox) o.geometry.computeBoundingBox();
+    const lb=o.geometry.boundingBox;
+    if(!lb || lb.isEmpty()) return;
+    const ls=new THREE.Vector3(); lb.getSize(ls);
+    // Ignore point/line-like label geometry and other degenerate helpers.
+    const dims=[Math.abs(ls.x),Math.abs(ls.y),Math.abs(ls.z)].sort((a,b)=>b-a);
+    if(dims[0] < 1e-5 || dims[1] < 1e-6) return;
+    const wb=lb.clone().applyMatrix4(o.matrixWorld);
+    if(!found){ out.copy(wb); found=true; } else out.union(wb);
+  });
+  return found ? out : null;
+}
+
+function alignSkinToCurrentBody(skin){
+  if(!skin) return;
+  scene.updateMatrixWorld(true);
+
+  // Prefer skeleton: its landmarks define the body frame and are not affected
+  // by muscle dissection visibility.  Crucially, do NOT use setFromObject(root)
+  // because the GLBs contain off-body 3-D labels.
+  let tb=anatomicalBodyBox(layers.skeleton);
+  if(!tb) tb=anatomicalBodyBox(layers.muscular);
+  const sb=anatomicalBodyBox(skin) || new THREE.Box3().setFromObject(skin);
+  if(!tb || !sb || tb.isEmpty() || sb.isEmpty()) return;
+
+  const ts=new THREE.Vector3(), ss=new THREE.Vector3();
+  const tc=new THREE.Vector3(), sc=new THREE.Vector3();
+  tb.getSize(ts); sb.getSize(ss); tb.getCenter(tc); sb.getCenter(sc);
+  if(!(ts.x>0 && ts.y>0 && ts.z>0 && ss.x>0 && ss.y>0 && ss.z>0)) return;
+
+  // The skin GLB was exported in a different scale/proportion from the anatomy
+  // GLBs (not merely a uniform scale).  Register each anatomical axis separately.
+  // Small allowances keep the surface outside the skeleton instead of shrinking
+  // the anatomy into a "small person inside a large skin".
+  const sx=(ts.x/ss.x)*1.06;
+  const sy=(ts.y/ss.y)*1.015;
+  const sz=(ts.z/ss.z)*1.10;
+  skin.scale.set(sx,sy,sz);
+  scene.updateMatrixWorld(true);
+
+  // Recompute after scaling and align centres in the SAME world frame.
+  const sb2=anatomicalBodyBox(skin) || new THREE.Box3().setFromObject(skin);
+  const sc2=new THREE.Vector3(); sb2.getCenter(sc2);
+  const worldDelta=tc.clone().sub(sc2);
+
+  // Convert world displacement to the skin parent's local vector.  This remains
+  // correct even if the human root later has a transform.
+  const parent=skin.parent;
+  if(parent){
+    const inv=new THREE.Matrix4().copy(parent.matrixWorld).invert();
+    const p0=new THREE.Vector3(0,0,0).applyMatrix4(inv);
+    const p1=worldDelta.clone().applyMatrix4(new THREE.Matrix4().copy(parent.matrixWorld).invert());
+    skin.position.add(p1.sub(p0));
+  }else{
+    skin.position.add(worldDelta);
+  }
+  scene.updateMatrixWorld(true);
+}
+function alignSkinToSkeleton(skin){ alignSkinToCurrentBody(skin); }
+
+/* =========================================================
+   MODEL TAGGING
+========================================================= */
+
+function tagLayerMeshes(root,key){
+
+  root.traverse(obj=>{
+
+    if(!obj.isMesh) return;
+
+    obj.userData.anatomyLayer = key;
+    if(!layerMeshRegistry[key].includes(obj)) layerMeshRegistry[key].push(obj);
+
+    obj.userData.originalVisible = obj.visible;
+
+  });
+}
+
+/* =========================================================
+   MATERIALS
+========================================================= */
+
+function prepareSkeleton(root){
+
+  root.traverse(obj=>{
+
+    if(!obj.isMesh) return;
+
+    if(
+      /Skeletal_system/i.test(obj.name)
+    ){
+      obj.visible=false;
+      return;
+    }
+
+    const mats =
+      Array.isArray(obj.material)
+      ? obj.material
+      : [obj.material];
+
+    const newMats = mats.map(mat=>{
+
+      if(!mat) return mat;
+
+      const m = mat.clone();
+
+      if("roughness" in m){
+        m.roughness=.68;
+      }
+
+      if("metalness" in m){
+        m.metalness=0;
+      }
+
+      return m;
+    });
+
+    obj.material =
+      Array.isArray(obj.material)
+      ? newMats
+      : newMats[0];
+  });
+}
+
+/* =========================================================
+   MUSCLE TEXTURE
+========================================================= */
+
+function makeMuscleTexture(){
+
+  const size=256;
+
+  const canvas=document.createElement("canvas");
+
+  canvas.width=size;
+  canvas.height=size;
+
+  const ctx=canvas.getContext("2d");
+
+  ctx.fillStyle="rgb(128,128,128)";
+  ctx.fillRect(0,0,size,size);
+
+  /*
+    Subtle longitudinal striation.
+    Cosmetic only — not fascicle-level anatomical simulation.
+  */
+
+  for(let i=0;i<650;i++){
+
+    const x=Math.random()*size;
+    const y=Math.random()*size;
+
+    const length=
+      10 + Math.random()*55;
+
+    const shade=
+      105 + Math.random()*55;
+
+    ctx.strokeStyle =
+      `rgba(${shade},${shade},${shade},${0.08+Math.random()*0.15})`;
+
+    ctx.lineWidth =
+      .4 + Math.random()*1.1;
+
+    ctx.beginPath();
+
+    ctx.moveTo(x,y);
+
+    ctx.lineTo(
+      x + Math.sin(y*.05)*2,
+      y + length
+    );
+
+    ctx.stroke();
+  }
+
+  const texture =
+    new THREE.CanvasTexture(canvas);
+
+  texture.wrapS=THREE.RepeatWrapping;
+  texture.wrapT=THREE.RepeatWrapping;
+
+  texture.repeat.set(3,10);
+
+  return texture;
+}
+
+const muscleTexture =
+  makeMuscleTexture();
+
+function prepareMuscles(root){
+
+  root.traverse(obj=>{
+
+    if(!obj.isMesh) return;
+
+    const mats =
+      Array.isArray(obj.material)
+      ? obj.material
+      : [obj.material];
+
+    const output=mats.map(mat=>{
+
+      if(!mat) return mat;
+
+      const m=mat.clone();
+
+      if("roughness" in m){
+        m.roughness=.74;
+      }
+
+      if("metalness" in m){
+        m.metalness=0;
+      }
+
+      /*
+        Only use bump texture when UVs exist.
+      */
+      if(
+        obj.geometry &&
+        obj.geometry.attributes &&
+        obj.geometry.attributes.uv &&
+        "bumpMap" in m
+      ){
+        m.bumpMap=muscleTexture;
+        m.bumpScale=.0045;
+      }
+
+      return m;
+    });
+
+    obj.material =
+      Array.isArray(obj.material)
+      ? output
+      : output[0];
+
+  });
+
+}
+
+/* =========================================================
+   CAMERA FIT
+========================================================= */
+
+function fitCamera(size){
+
+  const maxDim =
+    Math.max(
+      size.x,
+      size.y,
+      size.z
+    );
+
+  const fov =
+    THREE.MathUtils.degToRad(
+      camera.fov
+    );
+
+  let distance =
+    maxDim /
+    (2*Math.tan(fov/2));
+
+  distance *= 1.30;
+
+  camera.position.set(
+    0,
+    maxDim*.02,
+    distance
+  );
+
+  camera.near =
+    Math.max(maxDim/10000,.001);
+
+  camera.far =
+    maxDim*30;
+
+  camera.updateProjectionMatrix();
+
+  controls.target.set(0,0,0);
+  controls.update();
+}
+
+/* =========================================================
+   BONE FINDING
+========================================================= */
+
+function findSkeletonMesh(exactName){
+
+  if(!layers.skeleton) return null;
+
+  let result=null;
+
+  layers.skeleton.traverse(obj=>{
+
+    if(
+      !result &&
+      obj.isMesh &&
+      obj.name === exactName
+    ){
+      result=obj;
+    }
+
+  });
+
+  return result;
+}
+
+/*
+  IMPORTANT FIX:
+  No generic "phalanx = hand" rule.
+
+  A right hand bone MUST explicitly carry the right-side
+  model suffix / name pattern.
+*/
+
+function isRightHandBone(mesh){
+
+  const n=mesh.name || "";
+
+  const right =
+    /r001$/i.test(n);
+
+  if(!right) return false;
+
+  const handPattern =
+    /(metacarpal|capitate|hamate|lunate|pisiform|scaphoid|trapezium|trapezoid|triquetrum|phalan|phalange)/i;
+
+  return handPattern.test(n);
+}
+
+/* =========================================================
+   RIGHT UPPER-LIMB RIG
+========================================================= */
+
+const rig = {
+  ready:false,
+
+  scapulaPivot:null,
+  claviclePivot:null,
+  shoulderFlex:null,
+  shoulderAbduction:null,
+  shoulderRotation:null,
+
+  elbow:null,
+  forearm:null,
+  wrist:null,
+
+  rightHumerus:null,
+  rightRadius:null,
+  rightUlna:null,
+  rightScapula:null,
+  rightClavicle:null,
+
+  leftHumerus:null,
+  leftRadius:null,
+  leftUlna:null,
+
+  refs:null
+};
+
+/*
+  Create pivot while preserving world position.
+*/
+
+function createPivotAt(worldPosition,parent,name){
+
+  const group =
+    new THREE.Group();
+
+  group.name=name;
+
+  parent.add(group);
+
+  const local =
+    worldPosition.clone();
+
+  parent.worldToLocal(local);
+
+  group.position.copy(local);
+
+  return group;
+}
+
+/*
+  Distance from point to line segment.
+*/
+
+function pointSegmentDistance(p,a,b){
+
+  const ab =
+    b.clone().sub(a);
+
+  const len2 =
+    ab.lengthSq();
+
+  if(len2===0){
+    return p.distanceTo(a);
+  }
+
+  const t =
+    THREE.MathUtils.clamp(
+      p.clone().sub(a).dot(ab)/len2,
+      0,
+      1
+    );
+
+  const q =
+    a.clone().add(
+      ab.multiplyScalar(t)
+    );
+
+  return p.distanceTo(q);
+}
+
+/* =========================================================
+   BUILD SKELETAL RIG
+========================================================= */
+
+function buildRig(){
+
+  const humerus =
+    findSkeletonMesh("Humerusr001");
+
+  const radius =
+    findSkeletonMesh("Radiusr001");
+
+  const ulna =
+    findSkeletonMesh("Ulnar001");
+
+  const rightScapula =
+    findSkeletonMesh("Scapular001") || findSkeletonMesh("Scapula.r001") || findSkeletonMesh("ScapulaR001");
+
+  const rightClavicle =
+    findSkeletonMesh("Clavicler001") || findSkeletonMesh("Clavicle.r001") || findSkeletonMesh("ClavicleR001");
+
+  const leftHumerus =
+    findSkeletonMesh("Humerusl001");
+
+  const leftRadius =
+    findSkeletonMesh("Radiusl001");
+
+  const leftUlna =
+    findSkeletonMesh("Ulnal001");
+
+  if(!humerus || !radius || !ulna){
+
+    showError(
+      "Right upper-limb bones could not be identified."
+    );
+
+    return;
+  }
+
+  rig.rightHumerus=humerus;
+  rig.rightRadius=radius;
+  rig.rightUlna=ulna;
+  rig.rightScapula=rightScapula;
+  rig.rightClavicle=rightClavicle;
+
+  rig.leftHumerus=leftHumerus;
+  rig.leftRadius=leftRadius;
+  rig.leftUlna=leftUlna;
+
+  scene.updateMatrixWorld(true);
+
+  const humBox=worldBox(humerus);
+  const radBox=worldBox(radius);
+  const ulnaBox=worldBox(ulna);
+
+  const humCenter=new THREE.Vector3();
+  const humSize=new THREE.Vector3();
+
+  humBox.getCenter(humCenter);
+  humBox.getSize(humSize);
+
+  const radCenter=worldCenter(radius);
+  const ulnaCenter=worldCenter(ulna);
+
+  /*
+    We determine which end of the humerus is shoulder
+    by checking which end is farther from the forearm.
+
+    This avoids assuming Y direction.
+  */
+
+  const humMinY =
+    new THREE.Vector3(
+      humCenter.x,
+      humBox.min.y,
+      humCenter.z
+    );
+
+  const humMaxY =
+    new THREE.Vector3(
+      humCenter.x,
+      humBox.max.y,
+      humCenter.z
+    );
+
+  const forearmCenter =
+    radCenter.clone()
+      .add(ulnaCenter)
+      .multiplyScalar(.5);
+
+  const shoulder =
+    humMinY.distanceTo(forearmCenter) >
+    humMaxY.distanceTo(forearmCenter)
+      ? humMinY
+      : humMaxY;
+
+  const elbowHumerus =
+    shoulder===humMinY
+      ? humMaxY
+      : humMinY;
+
+  /*
+    Find forearm end nearest humerus = elbow,
+    opposite end = wrist.
+  */
+
+  const combinedForearm =
+    radBox.clone().union(ulnaBox);
+
+  const foreCenter =
+    new THREE.Vector3();
+
+  combinedForearm.getCenter(foreCenter);
+
+  const foreMin =
+    new THREE.Vector3(
+      foreCenter.x,
+      combinedForearm.min.y,
+      foreCenter.z
+    );
+
+  const foreMax =
+    new THREE.Vector3(
+      foreCenter.x,
+      combinedForearm.max.y,
+      foreCenter.z
+    );
+
+  const elbowForearm =
+    foreMin.distanceTo(elbowHumerus) <
+    foreMax.distanceTo(elbowHumerus)
+      ? foreMin
+      : foreMax;
+
+  const wrist =
+    elbowForearm===foreMin
+      ? foreMax
+      : foreMin;
+
+  const elbow =
+    elbowHumerus.clone()
+      .add(elbowForearm)
+      .multiplyScalar(.5);
+
+  /*
+    Joint hierarchy:
+
+    shoulder flex
+       ↓
+    shoulder abduction
+       ↓
+    shoulder rotation
+       ↓
+    humerus
+       ↓
+    elbow
+       ↓
+    forearm pronation / supination
+       ↓
+    radius + hand (ulna remains with elbow)
+       ↓
+    wrist
+       ↓
+    hand
+  */
+
+  // V14: shoulder-girdle pivots. These provide coupled scapular/clavicular
+  // motion during elevation instead of rotating the humerus in isolation.
+  const scapulaCenter = rightScapula ? worldCenter(rightScapula) : shoulder.clone();
+  const clavicleCenter = rightClavicle ? worldCenter(rightClavicle) : shoulder.clone();
+
+  rig.scapulaPivot = createPivotAt(scapulaCenter, human, "RIGHT_SCAPULOTHORACIC");
+  rig.claviclePivot = createPivotAt(clavicleCenter, human, "RIGHT_STERNOCLAVICULAR");
+
+  if(rightScapula) rig.scapulaPivot.attach(rightScapula);
+  if(rightClavicle) rig.claviclePivot.attach(rightClavicle);
+
+  rig.shoulderFlex =
+    createPivotAt(
+      shoulder,
+      human,
+      "RIGHT_SHOULDER_FLEX"
+    );
+
+  rig.shoulderAbduction =
+    createPivotAt(
+      shoulder,
+      rig.shoulderFlex,
+      "RIGHT_SHOULDER_ABDUCTION"
+    );
+
+  rig.shoulderRotation =
+    createPivotAt(
+      shoulder,
+      rig.shoulderAbduction,
+      "RIGHT_SHOULDER_ROTATION"
+    );
+
+  rig.elbow =
+    createPivotAt(
+      elbow,
+      rig.shoulderRotation,
+      "RIGHT_ELBOW"
+    );
+
+  // V15.2: pronation/supination is no longer a rigid radius+ulna block.
+  // The ulna stays with the elbow chain; the radius and hand rotate around
+  // the forearm long axis. This is still a rigid educational approximation
+  // because the source GLB has no authored skinning/deformation.
+  rig.forearm =
+    createPivotAt(
+      elbow,
+      rig.elbow,
+      "RIGHT_RADIUS_PRONATION"
+    );
+
+  rig.wrist =
+    createPivotAt(
+      wrist,
+      rig.forearm,
+      "RIGHT_WRIST"
+    );
+
+  /*
+    Humerus belongs to shoulder.
+  */
+
+  rig.shoulderRotation.attach(
+    humerus
+  );
+
+  /*
+    V15.2 forearm mechanics:
+    - ulna follows elbow flexion but does not rotate as a unit during pronation
+    - radius rotates with the pronation pivot
+    - hand follows the radius through the wrist pivot
+  */
+
+  rig.forearm.attach(radius);
+  rig.elbow.attach(ulna);
+
+  /*
+    RIGHT HAND ONLY.
+
+    No foot phalanges can enter this group because
+    explicit right-hand naming is required.
+  */
+
+  const handBones=[];
+  const provisionalForearmLength = elbow.distanceTo(wrist);
+
+  layers.skeleton.traverse(obj=>{
+    if(!obj.isMesh || !isRightHandBone(obj)) return;
+    // Name alone is insufficient: the source model uses the same r001 suffix on
+    // phalanges in more than one region. A true hand bone must also sit near the wrist.
+    const c = worldCenter(obj);
+    if(c.distanceTo(wrist) <= provisionalForearmLength * 0.72){
+      handBones.push(obj);
+    }
+  });
+
+  handBones.forEach(mesh=>{
+    rig.wrist.attach(mesh);
+  });
+
+  /*
+    Anatomical reference geometry used to classify
+    muscles, nerves and vessels.
+  */
+
+  const upperArmLength =
+    shoulder.distanceTo(elbow);
+
+  const forearmLength =
+    elbow.distanceTo(wrist);
+
+  /*
+    Estimate hand centre using actual right hand bones.
+  */
+
+  let handCenter =
+    wrist.clone();
+
+  if(handBones.length){
+
+    const hb =
+      new THREE.Box3();
+
+    handBones.forEach((mesh,i)=>{
+
+      const b=worldBox(mesh);
+
+      if(i===0){
+        hb.copy(b);
+      }else{
+        hb.union(b);
+      }
+
+    });
+
+    hb.getCenter(handCenter);
+  }
+
+  /*
+    Left-side references are used as a safety comparison.
+    A structure must be closer to the RIGHT arm than
+    corresponding LEFT arm before it can be attached.
+
+    This prevents contralateral structures entering
+    the right-arm rig.
+  */
+
+  const leftShoulder =
+    leftHumerus
+      ? worldCenter(leftHumerus)
+      : null;
+
+  const leftForearm =
+    leftRadius && leftUlna
+      ? worldCenter(leftRadius)
+          .add(worldCenter(leftUlna))
+          .multiplyScalar(.5)
+      : null;
+
+  rig.refs={
+    shoulder,
+    elbow,
+    wrist,
+    handCenter,
+
+    upperArmLength,
+    forearmLength,
+
+    leftShoulder,
+    leftForearm
+  };
+
+  rig.ready=true;
+
+  /*
+    Skeleton itself is now rigged.
+    Muscles / nerves / vessels loaded later will be
+    registered with registerSoftTissueLayer().
+  */
+
+  applyJointPose();
+}
+
+/* =========================================================
+   SOFT TISSUE CLASSIFICATION
+========================================================= */
+
+/*
+  This is deliberately spatial rather than name-only.
+
+  Why:
+  Nervous / cardiovascular GLBs often use different naming
+  conventions.
+
+  A mesh is assigned according to its actual 3D position
+  relative to the RIGHT humerus / forearm / hand.
+
+  Large structures crossing into the trunk are rejected
+  to prevent the aorta, spinal cord, etc. from being
+  dragged by the shoulder.
+*/
+
+function classifyRightUpperLimbMesh(mesh){
+  if(!rig.ready) return null;
+  scene.updateMatrixWorld(true);
+  const box=worldBox(mesh);
+  if(box.isEmpty()) return null;
+  const center=new THREE.Vector3(), size=new THREE.Vector3();
+  box.getCenter(center); box.getSize(size);
+  const r=rig.refs;
+  const upperDist=pointSegmentDistance(center,r.shoulder,r.elbow);
+  const foreDist=pointSegmentDistance(center,r.elbow,r.wrist);
+  const handDist=center.distanceTo(r.handCenter);
+  const upperRadius=r.upperArmLength*.34;
+  const foreRadius=r.forearmLength*.34;
+  const handRadius=r.forearmLength*.38;
+
+  // V5 safety: a mesh may be moved only when its WHOLE bounding box is local to
+  // the right upper limb. This deliberately rejects torso, knee, contralateral
+  // and long multi-region meshes instead of dragging half the body with the arm.
+  const diag=size.length();
+  if(diag > Math.max(r.upperArmLength,r.forearmLength)*1.45) return null;
+
+  const corners=[];
+  for(const x of [box.min.x,box.max.x]) for(const y of [box.min.y,box.max.y]) for(const z of [box.min.z,box.max.z]) corners.push(new THREE.Vector3(x,y,z));
+  const maxSegDist=(a,b)=>Math.max(...corners.map(p=>pointSegmentDistance(p,a,b)));
+  const maxHandDist=Math.max(...corners.map(p=>p.distanceTo(r.handCenter)));
+
+  // Reject structures that are spatially closer to the opposite shoulder.
+  if(r.leftShoulder){
+    const rightDistance=Math.min(upperDist,foreDist,handDist);
+    if(center.distanceTo(r.leftShoulder) < rightDistance*.92) return null;
+  }
+
+  if(handDist < handRadius && maxHandDist < handRadius*1.9) return "hand";
+  if(foreDist < foreRadius && foreDist <= upperDist && maxSegDist(r.elbow,r.wrist) < foreRadius*1.75) return "forearm";
+  if(upperDist < upperRadius && maxSegDist(r.shoulder,r.elbow) < upperRadius*1.75) return "upperArm";
+  return null;
+}
+
+/* =========================================================
+   REGISTER MUSCLE / NERVE / VESSEL LAYERS
+========================================================= */
+
+function rightSideName(mesh){
+  const n=getHierarchyName(mesh).toLowerCase();
+  return /(?:\.r(?:\.001)?\b|\br001\b)/i.test(n) && !/(?:\.l(?:\.001)?\b|\bl001\b)/i.test(n);
+}
+
+function anatomicalArmSegment(mesh){
+  if(!rightSideName(mesh)) return null;
+  const n=getHierarchyName(mesh).toLowerCase();
+
+  // V9: strict NAME whitelist. Never classify an arm structure by proximity alone.
+  // Explicit lower-limb words win first; this prevents toe/leg structures with names
+  // such as "flexor digitorum longus.r.001" from entering the hand/forearm rig.
+  if(/foot|plantar|halluc|tibial|fibular|perone|ankle|crural|femor|patell|gastrocnem|soleus|poplite|calcane/i.test(n)) return null;
+  // Thorax/scapula muscles are NOT rigid arm segments. Serratus anterior stays on ribs.
+  if(/serratus|pectoralis|latissimus|trapezius|rhomboid|subscapularis|supraspinatus|infraspinatus|teres major|teres minor|levator scapulae/i.test(n)) return null;
+
+  // Muscles whose belly is predominantly on the brachium.
+  if(/deltoid muscle|(?:long|short) head of biceps brachii|(?:long|lateral|medial) head of triceps brachii|brachialis muscle|coracobrachialis muscle|brachial fascia/i.test(n)) return "upperArm";
+
+  // Forearm structures: explicit upper-limb names only.
+  if(/brachioradialis|pronator teres|pronator quadratus|supinator|extensor carpi radialis|extensor carpi ulnaris|flexor carpi radialis|flexor carpi ulnaris|palmaris longus|extensor digitorum\.r|flexor digitorum profundus|flexor digitorum superficialis|extensor indicis|extensor digiti minimi|abductor pollicis longus|extensor pollicis longus|extensor pollicis brevis|flexor pollicis longus|antebrachial fascia/i.test(n)) return "forearm";
+
+  // Intrinsic hand muscles only. The phrase "of hand" is intentionally required
+  // for interossei/lumbricals because the foot contains names with the same stem.
+  if(/palmar aponeurosis|palmar interossei muscles|dorsal interossei muscles of hand|lumbrical muscles of hand|opponens pollicis|abductor pollicis brevis|adductor pollicis|flexor pollicis brevis|opponens digiti minimi|abductor digiti minimi.*hand|flexor digiti minimi.*hand/i.test(n)) return "hand";
+  return null;
+}
+
+
+/* =========================================================
+   V12 — NAMED ANATOMICAL ATTACHMENT MAP
+   ---------------------------------------------------------
+   No proximity classifier is used for muscles.  Each moving
+   structure is admitted by anatomical identity.  Structures
+   spanning the shoulder girdle (serratus, pectorals, cuff,
+   trapezius, rhomboids, latissimus) stay with their true
+   thorax/scapular origin instead of being dragged by humerus.
+========================================================= */
+const V12_ANATOMY = Object.freeze({
+  deltoid: {origin:"lateral clavicle + acromion + scapular spine", insertion:"deltoid tuberosity of humerus", joints:["glenohumeral"]},
+  biceps: {origin:"supraglenoid tubercle/coracoid", insertion:"radial tuberosity + bicipital aponeurosis", joints:["glenohumeral","elbow","radioulnar"]},
+  triceps: {origin:"infraglenoid tubercle/posterior humerus", insertion:"olecranon of ulna", joints:["glenohumeral","elbow"]},
+  brachialis: {origin:"anterior distal humerus", insertion:"ulnar tuberosity/coronoid", joints:["elbow"]},
+  coracobrachialis: {origin:"coracoid process", insertion:"medial humerus", joints:["glenohumeral"]},
+  serratusAnterior: {origin:"ribs 1–8/9", insertion:"anterior medial border of scapula", joints:["scapulothoracic"]}
+});
+
+function v12AnatomyIdentity(mesh){
+  const n=getHierarchyName(mesh).toLowerCase();
+  if(/deltoid/.test(n)) return "deltoid";
+  if(/biceps brachii/.test(n)) return "biceps";
+  if(/triceps brachii/.test(n)) return "triceps";
+  if(/brachialis/.test(n)) return "brachialis";
+  if(/coracobrachialis/.test(n)) return "coracobrachialis";
+  if(/serratus anterior/.test(n)) return "serratusAnterior";
+  return null;
+}
+
+function registerSoftTissueLayer(key){
+  if(!rig.ready) return;
+  const root=layers[key];
+  if(!root) return;
+
+  // Nerves, arteries/veins, viscera and skin remain in their complete source hierarchy.
+  // They are never pulled out of the body by a limb pivot.
+  if(key!=="muscular") return;
+
+  const meshes=allMeshes(root);
+  const assignments=[];
+  for(const mesh of meshes){
+    if(isNonMuscleSoftTissue(mesh)) continue;
+    const named=v14NamedLayer(mesh);
+    mesh.userData.muscleRegion = named?.region || muscleRegionFor(mesh);
+    mesh.userData.muscleLayer = named?.depth || muscleLayerFor(mesh, mesh.userData.muscleRegion);
+    const segment=anatomicalArmSegment(mesh);
+    if(segment) assignments.push({mesh,segment});
+  }
+
+  for(const {mesh,segment} of assignments){
+    mesh.userData.rigSegment=segment;
+    mesh.userData.anatomyIdentity=v12AnatomyIdentity(mesh);
+    mesh.userData.riggedRightUpperLimb=true;
+    if(segment==="upperArm") rig.shoulderRotation.attach(mesh);
+    else if(segment==="forearm") rig.forearm.attach(mesh);
+    else if(segment==="hand") rig.wrist.attach(mesh);
+  }
+  console.log(`muscular: ${assignments.length} V12 named-anatomy right-arm meshes rigged`);
+}
+
+/* =========================================================
+   JOINT POSE
+========================================================= */
+
+function applyJointPose(){
+
+  if(!rig.ready) return;
+
+  const sf =
+    Number(
+      document.getElementById(
+        "shoulderFlex"
+      ).value
+    );
+
+  const sa =
+    Number(
+      document.getElementById(
+        "shoulderAbduction"
+      ).value
+    );
+
+  const sr =
+    Number(
+      document.getElementById(
+        "shoulderRotation"
+      ).value
+    );
+
+  const elbow =
+    Number(
+      document.getElementById(
+        "elbowFlexion"
+      ).value
+    );
+
+  const forearm =
+    Number(
+      document.getElementById(
+        "forearmRotation"
+      ).value
+    );
+
+  const wrist =
+    Number(
+      document.getElementById(
+        "wristFlexion"
+      ).value
+    );
+
+  /*
+    Prototype anatomical axes.
+
+    Because the source GLB has no authored skeletal rig,
+    these axes are mapped to the model coordinate system.
+
+    The hierarchy itself is now correct:
+    downstream structures inherit upstream movement.
+  */
+
+  // V15 BIOMECHANICS
+  // Elevation is split between glenohumeral and scapulothoracic motion.
+  // This is a simplified educational coupling, not a patient-specific simulator.
+  const elevation = Math.max(0, Math.max(sf, sa));
+  const scapUp = elevation <= 30 ? 0 : (elevation - 30) * 0.33;
+  const clavElev = elevation <= 30 ? 0 : Math.min(25, (elevation - 30) * 0.16);
+
+  // V15.2 source-GLB calibration: positive clinical flexion must move the arm
+  // anteriorly. V15 used the opposite sign, producing extension in lateral view.
+  rig.shoulderFlex.rotation.set(deg(-sf),0,0);
+  rig.shoulderAbduction.rotation.set(0,0,deg(-sa));
+  rig.shoulderRotation.rotation.set(0,deg(sr),0);
+
+  if(rig.scapulaPivot){
+    // source-model coordinate approximation: upward rotation + small posterior tilt
+    rig.scapulaPivot.rotation.set(deg(-scapUp*0.10), deg(scapUp*0.08), deg(-scapUp));
+  }
+  if(rig.claviclePivot){
+    rig.claviclePivot.rotation.set(0,0,deg(-clavElev));
+  }
+
+  rig.elbow.rotation.set(deg(-elbow),0,0);
+
+  // V15.2: rotate radius + hand, not the ulna, for pronation/supination.
+  // Axis is aligned to the source model's longitudinal forearm direction.
+  rig.forearm.rotation.set(0,deg(forearm),0);
+  rig.wrist.rotation.set(deg(wrist),0,0);
+
+  document.getElementById(
+    "sfValue"
+  ).textContent=sf+"°";
+
+  document.getElementById(
+    "saValue"
+  ).textContent=sa+"°";
+
+  document.getElementById(
+    "srValue"
+  ).textContent=sr+"°";
+
+  document.getElementById(
+    "elbowValue"
+  ).textContent=elbow+"°";
+
+  document.getElementById(
+    "forearmValue"
+  ).textContent=forearm+"°";
+
+  document.getElementById(
+    "wristValue"
+  ).textContent=wrist+"°";
+}
+
+/* =========================================================
+   JOINT EVENTS
+========================================================= */
+
+[
+  "shoulderFlex",
+  "shoulderAbduction",
+  "shoulderRotation",
+  "elbowFlexion",
+  "forearmRotation",
+  "wristFlexion"
+].forEach(id=>{
+
+  document.getElementById(id)
+    .addEventListener(
+      "input",
+      applyJointPose
+    );
+
+});
+
+document.getElementById(
+  "resetJoints"
+).addEventListener("click",()=>{
+
+  document.getElementById(
+    "shoulderFlex"
+  ).value=0;
+
+  document.getElementById(
+    "shoulderAbduction"
+  ).value=0;
+
+  document.getElementById(
+    "shoulderRotation"
+  ).value=0;
+
+  document.getElementById(
+    "elbowFlexion"
+  ).value=0;
+
+  document.getElementById(
+    "forearmRotation"
+  ).value=0;
+
+  document.getElementById(
+    "wristFlexion"
+  ).value=0;
+
+  applyJointPose();
+});
+
+/* =========================================================
+   REGIONAL MUSCLE LAYERS
+   Inspired by anatomy apps: choose a body region, then peel that region.
+========================================================= */
+
+let activeMuscleRegion="full";
+
+/*
+  V9 follows the reference app instead of forcing every body part into the same
+  four levels.  Each region has its own anatomically useful number of muscle
+  additions.  Shoulder, for example, has two useful muscle additions in the
+  supplied reference clip (deep cuff/teres layer, then superficial deltoid layer),
+  while hand/forearm, back and leg/foot need more.
+*/
+const regionMaxDepth={
+  headneck:6,
+  shoulder:4,
+  arm:8,
+  spine:7,
+  chest:5,
+  abdomen:4,
+  pelvis:5,
+  hip:6,
+  leg:8
+};
+const regionDepth={
+  full:8,
+  headneck:6, shoulder:4, arm:8, spine:7, chest:5,
+  abdomen:4, pelvis:5, hip:6, leg:8
+};
+
+function muscleRegionFor(mesh){
+  const n=getHierarchyName(mesh).toLowerCase();
+  if(/capitis|cervic|sternocleidomastoid|scalen|hyoid|phary|laryng|facial|orbicularis|masseter|temporalis/i.test(n)) return "headneck";
+  if(/deltoid|supraspinatus|infraspinatus|subscapularis|teres major|teres minor|subdeltoid|subacromial|coracobrachial bursa/i.test(n)) return "shoulder";
+  if(/brachii|brachialis|coracobrachialis|brachioradialis|carpi|pollicis|pronator|supinator|antebrach|palmar|of hand|digit of hand|manus|indicis/i.test(n)) return "arm";
+  if(/trapezius|latissimus|rhomboid|erector spinae|multifidus|rotatores|interspinal|intertransvers|spinalis|longissimus|iliocostalis|serratus posterior/i.test(n)) return "spine";
+  if(/pectoralis|serratus anterior|intercostal|thorac|subclavius/i.test(n)) return "chest";
+  if(/rectus abdominis|abdominal oblique|transversus abdominis|quadratus lumborum/i.test(n)) return "abdomen";
+  if(/pelvic|perine|coccygeus|levator ani|obturator internus|anal sphincter/i.test(n)) return "pelvis";
+  if(/glute|piriformis|iliacus|psoas|tensor fasciae latae|adductor|pectineus|gemellus|quadratus femoris/i.test(n)) return "hip";
+  if(/femor|vastus|sartorius|gracilis|gastrocnem|soleus|tibialis|fibular|perone|halluc|foot|plantar|poplite|crural|ankle|calcane/i.test(n)) return "leg";
+  const b=worldBox(mesh), c=new THREE.Vector3(); b.getCenter(c);
+  const x=Math.abs(c.x), y=c.y;
+  if(y>1.40) return "headneck";
+  if(y>1.16 && x>0.16) return "shoulder";
+  if(y>0.72 && x>0.24) return "arm";
+  if(y>0.93 && y<=1.35) return "chest";
+  if(y>0.66 && y<=1.02) return "abdomen";
+  if(y>0.48 && y<=0.76 && x<0.22) return "pelvis";
+  if(y>0.40 && y<=0.82 && x>=0.12) return "hip";
+  return "leg";
+}
+
+
+/* =========================================================
+   V15.2 — DETERMINISTIC ANATOMICAL DISSECTION MAP
+   ---------------------------------------------------------
+   Explicit named anatomy wins. Heuristics are only fallback
+   for source meshes that cannot be identified.
+========================================================= */
+const V14_LAYER_RULES = [
+  // shoulder / scapular region
+  [/deltoid/i,"shoulder",4], [/infraspinatus/i,"shoulder",3],
+  [/teres major/i,"shoulder",3], [/supraspinatus/i,"shoulder",2],
+  [/teres minor/i,"shoulder",2], [/subscapularis/i,"shoulder",1],
+
+  // anterior thorax
+  [/pectoralis major/i,"chest",5], [/serratus anterior/i,"chest",4],
+  [/pectoralis minor/i,"chest",3], [/subclavius/i,"chest",3],
+  [/external intercostal/i,"chest",2], [/(internal|innermost) intercostal/i,"chest",1],
+
+  // posterior trunk
+  [/trapezius/i,"spine",7], [/latissimus dorsi/i,"spine",6],
+  [/(rhomboid|levator scapulae)/i,"spine",5], [/(serratus posterior|splenius)/i,"spine",4],
+  [/(iliocostalis|longissimus|spinalis|erector spinae)/i,"spine",3],
+  [/(semispinalis|multifidus)/i,"spine",2],
+  [/(rotatores|interspinales|intertransversarii)/i,"spine",1],
+
+  // arm / forearm / hand
+  [/(biceps brachii|triceps brachii|brachioradialis)/i,"arm",7],
+  [/(pronator teres|flexor carpi radialis|flexor carpi ulnaris|palmaris longus|extensor carpi radialis|extensor carpi ulnaris)/i,"arm",6],
+  [/(flexor digitorum superficialis|extensor digitorum|extensor digiti minimi)/i,"arm",5],
+  [/(brachialis|coracobrachialis|supinator|abductor pollicis longus|extensor pollicis|extensor indicis)/i,"arm",4],
+  [/(flexor digitorum profundus|flexor pollicis longus|pronator quadratus)/i,"arm",3],
+  [/(opponens|abductor pollicis brevis|flexor pollicis brevis|adductor pollicis|lumbrical)/i,"arm",2],
+  [/(palmar interosse|dorsal interosse)/i,"arm",1],
+
+  // hip / thigh / leg / foot
+  [/(gluteus maximus|tensor fasciae latae)/i,"hip",6], [/gluteus medius/i,"hip",5],
+  [/(gluteus minimus|adductor longus|gracilis)/i,"hip",4],
+  [/(adductor brevis|pectineus)/i,"hip",3],
+  [/(piriformis|obturator|gemellus|quadratus femoris)/i,"hip",2],
+  [/(iliacus|psoas)/i,"hip",1],
+
+  [/(sartorius|rectus femoris|vastus medialis|vastus lateralis|gastrocnemius|tibialis anterior|fibularis longus)/i,"leg",7],
+  [/(biceps femoris|semitendinosus|semimembranosus|soleus|extensor digitorum longus|extensor hallucis longus|fibularis brevis)/i,"leg",6],
+  [/(vastus intermedius|popliteus|tibialis posterior|flexor digitorum longus|flexor hallucis longus)/i,"leg",5],
+  [/(abductor hallucis|flexor digitorum brevis)/i,"leg",4],
+  [/(quadratus plantae|lumbrical.*foot)/i,"leg",3],
+  [/(adductor hallucis|flexor hallucis brevis|flexor digiti minimi.*foot)/i,"leg",2],
+  [/(plantar interosse|dorsal interosse.*foot)/i,"leg",1]
+];
+
+function v14NamedLayer(mesh){
+  const n=getHierarchyName(mesh);
+  for(const [rx,region,depth] of V14_LAYER_RULES){
+    if(rx.test(n)) return {region,depth};
+  }
+  return null;
+}
+
+function muscleLayerFor(mesh, regionOverride=null){
+  const n=getHierarchyName(mesh).toLowerCase();
+  const r=regionOverride || muscleRegionFor(mesh);
+  const covering=/fascia|aponeurosis|retinaculum|tendon sheath|fibrous sheath|bursa/i.test(n);
+
+  if(r==="shoulder"){
+    if(covering || /deltoid/i.test(n)) return 4;
+    if(/teres major|infraspinatus/i.test(n)) return 3;
+    if(/supraspinatus|teres minor/i.test(n)) return 2;
+    return 1; // subscapularis / deepest shoulder structures
+  }
+  if(r==="chest"){
+    if(covering) return 5;
+    if(/pectoralis major/i.test(n)) return 5;
+    if(/serratus anterior/i.test(n)) return 4;
+    if(/pectoralis minor|subclavius/i.test(n)) return 3;
+    if(/external intercostal/i.test(n)) return 2;
+    return 1; // internal/innermost intercostals
+  }
+  if(r==="abdomen"){
+    if(covering || /external abdominal oblique/i.test(n)) return 4;
+    if(/rectus abdominis|internal abdominal oblique/i.test(n)) return 3;
+    if(/transversus abdominis/i.test(n)) return 2;
+    return 1;
+  }
+  if(r==="spine"){
+    if(covering || /trapezius/i.test(n)) return 7;
+    if(/latissimus dorsi/i.test(n)) return 6;
+    if(/rhomboid|levator scapulae/i.test(n)) return 5;
+    if(/serratus posterior|splenius/i.test(n)) return 4;
+    if(/iliocostalis|longissimus|spinalis|erector spinae/i.test(n)) return 3;
+    if(/semispinalis|multifidus/i.test(n)) return 2;
+    return 1; // rotatores/interspinales/intertransversarii
+  }
+  if(r==="arm"){
+    if(covering || /palmar aponeurosis/i.test(n)) return 8;
+    if(/biceps brachii|triceps brachii|brachioradialis/i.test(n)) return 7;
+    if(/pronator teres|flexor carpi radialis|flexor carpi ulnaris|palmaris longus|extensor carpi radialis|extensor carpi ulnaris/i.test(n)) return 6;
+    if(/flexor digitorum superficialis|extensor digitorum|extensor digiti minimi/i.test(n)) return 5;
+    if(/brachialis|coracobrachialis|supinator|abductor pollicis longus|extensor pollicis|extensor indicis/i.test(n)) return 4;
+    if(/flexor digitorum profundus|flexor pollicis longus|pronator quadratus/i.test(n)) return 3;
+    if(/thenar|hypothenar|opponens|abductor pollicis brevis|flexor pollicis brevis|adductor pollicis|lumbrical/i.test(n)) return 2;
+    return 1; // interossei / deepest intrinsic hand
+  }
+  if(r==="leg"){
+    if(covering || /plantar aponeurosis/i.test(n)) return 8;
+    if(/sartorius|rectus femoris|vastus medialis|vastus lateralis|gastrocnemius|tibialis anterior|fibularis longus/i.test(n)) return 7;
+    if(/biceps femoris|semitendinosus|semimembranosus|soleus|extensor digitorum longus|extensor hallucis longus|fibularis brevis/i.test(n)) return 6;
+    if(/vastus intermedius|popliteus|tibialis posterior|flexor digitorum longus|flexor hallucis longus/i.test(n)) return 5;
+    if(/abductor hallucis|abductor digiti minimi of foot|flexor digitorum brevis/i.test(n)) return 4;
+    if(/quadratus plantae|lumbrical muscles of foot/i.test(n)) return 3;
+    if(/adductor hallucis|flexor hallucis brevis|flexor digiti minimi of foot/i.test(n)) return 2;
+    return 1; // plantar/dorsal interossei and deepest residuals
+  }
+  if(r==="hip"){
+    if(covering || /gluteus maximus|tensor fasciae latae/i.test(n)) return 6;
+    if(/gluteus medius|sartorius/i.test(n)) return 5;
+    if(/gluteus minimus|adductor longus|gracilis/i.test(n)) return 4;
+    if(/adductor brevis|pectineus/i.test(n)) return 3;
+    if(/piriformis|obturator|gemellus|quadratus femoris/i.test(n)) return 2;
+    return 1; // iliopsoas / deepest
+  }
+  if(r==="pelvis"){
+    if(covering) return 5;
+    if(/external anal sphincter|superficial perine/i.test(n)) return 4;
+    if(/deep perine|urogenital/i.test(n)) return 3;
+    if(/levator ani|coccygeus/i.test(n)) return 2;
+    return 1;
+  }
+  if(r==="headneck"){
+    if(covering || /platysma|facial|orbicularis/i.test(n)) return 6;
+    if(/sternocleidomastoid|masseter|temporalis/i.test(n)) return 5;
+    if(/digastric|mylohyoid|infrahyoid/i.test(n)) return 4;
+    if(/splenius/i.test(n)) return 3;
+    if(/scalen/i.test(n)) return 2;
+    return 1; // longus capitis/colli and deepest prevertebral
+  }
+  return 1;
+}
+
+function getHierarchyName(object){
+  const parts=[]; let p=object;
+  while(p && p!==layers.muscular){ if(p.name) parts.push(p.name); p=p.parent; }
+  return parts.join(" ");
+}
+
+function effectiveDepthForRegion(region){
+  if(activeMuscleRegion==="full") return regionDepth[region] ?? regionMaxDepth[region] ?? 1;
+  return region===activeMuscleRegion ? regionDepth[region] : regionMaxDepth[region];
+}
+
+function setFullDepthStep(step){
+  // step 0..5; regions with fewer anatomical layers saturate at their own max.
+  regionDepth.full=THREE.MathUtils.clamp(step,0,8);
+  for(const [r,max] of Object.entries(regionMaxDepth)) regionDepth[r]=Math.min(max,regionDepth.full);
+}
+
+function updateMuscleDepth(){
+  if(!layers.muscular) return;
+  (layerMeshRegistry.muscular||[]).forEach(obj=>{
+    if(!obj || !obj.isMesh) return;
+    if(obj.userData.hiddenIndividually){ obj.visible=false; return; }
+    if(isNonMuscleSoftTissue(obj)){
+      obj.userData.muscleRegion="connective";
+      obj.userData.muscleLayer=99;
+      obj.visible=false; // connective coverings no longer corrupt muscle-dissection layers
+      return;
+    }
+    const named=v14NamedLayer(obj);
+    const region=named?.region || obj.userData.muscleRegion || muscleRegionFor(obj);
+    const d=named?.depth || obj.userData.muscleLayer || muscleLayerFor(obj,region);
+    obj.userData.muscleRegion=region; obj.userData.muscleLayer=d;
+    obj.visible=layerVisibility.muscular && d<=effectiveDepthForRegion(region);
+  });
+
+  const regionNames={full:"Full body｜全身",headneck:"Head & neck｜頭頸",shoulder:"Shoulder｜肩",arm:"Hand & elbow｜手和肘",spine:"Spine / back｜脊柱／背",chest:"Chest｜胸",abdomen:"Abdomen｜腹",pelvis:"Pelvis｜盆",hip:"Hip｜髖",leg:"Knee & foot｜膝和足"};
+  const max=activeMuscleRegion==="full" ? 8 : regionMaxDepth[activeMuscleRegion];
+  const depth=activeMuscleRegion==="full" ? regionDepth.full : regionDepth[activeMuscleRegion];
+  document.getElementById("regionName").textContent=regionNames[activeMuscleRegion];
+  document.getElementById("depthName").textContent=depth===0 ? "Bones exposed｜骨骼顯露" : `Muscle layer ${depth} / ${max}｜肌肉層 ${depth} / ${max}`;
+  document.getElementById("depthDescription").textContent=depth===0 ? "所選區域肌肉已隱藏" : "按 − Muscle 逐層剝離；直接點擊任何一塊肌肉會變成橙黃色高亮，再點其他肌肉即可切換。";
+  document.querySelectorAll(".depthBar").forEach((bar,i)=>{
+    bar.style.display=i<max?"block":"none";
+    bar.classList.toggle("active",i<depth);
+  });
+}
+
+document.querySelectorAll(".regionBtn").forEach(btn=>btn.addEventListener("click",()=>{
+  activeMuscleRegion=btn.dataset.region;
+  document.querySelectorAll(".regionBtn").forEach(b=>b.classList.toggle("active",b===btn));
+  updateMuscleDepth();
+}));
+
+document.getElementById("muscleMinus").addEventListener("click",()=>{
+  if(activeMuscleRegion==="full") setFullDepthStep(regionDepth.full-1);
+  else regionDepth[activeMuscleRegion]=Math.max(0,regionDepth[activeMuscleRegion]-1);
+  updateMuscleDepth();
+});
+document.getElementById("musclePlus").addEventListener("click",()=>{
+  if(activeMuscleRegion==="full") setFullDepthStep(regionDepth.full+1);
+  else regionDepth[activeMuscleRegion]=Math.min(regionMaxDepth[activeMuscleRegion],regionDepth[activeMuscleRegion]+1);
+  updateMuscleDepth();
+});
+
+/* =========================================================
+   LAYER BUTTONS
+========================================================= */
+
+function updateSystemButtons(){
+
+  document
+    .querySelectorAll(".systemBtn")
+    .forEach(btn=>{
+
+      const key =
+        btn.dataset.layer;
+
+      btn.classList.toggle(
+        "on",
+        !!layerVisibility[key]
+      );
+
+      btn.classList.toggle(
+        "loading",
+        !layerReady[key]
+      );
+
+    });
+}
+
+document
+  .querySelectorAll(".systemBtn")
+  .forEach(btn=>{
+    btn.addEventListener("click", async ()=>{
+      const key=btn.dataset.layer;
+
+      // V15: large optional GLBs are decoded only when the user requests them.
+      // This avoids Safari/iPad trying to decode nervous + cardiovascular + skin
+      // during initial page load.
+      if(!layerReady[key]){
+        if(!["nervous","cardiovascular","skin","visceral"].includes(key)) return;
+        btn.disabled=true;
+        const ok=await loadOptionalLayer(key,key);
+        btn.disabled=false;
+        if(!ok){ updateSystemButtons(); return; }
+        layerVisibility[key]=true;
+      }else{
+        layerVisibility[key]=!layerVisibility[key];
+      }
+
+      if(layers[key]) layers[key].visible=layerVisibility[key];
+      (layerMeshRegistry[key]||[]).forEach(obj=>{
+        if(obj && obj.isMesh) obj.visible=layerVisibility[key];
+      });
+      if(key==="cardiovascular" && layerVisibility[key]) updateVesselVisibility();
+      if(key==="muscular" && layerVisibility.muscular) updateMuscleDepth();
+      updateSystemButtons();
+    });
+  });
+
+const vesselVisibility={artery:true,vein:true};
+function vesselTypeFor(mesh){
+  let parts=[],p=mesh;
+  while(p && p!==layers.cardiovascular){ if(p.name) parts.push(p.name); p=p.parent; }
+  const n=parts.join(" ").toLowerCase();
+  if(/vein|venous|sinus|vena cava|caval/i.test(n)) return "vein";
+  if(/artery|arterial|aorta|aortic|trunk/i.test(n)) return "artery";
+  return "other";
+}
+function updateVesselVisibility(){
+  const on=!!layerVisibility.cardiovascular;
+  if(layers.cardiovascular) layers.cardiovascular.visible=on;
+  (layerMeshRegistry.cardiovascular||[]).forEach(mesh=>{
+    const t=mesh.userData.vesselType || (mesh.userData.vesselType=vesselTypeFor(mesh));
+    mesh.visible=on && (t==="other" || vesselVisibility[t]);
+  });
+}
+document.querySelectorAll(".vesselBtn").forEach(btn=>btn.addEventListener("click",()=>{
+  const t=btn.dataset.vessel; vesselVisibility[t]=!vesselVisibility[t];
+  btn.classList.toggle("on",vesselVisibility[t]);
+  updateVesselVisibility();
+}));
+
+/* =========================================================
+   SELECTION
+========================================================= */
+
+const raycaster =
+  new THREE.Raycaster();
+
+const pointer =
+  new THREE.Vector2();
+
+let selectedObject=null;
+
+const individualOverrides =
+  new Map();
+
+function selectableMeshes(){
+
+  const arr=[];
+
+  human.traverse(obj=>{
+
+    if(
+      obj.isMesh &&
+      obj.visible &&
+      (
+        obj.userData.anatomyLayer==="muscular" ||
+        obj.userData.anatomyLayer==="skeleton"
+      )
+    ){
+      arr.push(obj);
+    }
+
+  });
+
+  return arr;
+}
+
+function restoreOriginalMaterials(){
+
+  if(!selectedObject) return;
+
+  if(
+    selectedObject.userData
+      .selectionOriginalMaterial
+  ){
+
+    selectedObject.material =
+      selectedObject.userData
+        .selectionOriginalMaterial;
+
+    delete selectedObject.userData
+      .selectionOriginalMaterial;
+  }
+}
+
+function highlightObject(obj){
+
+  restoreOriginalMaterials();
+
+  selectedObject=obj;
+
+  obj.userData.selectionOriginalMaterial =
+    obj.material;
+
+  const mats =
+    Array.isArray(obj.material)
+      ? obj.material
+      : [obj.material];
+
+  const highlighted =
+    mats.map(mat=>{
+
+      if(!mat) return mat;
+
+      const m=mat.clone();
+
+      // Reference-app style selection: the tapped structure becomes unmistakable.
+      if(m.color) m.color.set(0xffb000);
+      if(m.emissive){
+        m.emissive.set(0xff6a00);
+        m.emissiveIntensity=.85;
+      }
+      if("roughness" in m) m.roughness=.42;
+
+      return m;
+    });
+
+  obj.material =
+    Array.isArray(obj.material)
+      ? highlighted
+      : highlighted[0];
+}
+
+/* =========================================================
+   TEACHING PANEL
+========================================================= */
+
+function fieldHTML(
+  title,
+  en,
+  zh
+){
+
+  return `
+    <div class="infoField">
+      <div class="infoHeading">${title}</div>
+      <div class="infoText">${en || "—"}</div>
+      <div class="infoZh">${zh || ""}</div>
+    </div>
+  `;
+}
+
+function v15HierarchyCategory(obj){
+  const n=getHierarchyName(obj).toLowerCase();
+  // The supplied muscular.glb contains explicit hierarchy groups such as
+  // "Muscles", "Fasciae", bursae and tendon sheaths.  Specific non-muscle
+  // anatomy always wins over a generic "muscular system" ancestor.
+  if(/synovial bursa|\bbursa\b/.test(n)) return "bursa";
+  if(/tendon sheath|\bsheath\b/.test(n)) return "tendon_sheath";
+  if(/\bfasciae\b|\bfascia\b|aponeuros/.test(n)) return "fascia";
+  if(/retinacul|ligament|capsule|cartilage|labrum|meniscus|interosseous membrane/.test(n)) return "connective";
+  if(/\btendon\b/.test(n) && !/tendon.*muscle/.test(n)) return "tendon";
+  return "muscle";
+}
+function isNonMuscleSoftTissue(obj){
+  return v15HierarchyCategory(obj)!=="muscle";
+}
+
+function showConnectiveTissueInfo(obj){
+  const modelName=cleanName(obj.name) || "Connective tissue";
+  document.getElementById("structureBadge").textContent="CONNECTIVE TISSUE｜結締組織";
+  document.getElementById("structureName").textContent=modelName;
+  const cat=v15HierarchyCategory(obj);
+  const zhMap={fascia:"筋膜",bursa:"滑液囊",tendon_sheath:"腱鞘",tendon:"肌腱",connective:"結締組織"};
+  document.getElementById("structureChinese").textContent=zhMap[cat] || "非肌肉軟組織";
+  document.getElementById("infoContent").innerHTML=`<div class="placeholder">此 mesh 屬於結締組織，不會再錯誤套用肌肉 O / I / A / N。<br><br>Model mesh: ${obj.name}</div>`;
+}
+
+function showMuscleInfo(obj){
+
+  const modelName =
+    cleanName(obj.name);
+
+  const data =
+    findMuscle(
+      getHierarchyName(obj)
+    ) ||
+    findMuscle(modelName);
+
+  document.getElementById(
+    "structureBadge"
+  ).textContent="MUSCLE｜肌肉";
+
+  if(!data){
+
+    document.getElementById(
+      "structureName"
+    ).textContent=modelName || "Muscle";
+
+    document.getElementById(
+      "structureChinese"
+    ).textContent="肌肉";
+
+    document.getElementById(
+      "infoContent"
+    ).innerHTML=
+      `<div class="placeholder">
+       模型已辨識此結構為肌肉，但暫時未有對應教學資料。<br><br>
+       Model mesh: ${obj.name}
+       </div>`;
+
+    return;
+  }
+
+  const side =
+    /l001$/i.test(obj.name)
+      ? "Left "
+      : /r001$/i.test(obj.name)
+        ? "Right "
+        : "";
+
+  const sideZh =
+    /l001$/i.test(obj.name)
+      ? "左"
+      : /r001$/i.test(obj.name)
+        ? "右"
+        : "";
+
+  document.getElementById(
+    "structureName"
+  ).textContent=
+    side + data.en;
+
+  document.getElementById(
+    "structureChinese"
+  ).textContent=
+    sideZh + data.zh;
+
+  document.getElementById(
+    "infoContent"
+  ).innerHTML=
+
+    fieldHTML(
+      "ORIGIN｜起點",
+      data.origin,
+      data.originZh
+    ) +
+
+    fieldHTML(
+      "INSERTION｜止點",
+      data.insertion,
+      data.insertionZh
+    ) +
+
+    fieldHTML(
+      "ACTION｜作用",
+      data.action,
+      data.actionZh
+    ) +
+
+    fieldHTML(
+      "INNERVATION｜神經支配",
+      data.nerve,
+      data.nerveZh
+    ) +
+
+    fieldHTML(
+      "BLOOD SUPPLY｜血液供應",
+      data.blood,
+      data.bloodZh
+    );
+}
+
+function showBoneInfo(obj){
+
+  const modelName =
+    cleanName(obj.name);
+
+  const data =
+    findBone(modelName);
+
+  document.getElementById(
+    "structureBadge"
+  ).textContent="BONE｜骨骼";
+
+  if(!data){
+
+    document.getElementById(
+      "structureName"
+    ).textContent=
+      modelName || "Bone";
+
+    document.getElementById(
+      "structureChinese"
+    ).textContent="骨骼";
+
+    document.getElementById(
+      "infoContent"
+    ).innerHTML=
+      `<div class="placeholder">
+       此骨骼已被選取，但目前資料庫未有完整教學資料。<br><br>
+       Model mesh: ${obj.name}
+       </div>`;
+
+    return;
+  }
+
+  const side =
+    /l001$/i.test(obj.name)
+      ? "Left "
+      : /r001$/i.test(obj.name)
+        ? "Right "
+        : "";
+
+  const sideZh =
+    /l001$/i.test(obj.name)
+      ? "左"
+      : /r001$/i.test(obj.name)
+        ? "右"
+        : "";
+
+  document.getElementById(
+    "structureName"
+  ).textContent=
+    side + data.en;
+
+  document.getElementById(
+    "structureChinese"
+  ).textContent=
+    sideZh + data.zh;
+
+  document.getElementById(
+    "infoContent"
+  ).innerHTML=
+
+    fieldHTML(
+      "TYPE｜骨分類",
+      data.type,
+      data.typeZh
+    ) +
+
+    fieldHTML(
+      "ARTICULATIONS｜關節連接",
+      data.articulations,
+      data.articulationsZh
+    ) +
+
+    fieldHTML(
+      "LANDMARKS｜骨性標誌",
+      data.landmarks,
+      data.landmarksZh
+    ) +
+
+    fieldHTML(
+      "MUSCLE ATTACHMENTS｜肌肉附著",
+      data.attachments,
+      data.attachmentsZh
+    ) +
+
+    fieldHTML(
+      "CLINICAL ANATOMY｜臨床解剖",
+      data.clinical,
+      data.clinicalZh
+    );
+}
+
+
+function showSystemStructureInfo(obj,key){
+  const modelName=cleanName(obj.name) || "Anatomical structure";
+  const hierarchy=getHierarchyName(obj);
+  let badge="STRUCTURE｜解剖結構", zh="", note="";
+  if(key==="nervous"){
+    badge="NERVOUS SYSTEM｜神經";
+    zh="神經系統結構";
+    note="V15 已將此結構由 nervous.glb 的真實 hierarchy 識別。";
+  }else if(key==="cardiovascular"){
+    const t=obj.userData.vesselType || (obj.userData.vesselType=vesselTypeFor(obj));
+    badge=t==="vein" ? "VEIN｜靜脈" : t==="artery" ? "ARTERY｜動脈" : "CARDIOVASCULAR｜心血管";
+    zh=t==="vein" ? "靜脈" : t==="artery" ? "動脈" : "心血管結構";
+    note="V15 依 cardiovascular.glb hierarchy 區分 artery / vein。";
+  }else if(key==="skin"){
+    badge="SKIN｜皮膚"; zh="皮膚"; note="Body surface mesh";
+  }else{
+    badge=String(key||"structure").toUpperCase()+"｜解剖結構";
+  }
+  document.getElementById("structureBadge").textContent=badge;
+  document.getElementById("structureName").textContent=modelName;
+  document.getElementById("structureChinese").textContent=zh;
+  document.getElementById("infoContent").innerHTML=
+    `<div class="placeholder">${note}<br><br><b>Model mesh</b>: ${obj.name}<br><br><b>GLB hierarchy</b>: ${hierarchy}</div>`;
+}
+
+function selectObject(obj){
+
+  highlightObject(obj);
+
+  document.getElementById(
+    "selectionControls"
+  ).style.display="block";
+
+  if(
+    obj.userData.anatomyLayer===
+    "muscular"
+  ){
+    if(isNonMuscleSoftTissue(obj)) showConnectiveTissueInfo(obj);
+    else showMuscleInfo(obj);
+  }
+
+  else if(
+    obj.userData.anatomyLayer===
+    "skeleton"
+  ){
+    showBoneInfo(obj);
+  }
+  else if(["nervous","cardiovascular","skin","visceral"].includes(obj.userData.anatomyLayer)){
+    showSystemStructureInfo(obj,obj.userData.anatomyLayer);
+  }
+}
+
+/* =========================================================
+   POINTER
+========================================================= */
+
+renderer.domElement.addEventListener(
+  "pointerup",
+  event=>{
+
+    /*
+      Ignore obvious multi-touch gestures.
+    */
+
+    if(event.pointerType==="touch"){
+      // pointerup remains usable for tap selection
+    }
+
+    const rect =
+      renderer.domElement
+        .getBoundingClientRect();
+
+    pointer.x =
+      ((event.clientX-rect.left)/rect.width)*2-1;
+
+    pointer.y =
+      -((event.clientY-rect.top)/rect.height)*2+1;
+
+    raycaster.setFromCamera(
+      pointer,
+      camera
+    );
+
+    const hits =
+      raycaster.intersectObjects(
+        selectableMeshes(),
+        false
+      );
+
+    if(hits.length){
+      selectObject(hits[0].object);
+    }
+
+  }
+);
+
+/* =========================================================
+   HIDE / ISOLATE
+========================================================= */
+
+document.getElementById(
+  "hideSelected"
+).addEventListener("click",()=>{
+
+  if(!selectedObject) return;
+
+  restoreOriginalMaterials();
+
+  selectedObject.visible=false;
+
+  individualOverrides.set(
+    selectedObject,
+    "hidden"
+  );
+
+  selectedObject=null;
+});
+
+document.getElementById(
+  "isolateSelected"
+).addEventListener("click",()=>{
+
+  if(!selectedObject) return;
+
+  const layer =
+    selectedObject.userData
+      .anatomyLayer;
+
+  human.traverse(obj=>{
+
+    if(
+      obj.isMesh &&
+      obj.userData.anatomyLayer===layer
+    ){
+      obj.visible =
+        obj===selectedObject;
+    }
+
+  });
+
+});
+
+function resetIndividualControls(){
+
+  restoreOriginalMaterials();
+
+  selectedObject=null;
+
+  individualOverrides.clear();
+
+  human.traverse(obj=>{
+
+    if(!obj.isMesh) return;
+
+    const key =
+      obj.userData.anatomyLayer;
+
+    if(!key) return;
+
+    obj.visible =
+      !!layerVisibility[key];
+
+  });
+
+  updateMuscleDepth();
+
+  document.getElementById(
+    "structureName"
+  ).textContent=
+    "Select a structure";
+
+  document.getElementById(
+    "structureChinese"
+  ).textContent=
+    "點擊肌肉或骨骼";
+
+  document.getElementById(
+    "structureBadge"
+  ).textContent=
+    "3D SELECT";
+
+  document.getElementById(
+    "selectionControls"
+  ).style.display="none";
+
+  document.getElementById(
+    "infoContent"
+  ).innerHTML=
+    `直接點擊人體。V15 直接使用實際 GLB hierarchy；Muscles、Fasciae、Nerves、Arteries/Veins 分開處理。<br><br>
+     肌肉：Origin / Insertion / Action /
+     Innervation / Blood supply。<br><br>
+     骨骼：Type / Articulations / Landmarks /
+     Muscle attachments / Clinical anatomy。`;
+}
+
+document.getElementById(
+  "resetIndividual"
+).addEventListener(
+  "click",
+  resetIndividualControls
+);
+
+document.getElementById(
+  "restoreAll"
+).addEventListener(
+  "click",
+  ()=>{
+
+    Object.keys(regionDepth).forEach(k=>regionDepth[k]=4); activeMuscleRegion="full";
+
+    layerVisibility.skeleton=true;
+    layerVisibility.muscular=true;
+
+    human.traverse(obj=>{
+
+      if(!obj.isMesh) return;
+
+      const key =
+        obj.userData.anatomyLayer;
+
+      if(key){
+        obj.visible =
+          !!layerVisibility[key];
+      }
+
+    });
+
+    updateMuscleDepth();
+    updateSystemButtons();
+    resetIndividualControls();
+  }
+);
+
+/* =========================================================
+   SEARCH
+========================================================= */
+
+function searchStructure(){
+
+  const q =
+    document.getElementById(
+      "searchInput"
+    ).value
+      .trim()
+      .toLowerCase();
+
+  if(!q) return;
+
+  let found=null;
+
+  human.traverse(obj=>{
+
+    if(
+      found ||
+      !obj.isMesh
+    ){
+      return;
+    }
+
+    const layer =
+      obj.userData.anatomyLayer;
+
+    if(
+      layer!=="muscular" &&
+      layer!=="skeleton"
+    ){
+      return;
+    }
+
+    const modelName =
+      getHierarchyName(obj)
+        .toLowerCase();
+
+    const clean =
+      cleanName(obj.name)
+        .toLowerCase();
+
+    if(
+      modelName.includes(q) ||
+      clean.includes(q)
+    ){
+      found=obj;
+    }
+
+  });
+
+  /*
+    Teaching database English / Chinese search.
+  */
+
+  if(!found){
+
+    const muscle =
+      MUSCLES.find(m=>
+        m.en.toLowerCase().includes(q) ||
+        m.zh.includes(q)
+      );
+
+    if(muscle){
+
+      human.traverse(obj=>{
+
+        if(
+          found ||
+          !obj.isMesh ||
+          obj.userData.anatomyLayer!=="muscular"
+        ){
+          return;
+        }
+
+        if(
+          findMuscle(
+            getHierarchyName(obj)
+          )?.id===muscle.id
+        ){
+          found=obj;
+        }
+
+      });
+
+    }
+  }
+
+  if(!found){
+
+    const bone =
+      BONES.find(b=>
+        b.en.toLowerCase().includes(q) ||
+        b.zh.includes(q)
+      );
+
+    if(bone){
+
+      human.traverse(obj=>{
+
+        if(
+          found ||
+          !obj.isMesh ||
+          obj.userData.anatomyLayer!=="skeleton"
+        ){
+          return;
+        }
+
+        if(
+          findBone(
+            cleanName(obj.name)
+          )?.id===bone.id
+        ){
+          found=obj;
+        }
+
+      });
+
+    }
+  }
+
+  if(found){
+
+    found.visible=true;
+
+    selectObject(found);
+
+    const box =
+      worldBox(found);
+
+    const c =
+      new THREE.Vector3();
+
+    const s =
+      new THREE.Vector3();
+
+    box.getCenter(c);
+    box.getSize(s);
+
+    controls.target.copy(c);
+
+    const max =
+      Math.max(
+        s.x,
+        s.y,
+        s.z,
+        rig.refs
+          ? rig.refs.upperArmLength*.15
+          : 1
+      );
+
+    const direction =
+      camera.position
+        .clone()
+        .sub(controls.target)
+        .normalize();
+
+    camera.position.copy(
+      c.clone().add(
+        direction.multiplyScalar(
+          max*6
+        )
+      )
+    );
+
+    controls.update();
+
+  }else{
+
+    showError(
+      "No matching visible structure found｜找不到對應結構"
+    );
+  }
+}
+
+document.getElementById(
+  "searchButton"
+).addEventListener(
+  "click",
+  searchStructure
+);
+
+document.getElementById(
+  "searchInput"
+).addEventListener(
+  "keydown",
+  e=>{
+
+    if(e.key==="Enter"){
+      searchStructure();
+    }
+
+  }
+);
+
+/* =========================================================
+   INITIAL LOADING
+========================================================= */
+
+async function init(){
+
+  try{
+
+    /*
+      1. SKELETON
+    */
+
+    setStatus(
+      "Loading skeleton… (V15 Real-GLB Anatomy Engine)"
+    );
+
+    await loadOne(
+      "skeleton"
+    );
+
+    scene.updateMatrixWorld(true);
+
+    /*
+      Center entire human using skeleton only.
+      This prevents label geometry in other GLBs from
+      corrupting camera fit.
+    */
+
+    const box =
+      new THREE.Box3()
+        .setFromObject(
+          layers.skeleton
+        );
+
+    const center =
+      new THREE.Vector3();
+
+    const size =
+      new THREE.Vector3();
+
+    box.getCenter(center);
+    box.getSize(size);
+    referenceSkeletonBox = box.clone();
+
+    human.position.sub(center);
+
+    scene.updateMatrixWorld(true);
+
+    fitCamera(size);
+
+    /*
+      2. BUILD RIGHT ARM SKELETAL RIG
+    */
+
+    buildRig();
+
+    updateSystemButtons();
+
+    await sleep(100);
+
+    /*
+      3. MUSCLES
+    */
+
+    setStatus(
+      "Loading muscles..."
+    );
+
+    await loadOne(
+      "muscular"
+    );
+
+    /*
+      Attach right upper-limb muscle meshes
+      to shoulder/elbow/wrist hierarchy.
+    */
+
+    registerSoftTissueLayer(
+      "muscular"
+    );
+
+    updateMuscleDepth();
+
+    setStatus(
+      "Core anatomy ready",
+      "ready"
+    );
+
+    updateSystemButtons();
+
+    /*
+      Allow Safari to render before decoding
+      another large GLB.
+    */
+
+    await sleep(250);
+
+    /*
+      4. V15 OPTIONAL SYSTEMS — TRUE ON-DEMAND LOADING
+      ------------------------------------------------
+      nervous.glb (~large), cardiovascular.glb and skin are NOT decoded at boot.
+      Tap the corresponding system button to load that model.  This is much more
+      reliable on iPad Safari and makes the skeleton+muscle core usable immediately.
+    */
+    setStatus("V15.2 core ready · anatomical-axis rig · optional systems load on demand","ready");
+    updateSystemButtons();
+
+    updateSystemButtons();
+
+  }catch(err){
+
+    console.error(err);
+
+    setStatus(
+      "Loading error",
+      "error"
+    );
+
+    showError(
+      "Core anatomy failed to load: " +
+      (err?.message || err)
+    );
+  }
+}
+
+/* =========================================================
+   RESIZE
+========================================================= */
+
+window.addEventListener(
+  "resize",
+  ()=>{
+
+    camera.aspect =
+      window.innerWidth /
+      window.innerHeight;
+
+    camera.updateProjectionMatrix();
+
+    renderer.setSize(
+      window.innerWidth,
+      window.innerHeight
+    );
+
+  }
+);
+
+/* =========================================================
+   RENDER LOOP
+========================================================= */
+
+function animate(){
+
+  requestAnimationFrame(
+    animate
+  );
+
+  controls.update();
+
+  renderer.render(
+    scene,
+    camera
+  );
+}
+
+animate();
+
+// V13: visible diagnostics instead of a silent black/frozen viewer.
+window.addEventListener("error",e=>showError("JavaScript error: "+(e.message||"unknown error")));
+window.addEventListener("unhandledrejection",e=>showError("Async error: "+(e.reason?.message||e.reason||"unknown error")));
+
+updateSystemButtons();
+
+init();
+
+</script>
+
+<!--
+V15 deployment:
+Keep index.html beside the models/ directory.
+Included models: skeleton.glb, muscular.glb, nervous.glb,
+cardiovascular.glb, anatomy-skin.glb.
+visceral.glb is optional and is not included in this package.
+-->
+</body>
+</html>
