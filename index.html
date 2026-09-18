@@ -414,7 +414,7 @@ input[type="range"]{
   <div id="leftPanel" class="panel">
 
     <h1>MJ Anatomy 3D</h1>
-    <div class="subtitle">Interactive Anatomy Learning System · V12.1</div>
+    <div class="subtitle">Interactive Anatomy Learning System · V12.2</div>
 
     <div id="status" class="status">● Starting...</div>
 
@@ -900,36 +900,61 @@ function allMeshes(root){
 ========================================================= */
 
 async function loadGLB(url){
-  // V12.1: iPad/Safari-safe loader.  loader.load() can occasionally leave the
-  // promise pending forever on a cached GitHub Pages GLB request.  Fetch the
-  // binary ourselves with a hard timeout, retry once with cache-busting, then
-  // hand the ArrayBuffer to GLTFLoader.parseAsync().
-  let lastError=null;
-  for(let attempt=0; attempt<2; attempt++){
+  // V12.2 recovery loader: first use the exact GLTFLoader.load path that
+  // already worked in V10. If it stalls/fails, fall back to binary fetch+parse.
+  const setStage=(msg)=>setStatus(msg);
+
+  const classicLoad=()=>new Promise((resolve,reject)=>{
+    let settled=false;
+    const timer=setTimeout(()=>{
+      if(settled) return;
+      settled=true;
+      reject(new Error(`Timeout while loading ${url}`));
+    },20000);
+    loader.load(url,(gltf)=>{
+      if(settled) return;
+      settled=true; clearTimeout(timer); resolve(gltf.scene);
+    },(xhr)=>{
+      if(xhr && xhr.total){
+        const pct=Math.max(0,Math.min(100,Math.round(xhr.loaded/xhr.total*100)));
+        setStage(`Downloading skeleton… ${pct}%`);
+      }
+    },(err)=>{
+      if(settled) return;
+      settled=true; clearTimeout(timer); reject(err || new Error(`GLTFLoader failed: ${url}`));
+    });
+  });
+
+  const binaryLoad=async()=>{
+    setStage("Primary loader failed — automatic recovery…");
     const controller=new AbortController();
-    const timer=setTimeout(()=>controller.abort(), 30000);
+    const timer=setTimeout(()=>controller.abort(),20000);
     try{
-      const requestURL = attempt===0 ? url : `${url}${url.includes("?")?"&":"?"}v12retry=${Date.now()}`;
-      const response=await fetch(requestURL, {
-        signal:controller.signal,
-        cache: attempt===0 ? "default" : "reload"
-      });
-      if(!response.ok) throw new Error(`${url}: HTTP ${response.status}`);
+      const requestURL=`${url}${url.includes("?")?"&":"?"}recover=${Date.now()}`;
+      const response=await fetch(requestURL,{signal:controller.signal,cache:"no-store"});
+      if(!response.ok) throw new Error(`HTTP ${response.status} for ${url}`);
+      setStage("Recovery download complete — parsing model…");
       const data=await response.arrayBuffer();
-      if(!data || data.byteLength<20) throw new Error(`${url}: empty GLB`);
-      const base=url.slice(0,url.lastIndexOf("/")+1);
-      const gltf=await loader.parseAsync(data, base);
-      return gltf.scene;
-    }catch(err){
-      lastError=err;
-      console.warn(`GLB load attempt ${attempt+1} failed`,url,err);
-    }finally{
-      clearTimeout(timer);
+      if(!data || data.byteLength<20) throw new Error(`Empty GLB: ${url}`);
+      const base=new URL(url,location.href).href.replace(/[^/]*$/,"");
+      return await new Promise((resolve,reject)=>{
+        loader.parse(data,base,gltf=>resolve(gltf.scene),reject);
+      });
+    } finally { clearTimeout(timer); }
+  };
+
+  try{
+    return await classicLoad();
+  }catch(primaryError){
+    console.warn("Primary GLB loader failed; recovering",primaryError);
+    try{
+      return await binaryLoad();
+    }catch(recoveryError){
+      console.error("Recovery GLB loader failed",recoveryError);
+      throw new Error(`Automatic recovery failed. ${recoveryError?.message || primaryError?.message || "unknown error"}`);
     }
   }
-  throw lastError || new Error(`Failed to load ${url}`);
 }
-
 async function loadOne(key){
 
   const model = await loadGLB(files[key]);
@@ -3131,7 +3156,7 @@ async function init(){
     */
 
     setStatus(
-      "Loading skeleton… (iPad-safe loader)"
+      "Loading skeleton… (V12.2 auto-recovery)"
     );
 
     await loadOne(
