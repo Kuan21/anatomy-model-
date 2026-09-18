@@ -469,10 +469,14 @@ input[type="range"]{
         <button class="regionBtn" data-region="hip">髖</button>
         <button class="regionBtn" data-region="leg">膝和足</button>
       </div>
-      <div id="depthName">Layer 4 · Superficial complete｜表層完整</div>
-      <div id="depthDescription">所選區域：完整肌肉</div>
+      <div id="depthName">Muscle layers｜肌肉逐層</div>
+      <div id="depthDescription">按 − Muscle 逐層剝離；點擊任何肌肉可高亮</div>
 
       <div class="depthBars">
+        <div class="depthBar active"></div>
+        <div class="depthBar active"></div>
+        <div class="depthBar active"></div>
+        <div class="depthBar active"></div>
         <div class="depthBar active"></div>
         <div class="depthBar active"></div>
         <div class="depthBar active"></div>
@@ -979,89 +983,99 @@ async function loadOptionalLayer(key,label){
 function prepareSkin(model){
   model.traverse(o=>{
     if(!o.isMesh) return;
-    // The supplied skin GLB is Draco-compressed and contains positions only.
-    // Without normals a lit PBR material appears as a dark/black silhouette.
-    if(o.geometry && !o.geometry.getAttribute("normal")){
-      o.geometry.computeVertexNormals();
-    }
+    if(o.geometry && !o.geometry.getAttribute("normal")) o.geometry.computeVertexNormals();
+
+    /*
+      V9 neutral body surface:
+      the supplied skin is a single unrigged male surface.  The viewer itself is
+      sex-neutral, so flatten the small central external-genital protrusion rather
+      than displaying external genital anatomy.  This edits only the decoded skin
+      vertices in memory; the source GLB is left untouched.
+    */
+    neutralizeExternalGenitalSurface(o.geometry);
+
     o.material = new THREE.MeshStandardMaterial({
-      color: 0xd8a184, roughness: 0.82, metalness: 0,
-      transparent: false, opacity: 1, depthWrite: true,
-      side: THREE.FrontSide
+      color:0xd8a184, roughness:0.82, metalness:0,
+      transparent:false, opacity:1, depthWrite:true,
+      side:THREE.FrontSide
     });
     o.castShadow=false; o.receiveShadow=true;
   });
-  // All anatomy GLBs share the same source coordinate frame.
-  // Do NOT bbox-align skin after the skeleton has been re-parented into joints;
-  // that was shifting the whole skin away from the body.
+
   model.position.set(0,0,0);
   model.rotation.set(0,0,0);
   model.scale.set(1,1,1);
 
-  // V8: fit skin to the PRE-RIG skeleton, never to an already posed arm.
-  // This removes the "large skin wrapped around a small person" mismatch.
-  if(referenceSkeletonBox){
-    scene.updateMatrixWorld(true);
-    const sb=new THREE.Box3().setFromObject(model);
-    const ss=new THREE.Vector3(), rs=new THREE.Vector3();
-    const sc=new THREE.Vector3(), rc=new THREE.Vector3();
-    sb.getSize(ss); referenceSkeletonBox.getSize(rs);
-    sb.getCenter(sc); referenceSkeletonBox.getCenter(rc);
-    if(ss.y>0 && rs.y>0){
-      const k=(rs.y/ss.y)*1.015;
-      model.scale.setScalar(k);
-      scene.updateMatrixWorld(true);
-      const b2=new THREE.Box3().setFromObject(model), c2=new THREE.Vector3(); b2.getCenter(c2);
-      model.position.add(rc.clone().sub(c2));
+  /*
+    IMPORTANT: align in the CURRENT world coordinate frame.  V8 compared a
+    pre-centering skeleton box with a post-centering skin box, which created the
+    second displaced human visible in the user's screenshot.
+  */
+  alignSkinToCurrentBody(model);
+}
+
+function neutralizeExternalGenitalSurface(geometry){
+  const pos=geometry?.getAttribute("position");
+  if(!pos || pos.count<10) return;
+  geometry.computeBoundingBox();
+  const b=geometry.boundingBox;
+  const sx=b.max.x-b.min.x, sy=b.max.y-b.min.y, sz=b.max.z-b.min.z;
+  if(!(sx>0 && sy>0 && sz>0)) return;
+  const cx=(b.min.x+b.max.x)*.5;
+
+  // Pelvic/perineal band: roughly 31–45% of body height from the feet.
+  // Use neighbouring groin vertices to estimate a neutral anterior surface.
+  const refs=[];
+  for(let i=0;i<pos.count;i++){
+    const x=pos.getX(i), y=pos.getY(i), z=pos.getZ(i);
+    const yn=(y-b.min.y)/sy, xn=Math.abs(x-cx)/sx;
+    if(yn>.32 && yn<.45 && xn>.07 && xn<.16) refs.push(z);
+  }
+  if(refs.length<20) return;
+  refs.sort((a,b)=>a-b);
+  const frontPositive=(b.max.z-(b.min.z+b.max.z)*.5) >= (((b.min.z+b.max.z)*.5)-b.min.z);
+  const q=frontPositive ? refs[Math.floor(refs.length*.82)] : refs[Math.floor(refs.length*.18)];
+
+  for(let i=0;i<pos.count;i++){
+    const x=pos.getX(i), y=pos.getY(i), z=pos.getZ(i);
+    const yn=(y-b.min.y)/sy, xn=Math.abs(x-cx)/sx;
+    if(yn>.315 && yn<.445 && xn<.075){
+      if(frontPositive && z>q) pos.setZ(i,q);
+      if(!frontPositive && z<q) pos.setZ(i,q);
     }
   }
+  pos.needsUpdate=true;
+  geometry.computeVertexNormals();
+  geometry.computeBoundingBox();
+  geometry.computeBoundingSphere();
 }
 
-function alignSkinToSkeleton(skin){
-
-  const skeleton = layers.skeleton;
-  if(!skin || !skeleton) return;
-
+function alignSkinToCurrentBody(skin){
+  const target=layers.muscular || layers.skeleton;
+  if(!skin || !target) return;
   scene.updateMatrixWorld(true);
 
-  // Measure the two real models instead of hard-coding a scale.
-  const skBox = new THREE.Box3().setFromObject(skeleton);
-  const skSize = new THREE.Vector3();
-  const skCenter = new THREE.Vector3();
-  skBox.getSize(skSize);
-  skBox.getCenter(skCenter);
+  const tb=new THREE.Box3().setFromObject(target);
+  const sb=new THREE.Box3().setFromObject(skin);
+  const ts=new THREE.Vector3(), ss=new THREE.Vector3();
+  const tc=new THREE.Vector3(), sc=new THREE.Vector3();
+  tb.getSize(ts); sb.getSize(ss); tb.getCenter(tc); sb.getCenter(sc);
+  if(!(ts.y>0 && ss.y>0)) return;
 
-  const skinBox0 = new THREE.Box3().setFromObject(skin);
-  const skinSize0 = new THREE.Vector3();
-  skinBox0.getSize(skinSize0);
-
-  if(skinSize0.y > 0 && skSize.y > 0){
-    const scale = skSize.y / skinSize0.y;
-    skin.scale.multiplyScalar(scale);
-  }
-
+  // Uniform scale preserves body proportions; 1.5% gives a thin skin envelope.
+  const k=(ts.y/ss.y)*1.015;
+  skin.scale.multiplyScalar(k);
   scene.updateMatrixWorld(true);
 
-  // Match centres after scaling.
-  const skinBox1 = new THREE.Box3().setFromObject(skin);
-  const skinCenter1 = new THREE.Vector3();
-  skinBox1.getCenter(skinCenter1);
-
-  const deltaWorld = skCenter.clone().sub(skinCenter1);
-
-  // skin and skeleton share the same parent (human), so this world-space
-  // delta can be applied directly to the skin's local position.
-  skin.position.add(deltaWorld);
-
+  const sb2=new THREE.Box3().setFromObject(skin), sc2=new THREE.Vector3();
+  sb2.getCenter(sc2);
+  // skin and target share the same parent (human), so their world delta is also
+  // the required local translation while human has no scale/rotation.
+  skin.position.add(tc.clone().sub(sc2));
   scene.updateMatrixWorld(true);
-
-  console.log("Skin auto-aligned", {
-    skeletonSize: skSize.toArray(),
-    originalSkinSize: skinSize0.toArray(),
-    skinScale: skin.scale.x,
-    offset: skin.position.toArray()
-  });
 }
+
+function alignSkinToSkeleton(skin){ alignSkinToCurrentBody(skin); }
 
 /* =========================================================
    MODEL TAGGING
@@ -1805,7 +1819,7 @@ function anatomicalArmSegment(mesh){
   if(!rightSideName(mesh)) return null;
   const n=getHierarchyName(mesh).toLowerCase();
 
-  // V8: strict NAME whitelist. Never classify an arm structure by proximity alone.
+  // V9: strict NAME whitelist. Never classify an arm structure by proximity alone.
   // Explicit lower-limb words win first; this prevents toe/leg structures with names
   // such as "flexor digitorum longus.r.001" from entering the hand/forearm rig.
   if(/foot|plantar|halluc|tibial|fibular|perone|ankle|crural|femor|patell|gastrocnem|soleus|poplite|calcane/i.test(n)) return null;
@@ -1837,7 +1851,7 @@ function registerSoftTissueLayer(key){
   const assignments=[];
   for(const mesh of meshes){
     mesh.userData.muscleRegion = muscleRegionFor(mesh);
-    mesh.userData.muscleLayer = muscleLayerFor(mesh);
+    mesh.userData.muscleLayer = muscleLayerFor(mesh, mesh.userData.muscleRegion);
     const segment=anatomicalArmSegment(mesh);
     if(segment) assignments.push({mesh,segment});
   }
@@ -2031,20 +2045,42 @@ document.getElementById(
 ========================================================= */
 
 let activeMuscleRegion="full";
-const regionDepth={full:4,headneck:4,shoulder:4,arm:4,spine:4,chest:4,abdomen:4,pelvis:4,hip:4,leg:4};
+
+/*
+  V9 follows the reference app instead of forcing every body part into the same
+  four levels.  Each region has its own anatomically useful number of muscle
+  additions.  Shoulder, for example, has two useful muscle additions in the
+  supplied reference clip (deep cuff/teres layer, then superficial deltoid layer),
+  while hand/forearm, back and leg/foot need more.
+*/
+const regionMaxDepth={
+  headneck:6,
+  shoulder:4,
+  arm:8,
+  spine:7,
+  chest:5,
+  abdomen:4,
+  pelvis:5,
+  hip:6,
+  leg:8
+};
+const regionDepth={
+  full:8,
+  headneck:6, shoulder:4, arm:8, spine:7, chest:5,
+  abdomen:4, pelvis:5, hip:6, leg:8
+};
 
 function muscleRegionFor(mesh){
   const n=getHierarchyName(mesh).toLowerCase();
-  // V8 anatomical-name region mapping first; geometry is fallback only.
   if(/capitis|cervic|sternocleidomastoid|scalen|hyoid|phary|laryng|facial|orbicularis|masseter|temporalis/i.test(n)) return "headneck";
-  if(/deltoid|supraspinatus|infraspinatus|subscapularis|teres major|teres minor|rotator cuff/i.test(n)) return "shoulder";
-  if(/brachii|brachialis|coracobrachialis|brachioradialis|carpi|pollicis|pronator|supinator|antebrach|palmar|hand|indicis/i.test(n)) return "arm";
-  if(/trapezius|latissimus|rhomboid|erector spinae|multifidus|rotatores|interspinal|spinalis|longissimus|iliocostalis/i.test(n)) return "spine";
-  if(/pectoralis|serratus|intercostal|thorac|subclavius/i.test(n)) return "chest";
-  if(/rectus abdominis|oblique|transversus abdominis|quadratus lumborum/i.test(n)) return "abdomen";
-  if(/pelvic|perine|coccygeus|levator ani|obturator internus/i.test(n)) return "pelvis";
-  if(/glute|piriformis|iliacus|psoas|tensor fasciae latae|adductor|pectineus/i.test(n)) return "hip";
-  if(/femor|vastus|sartorius|gracilis|gastrocnem|soleus|tibialis|fibular|perone|halluc|foot|plantar|poplite|crural/i.test(n)) return "leg";
+  if(/deltoid|supraspinatus|infraspinatus|subscapularis|teres major|teres minor|subdeltoid|subacromial|coracobrachial bursa/i.test(n)) return "shoulder";
+  if(/brachii|brachialis|coracobrachialis|brachioradialis|carpi|pollicis|pronator|supinator|antebrach|palmar|of hand|digit of hand|manus|indicis/i.test(n)) return "arm";
+  if(/trapezius|latissimus|rhomboid|erector spinae|multifidus|rotatores|interspinal|intertransvers|spinalis|longissimus|iliocostalis|serratus posterior/i.test(n)) return "spine";
+  if(/pectoralis|serratus anterior|intercostal|thorac|subclavius/i.test(n)) return "chest";
+  if(/rectus abdominis|abdominal oblique|transversus abdominis|quadratus lumborum/i.test(n)) return "abdomen";
+  if(/pelvic|perine|coccygeus|levator ani|obturator internus|anal sphincter/i.test(n)) return "pelvis";
+  if(/glute|piriformis|iliacus|psoas|tensor fasciae latae|adductor|pectineus|gemellus|quadratus femoris/i.test(n)) return "hip";
+  if(/femor|vastus|sartorius|gracilis|gastrocnem|soleus|tibialis|fibular|perone|halluc|foot|plantar|poplite|crural|ankle|calcane/i.test(n)) return "leg";
   const b=worldBox(mesh), c=new THREE.Vector3(); b.getCenter(c);
   const x=Math.abs(c.x), y=c.y;
   if(y>1.40) return "headneck";
@@ -2057,19 +2093,84 @@ function muscleRegionFor(mesh){
   return "leg";
 }
 
-function muscleLayerFor(mesh){
+function muscleLayerFor(mesh, regionOverride=null){
   const n=getHierarchyName(mesh).toLowerCase();
-  // V8 anatomical dissection map. 4 = most superficial, 1 = deepest.
-  // Fascia/aponeuroses are treated as superficial coverings so the first peel
-  // actually reveals the muscles beneath, matching anatomy-app behaviour.
-  if(/fascia|aponeurosis|retinaculum/i.test(n)) return 4;
-  if(/trapezius|deltoid|pectoralis major|latissimus dorsi|sternocleidomastoid|biceps brachii|brachioradialis|rectus abdominis|external oblique|gluteus maximus|tensor fasciae latae|sartorius|rectus femoris|vastus lateralis|vastus medialis|gastrocnemius|tibialis anterior|fibularis longus/i.test(n)) return 4;
-  if(/pectoralis minor|serratus anterior|rhomboid|splenius|triceps brachii|flexor digitorum superficialis|extensor digitorum|internal oblique|gluteus medius|adductor longus|gracilis|soleus|extensor hallucis longus|extensor digitorum longus/i.test(n)) return 3;
-  if(/supraspinatus|infraspinatus|teres major|teres minor|subscapularis|brachialis|coracobrachialis|pronator teres|supinator|flexor digitorum profundus|transversus abdominis|erector spinae|gluteus minimus|adductor brevis|vastus intermedius|tibialis posterior|flexor digitorum longus|flexor hallucis longus/i.test(n)) return 2;
-  if(/multifidus|rotatores|interspinal|intertransvers|pronator quadratus|quadratus lumborum|iliacus|psoas|piriformis|obturator|gemellus|quadratus femoris|popliteus|interossei/i.test(n)) return 1;
-  // Unknown named structures stay in the middle rather than contaminating the
-  // superficial layer. They disappear before the deep-only view.
-  return 2;
+  const r=regionOverride || muscleRegionFor(mesh);
+  const covering=/fascia|aponeurosis|retinaculum|tendon sheath|fibrous sheath|bursa/i.test(n);
+
+  if(r==="shoulder"){
+    if(covering || /deltoid/i.test(n)) return 4;
+    if(/teres major|infraspinatus/i.test(n)) return 3;
+    if(/supraspinatus|teres minor/i.test(n)) return 2;
+    return 1; // subscapularis / deepest shoulder structures
+  }
+  if(r==="chest"){
+    if(covering) return 5;
+    if(/pectoralis major/i.test(n)) return 5;
+    if(/serratus anterior/i.test(n)) return 4;
+    if(/pectoralis minor|subclavius/i.test(n)) return 3;
+    if(/external intercostal/i.test(n)) return 2;
+    return 1; // internal/innermost intercostals
+  }
+  if(r==="abdomen"){
+    if(covering || /external abdominal oblique/i.test(n)) return 4;
+    if(/rectus abdominis|internal abdominal oblique/i.test(n)) return 3;
+    if(/transversus abdominis/i.test(n)) return 2;
+    return 1;
+  }
+  if(r==="spine"){
+    if(covering || /trapezius/i.test(n)) return 7;
+    if(/latissimus dorsi/i.test(n)) return 6;
+    if(/rhomboid|levator scapulae/i.test(n)) return 5;
+    if(/serratus posterior|splenius/i.test(n)) return 4;
+    if(/iliocostalis|longissimus|spinalis|erector spinae/i.test(n)) return 3;
+    if(/semispinalis|multifidus/i.test(n)) return 2;
+    return 1; // rotatores/interspinales/intertransversarii
+  }
+  if(r==="arm"){
+    if(covering || /palmar aponeurosis/i.test(n)) return 8;
+    if(/biceps brachii|triceps brachii|brachioradialis/i.test(n)) return 7;
+    if(/pronator teres|flexor carpi radialis|flexor carpi ulnaris|palmaris longus|extensor carpi radialis|extensor carpi ulnaris/i.test(n)) return 6;
+    if(/flexor digitorum superficialis|extensor digitorum|extensor digiti minimi/i.test(n)) return 5;
+    if(/brachialis|coracobrachialis|supinator|abductor pollicis longus|extensor pollicis|extensor indicis/i.test(n)) return 4;
+    if(/flexor digitorum profundus|flexor pollicis longus|pronator quadratus/i.test(n)) return 3;
+    if(/thenar|hypothenar|opponens|abductor pollicis brevis|flexor pollicis brevis|adductor pollicis|lumbrical/i.test(n)) return 2;
+    return 1; // interossei / deepest intrinsic hand
+  }
+  if(r==="leg"){
+    if(covering || /plantar aponeurosis/i.test(n)) return 8;
+    if(/sartorius|rectus femoris|vastus medialis|vastus lateralis|gastrocnemius|tibialis anterior|fibularis longus/i.test(n)) return 7;
+    if(/biceps femoris|semitendinosus|semimembranosus|soleus|extensor digitorum longus|extensor hallucis longus|fibularis brevis/i.test(n)) return 6;
+    if(/vastus intermedius|popliteus|tibialis posterior|flexor digitorum longus|flexor hallucis longus/i.test(n)) return 5;
+    if(/abductor hallucis|abductor digiti minimi of foot|flexor digitorum brevis/i.test(n)) return 4;
+    if(/quadratus plantae|lumbrical muscles of foot/i.test(n)) return 3;
+    if(/adductor hallucis|flexor hallucis brevis|flexor digiti minimi of foot/i.test(n)) return 2;
+    return 1; // plantar/dorsal interossei and deepest residuals
+  }
+  if(r==="hip"){
+    if(covering || /gluteus maximus|tensor fasciae latae/i.test(n)) return 6;
+    if(/gluteus medius|sartorius/i.test(n)) return 5;
+    if(/gluteus minimus|adductor longus|gracilis/i.test(n)) return 4;
+    if(/adductor brevis|pectineus/i.test(n)) return 3;
+    if(/piriformis|obturator|gemellus|quadratus femoris/i.test(n)) return 2;
+    return 1; // iliopsoas / deepest
+  }
+  if(r==="pelvis"){
+    if(covering) return 5;
+    if(/external anal sphincter|superficial perine/i.test(n)) return 4;
+    if(/deep perine|urogenital/i.test(n)) return 3;
+    if(/levator ani|coccygeus/i.test(n)) return 2;
+    return 1;
+  }
+  if(r==="headneck"){
+    if(covering || /platysma|facial|orbicularis/i.test(n)) return 6;
+    if(/sternocleidomastoid|masseter|temporalis/i.test(n)) return 5;
+    if(/digastric|mylohyoid|infrahyoid/i.test(n)) return 4;
+    if(/splenius/i.test(n)) return 3;
+    if(/scalen/i.test(n)) return 2;
+    return 1; // longus capitis/colli and deepest prevertebral
+  }
+  return 1;
 }
 
 function getHierarchyName(object){
@@ -2079,8 +2180,14 @@ function getHierarchyName(object){
 }
 
 function effectiveDepthForRegion(region){
-  if(activeMuscleRegion==="full") return regionDepth.full;
-  return region===activeMuscleRegion ? regionDepth[activeMuscleRegion] : 4;
+  if(activeMuscleRegion==="full") return regionDepth[region] ?? regionMaxDepth[region] ?? 1;
+  return region===activeMuscleRegion ? regionDepth[region] : regionMaxDepth[region];
+}
+
+function setFullDepthStep(step){
+  // step 0..5; regions with fewer anatomical layers saturate at their own max.
+  regionDepth.full=THREE.MathUtils.clamp(step,0,8);
+  for(const [r,max] of Object.entries(regionMaxDepth)) regionDepth[r]=Math.min(max,regionDepth.full);
 }
 
 function updateMuscleDepth(){
@@ -2088,20 +2195,22 @@ function updateMuscleDepth(){
   (layerMeshRegistry.muscular||[]).forEach(obj=>{
     if(!obj || !obj.isMesh) return;
     if(obj.userData.hiddenIndividually){ obj.visible=false; return; }
-    // Region/layer are cached before any rig re-parenting so moving the arm cannot
-    // accidentally turn an arm muscle into a chest/leg muscle.
     const region=obj.userData.muscleRegion || muscleRegionFor(obj);
-    const d=obj.userData.muscleLayer || muscleLayerFor(obj);
+    const d=obj.userData.muscleLayer || muscleLayerFor(obj,region);
     obj.userData.muscleRegion=region; obj.userData.muscleLayer=d;
     obj.visible=layerVisibility.muscular && d<=effectiveDepthForRegion(region);
   });
-  const depth=regionDepth[activeMuscleRegion];
-  const regionNames={full:"Full body｜全身",headneck:"Head & neck｜頭頸",shoulder:"Shoulder｜肩",arm:"Hand & elbow｜手和肘",spine:"Spine｜脊柱",chest:"Chest｜胸",abdomen:"Abdomen｜腹",pelvis:"Pelvis｜盆",hip:"Hip｜髖",leg:"Knee & foot｜膝和足"};
-  const names={4:["Layer 4 · Superficial complete｜表層完整","完整顯示所選區域"],3:["Layer 3 · Superficial removed｜移除最表層","移除所選區域最表層"],2:["Layer 2 · Intermediate｜中層","顯示所選區域中層肌肉"],1:["Layer 1 · Deep｜深層","顯示所選區域深層肌肉"],0:["Bones exposed｜骨骼顯露","所選區域肌肉已隱藏"]};
+
+  const regionNames={full:"Full body｜全身",headneck:"Head & neck｜頭頸",shoulder:"Shoulder｜肩",arm:"Hand & elbow｜手和肘",spine:"Spine / back｜脊柱／背",chest:"Chest｜胸",abdomen:"Abdomen｜腹",pelvis:"Pelvis｜盆",hip:"Hip｜髖",leg:"Knee & foot｜膝和足"};
+  const max=activeMuscleRegion==="full" ? 8 : regionMaxDepth[activeMuscleRegion];
+  const depth=activeMuscleRegion==="full" ? regionDepth.full : regionDepth[activeMuscleRegion];
   document.getElementById("regionName").textContent=regionNames[activeMuscleRegion];
-  document.getElementById("depthName").textContent=names[depth][0];
-  document.getElementById("depthDescription").textContent=names[depth][1];
-  document.querySelectorAll(".depthBar").forEach((bar,i)=>bar.classList.toggle("active",i<depth));
+  document.getElementById("depthName").textContent=depth===0 ? "Bones exposed｜骨骼顯露" : `Muscle layer ${depth} / ${max}｜肌肉層 ${depth} / ${max}`;
+  document.getElementById("depthDescription").textContent=depth===0 ? "所選區域肌肉已隱藏" : "按 − Muscle 逐層剝離；直接點擊任何一塊肌肉會變成橙黃色高亮，再點其他肌肉即可切換。";
+  document.querySelectorAll(".depthBar").forEach((bar,i)=>{
+    bar.style.display=i<max?"block":"none";
+    bar.classList.toggle("active",i<depth);
+  });
 }
 
 document.querySelectorAll(".regionBtn").forEach(btn=>btn.addEventListener("click",()=>{
@@ -2111,10 +2220,14 @@ document.querySelectorAll(".regionBtn").forEach(btn=>btn.addEventListener("click
 }));
 
 document.getElementById("muscleMinus").addEventListener("click",()=>{
-  regionDepth[activeMuscleRegion]=Math.max(0,regionDepth[activeMuscleRegion]-1); updateMuscleDepth();
+  if(activeMuscleRegion==="full") setFullDepthStep(regionDepth.full-1);
+  else regionDepth[activeMuscleRegion]=Math.max(0,regionDepth[activeMuscleRegion]-1);
+  updateMuscleDepth();
 });
 document.getElementById("musclePlus").addEventListener("click",()=>{
-  regionDepth[activeMuscleRegion]=Math.min(4,regionDepth[activeMuscleRegion]+1); updateMuscleDepth();
+  if(activeMuscleRegion==="full") setFullDepthStep(regionDepth.full+1);
+  else regionDepth[activeMuscleRegion]=Math.min(regionMaxDepth[activeMuscleRegion],regionDepth[activeMuscleRegion]+1);
+  updateMuscleDepth();
 });
 
 /* =========================================================
@@ -2288,10 +2401,13 @@ function highlightObject(obj){
 
       const m=mat.clone();
 
+      // Reference-app style selection: the tapped structure becomes unmistakable.
+      if(m.color) m.color.set(0xffb000);
       if(m.emissive){
-        m.emissive.set(0x4b241e);
-        m.emissiveIntensity=.45;
+        m.emissive.set(0xff6a00);
+        m.emissiveIntensity=.85;
       }
+      if("roughness" in m) m.roughness=.42;
 
       return m;
     });
