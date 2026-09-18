@@ -415,7 +415,7 @@ input[type="range"]{
   <div id="leftPanel" class="panel">
 
     <h1>MJ Anatomy 3D</h1>
-    <div class="subtitle">Interactive Anatomy Learning System · V13 · CMU Lecture Edition</div>
+    <div class="subtitle">Interactive Anatomy Learning System · V15 · Anatomy Engine · Real GLB Edition</div>
 
     <div id="status" class="status">● Starting...</div>
 
@@ -502,7 +502,7 @@ input[type="range"]{
       </div>
 
       <div class="jointNotice">
-        Segmented joint rig｜骨骼＋局部肌肉；神經/血管保持完整避免撕裂
+        Anatomical joint engine｜ROM 限制＋肩胛肱骨節律＋橈尺骨旋轉
       </div>
 
       <div class="sliderRow">
@@ -512,8 +512,8 @@ input[type="range"]{
         </div>
         <input id="shoulderFlex"
                type="range"
-               min="-20"
-               max="120"
+               min="-30"
+               max="160"
                value="0">
       </div>
 
@@ -525,7 +525,7 @@ input[type="range"]{
         <input id="shoulderAbduction"
                type="range"
                min="0"
-               max="100"
+               max="170"
                value="0">
       </div>
 
@@ -536,8 +536,8 @@ input[type="range"]{
         </div>
         <input id="shoulderRotation"
                type="range"
-               min="-45"
-               max="60"
+               min="-60"
+               max="80"
                value="0">
       </div>
 
@@ -549,7 +549,7 @@ input[type="range"]{
         <input id="elbowFlexion"
                type="range"
                min="0"
-               max="135"
+               max="145"
                value="0">
       </div>
 
@@ -560,8 +560,8 @@ input[type="range"]{
         </div>
         <input id="forearmRotation"
                type="range"
-               min="-75"
-               max="75"
+               min="-80"
+               max="85"
                value="0">
       </div>
 
@@ -572,8 +572,8 @@ input[type="range"]{
         </div>
         <input id="wristFlexion"
                type="range"
-               min="-60"
-               max="60"
+               min="-70"
+               max="80"
                value="0">
       </div>
 
@@ -629,7 +629,7 @@ input[type="range"]{
     <div class="infoDivider"></div>
 
     <div id="infoContent" class="placeholder">
-      直接點擊人體。<br><br>
+      直接點擊人體。V15 直接使用實際 GLB hierarchy；Muscles、Fasciae、Nerves、Arteries/Veins 分開處理。<br><br>
       肌肉：Origin / Insertion / Action /
       Innervation / Blood supply。<br><br>
       骨骼：Type / Articulations / Landmarks /
@@ -872,12 +872,12 @@ let referenceSkeletonBox=null;
 
 
 const files = {
-  skeleton:"./models/skeleton.glb",
-  muscular:"./models/muscular.glb",
-  nervous:"./models/nervous.glb",
-  cardiovascular:"./models/cardiovascular.glb",
-  visceral:"./models/visceral.glb",
-  skin:"./models/anatomy-skin.glb"
+  skeleton:["./models/skeleton.glb"],
+  muscular:["./models/muscular.glb"],
+  nervous:["./models/nervous.glb"],
+  cardiovascular:["./models/cardiovascular.glb"],
+  visceral:["./models/visceral.glb"],
+  skin:["./models/anatomy-skin.glb"]
 };
 
 /* =========================================================
@@ -982,120 +982,71 @@ function allMeshes(root){
 ========================================================= */
 
 async function loadGLB(url){
-  // V12.2 recovery loader: first use the exact GLTFLoader.load path that
-  // already worked in V10. If it stalls/fails, fall back to binary fetch+parse.
-  const setStage=(msg)=>setStatus(msg);
-
-  const classicLoad=()=>new Promise((resolve,reject)=>{
-    let settled=false;
-    const timer=setTimeout(()=>{
-      if(settled) return;
-      settled=true;
-      reject(new Error(`Timeout while loading ${url}`));
-    },12000);
+  // V13.1: iPad/Safari-safe loader. Do NOT kill a large GLB after a fixed 12 s.
+  // The watchdog is reset whenever bytes arrive; only a truly stalled transfer is aborted.
+  const filename=url.split("/").pop();
+  return await new Promise((resolve,reject)=>{
+    let settled=false, lastLoaded=0, watchdog=null;
+    const armWatchdog=()=>{
+      clearTimeout(watchdog);
+      watchdog=setTimeout(()=>{
+        if(settled) return;
+        settled=true;
+        reject(new Error(`No download progress for 60 s: ${filename}`));
+      },60000);
+    };
+    armWatchdog();
     loader.load(url,(gltf)=>{
       if(settled) return;
-      settled=true; clearTimeout(timer); resolve(gltf.scene);
+      settled=true; clearTimeout(watchdog); resolve(gltf.scene);
     },(xhr)=>{
-      if(xhr && xhr.total){
+      if(settled || !xhr) return;
+      if(xhr.loaded>lastLoaded){ lastLoaded=xhr.loaded; armWatchdog(); }
+      if(xhr.total){
         const pct=Math.max(0,Math.min(100,Math.round(xhr.loaded/xhr.total*100)));
-        setStage(`Downloading ${url.split("/").pop()}… ${pct}%`);
+        setStatus(`Downloading ${filename}… ${pct}%`);
+      } else {
+        setStatus(`Downloading ${filename}… ${Math.round((xhr.loaded||0)/1048576)} MB`);
       }
     },(err)=>{
       if(settled) return;
-      settled=true; clearTimeout(timer); reject(err || new Error(`GLTFLoader failed: ${url}`));
+      settled=true; clearTimeout(watchdog); reject(err || new Error(`GLTFLoader failed: ${url}`));
     });
   });
+}
 
-  const binaryLoad=async()=>{
-    setStage("Primary loader failed — automatic recovery…");
-    const controller=new AbortController();
-    const timer=setTimeout(()=>controller.abort(),20000);
+async function loadOne(key){
+  const candidates=Array.isArray(files[key]) ? files[key] : [files[key]];
+  let lastError=null, model=null, usedURL=null;
+  for(const url of candidates){
     try{
-      const requestURL=`${url}${url.includes("?")?"&":"?"}recover=${Date.now()}`;
-      const response=await fetch(requestURL,{signal:controller.signal,cache:"no-store"});
-      if(!response.ok) throw new Error(`HTTP ${response.status} for ${url}`);
-      setStage("Recovery download complete — parsing model…");
-      const data=await response.arrayBuffer();
-      if(!data || data.byteLength<20) throw new Error(`Empty GLB: ${url}`);
-      const base=new URL(url,location.href).href.replace(/[^/]*$/,"");
-      return await new Promise((resolve,reject)=>{
-        loader.parse(data,base,gltf=>resolve(gltf.scene),reject);
-      });
-    } finally { clearTimeout(timer); }
-  };
-
-  try{
-    return await classicLoad();
-  }catch(primaryError){
-    console.warn("Primary GLB loader failed; recovering",primaryError);
-    try{
-      return await binaryLoad();
-    }catch(recoveryError){
-      console.error("Recovery GLB loader failed",recoveryError);
-      throw new Error(`Automatic recovery failed. ${recoveryError?.message || primaryError?.message || "unknown error"}`);
+      setStatus(`Loading ${key} · ${url.split('/').pop()}…`);
+      model=await loadGLB(url); usedURL=url; break;
+    }catch(err){
+      lastError=err;
+      console.warn(`${key} candidate failed: ${url}`,err);
     }
   }
-}
-async function loadOne(key){
-
-  const model = await loadGLB(files[key]);
-
-  model.name = key;
-
-  layers[key] = model;
-  layerReady[key] = true;
-
-  human.add(model);
-
-  model.visible = layerVisibility[key];
-
-  if(key === "skeleton"){
-    prepareSkeleton(model);
-  }
-
-  if(key === "muscular"){
-    prepareMuscles(model);
-  }
-
-  if(key === "skin"){
-    prepareSkin(model);
-  }
-
+  if(!model) throw lastError || new Error(`No usable model for ${key}`);
+  model.name=key; model.userData.sourceURL=usedURL;
+  layers[key]=model; layerReady[key]=true; human.add(model);
+  model.visible=layerVisibility[key];
+  if(key==="skeleton") prepareSkeleton(model);
+  if(key==="muscular") prepareMuscles(model);
+  if(key==="skin") prepareSkin(model);
   tagLayerMeshes(model,key);
-
   return model;
 }
 
 async function loadOptionalLayer(key,label){
-
   try{
-
-    setStatus("Loading " + label + "...");
-
     await loadOne(key);
-
-    /*
-      IMPORTANT:
-      Any newly loaded soft-tissue layer must be registered
-      into the already-created right upper-limb rig.
-    */
     registerSoftTissueLayer(key);
-
     updateSystemButtons();
-
-    await sleep(120);
-
     return true;
-
   }catch(err){
-
     console.error(key,err);
-
-    showError(
-      label + " failed to load. Core anatomy remains available."
-    );
-
+    showError(`${label} failed to load — checked ${files[key].map(x=>x.split('/').pop()).join(', ')}.`);
     return false;
   }
 }
@@ -1522,6 +1473,8 @@ function isRightHandBone(mesh){
 const rig = {
   ready:false,
 
+  scapulaPivot:null,
+  claviclePivot:null,
   shoulderFlex:null,
   shoulderAbduction:null,
   shoulderRotation:null,
@@ -1533,6 +1486,8 @@ const rig = {
   rightHumerus:null,
   rightRadius:null,
   rightUlna:null,
+  rightScapula:null,
+  rightClavicle:null,
 
   leftHumerus:null,
   leftRadius:null,
@@ -1610,6 +1565,12 @@ function buildRig(){
   const ulna =
     findSkeletonMesh("Ulnar001");
 
+  const rightScapula =
+    findSkeletonMesh("Scapular001") || findSkeletonMesh("Scapula.r001") || findSkeletonMesh("ScapulaR001");
+
+  const rightClavicle =
+    findSkeletonMesh("Clavicler001") || findSkeletonMesh("Clavicle.r001") || findSkeletonMesh("ClavicleR001");
+
   const leftHumerus =
     findSkeletonMesh("Humerusl001");
 
@@ -1631,6 +1592,8 @@ function buildRig(){
   rig.rightHumerus=humerus;
   rig.rightRadius=radius;
   rig.rightUlna=ulna;
+  rig.rightScapula=rightScapula;
+  rig.rightClavicle=rightClavicle;
 
   rig.leftHumerus=leftHumerus;
   rig.leftRadius=leftRadius;
@@ -1752,6 +1715,17 @@ function buildRig(){
        ↓
     hand
   */
+
+  // V14: shoulder-girdle pivots. These provide coupled scapular/clavicular
+  // motion during elevation instead of rotating the humerus in isolation.
+  const scapulaCenter = rightScapula ? worldCenter(rightScapula) : shoulder.clone();
+  const clavicleCenter = rightClavicle ? worldCenter(rightClavicle) : shoulder.clone();
+
+  rig.scapulaPivot = createPivotAt(scapulaCenter, human, "RIGHT_SCAPULOTHORACIC");
+  rig.claviclePivot = createPivotAt(clavicleCenter, human, "RIGHT_STERNOCLAVICULAR");
+
+  if(rightScapula) rig.scapulaPivot.attach(rightScapula);
+  if(rightClavicle) rig.claviclePivot.attach(rightClavicle);
 
   rig.shoulderFlex =
     createPivotAt(
@@ -2048,8 +2022,10 @@ function registerSoftTissueLayer(key){
   const meshes=allMeshes(root);
   const assignments=[];
   for(const mesh of meshes){
-    mesh.userData.muscleRegion = muscleRegionFor(mesh);
-    mesh.userData.muscleLayer = muscleLayerFor(mesh, mesh.userData.muscleRegion);
+    if(isNonMuscleSoftTissue(mesh)) continue;
+    const named=v14NamedLayer(mesh);
+    mesh.userData.muscleRegion = named?.region || muscleRegionFor(mesh);
+    mesh.userData.muscleLayer = named?.depth || muscleLayerFor(mesh, mesh.userData.muscleRegion);
     const segment=anatomicalArmSegment(mesh);
     if(segment) assignments.push({mesh,segment});
   }
@@ -2125,41 +2101,32 @@ function applyJointPose(){
     downstream structures inherit upstream movement.
   */
 
-  rig.shoulderFlex.rotation.set(
-    deg(sf),
-    0,
-    0
-  );
+  // V15 BIOMECHANICS
+  // Elevation is split between glenohumeral and scapulothoracic motion.
+  // This is a simplified educational coupling, not a patient-specific simulator.
+  const elevation = Math.max(0, Math.max(sf, sa));
+  const scapUp = elevation <= 30 ? 0 : (elevation - 30) * 0.33;
+  const clavElev = elevation <= 30 ? 0 : Math.min(25, (elevation - 30) * 0.16);
 
-  rig.shoulderAbduction.rotation.set(
-    0,
-    0,
-    deg(-sa)
-  );
+  rig.shoulderFlex.rotation.set(deg(sf),0,0);
+  rig.shoulderAbduction.rotation.set(0,0,deg(-sa));
+  rig.shoulderRotation.rotation.set(0,deg(sr),0);
 
-  rig.shoulderRotation.rotation.set(
-    0,
-    deg(sr),
-    0
-  );
+  if(rig.scapulaPivot){
+    // source-model coordinate approximation: upward rotation + small posterior tilt
+    rig.scapulaPivot.rotation.set(deg(-scapUp*0.10), deg(scapUp*0.08), deg(-scapUp));
+  }
+  if(rig.claviclePivot){
+    rig.claviclePivot.rotation.set(0,0,deg(-clavElev));
+  }
 
-  rig.elbow.rotation.set(
-    deg(-elbow),
-    0,
-    0
-  );
+  rig.elbow.rotation.set(deg(-elbow),0,0);
 
-  rig.forearm.rotation.set(
-    0,
-    deg(forearm),
-    0
-  );
-
-  rig.wrist.rotation.set(
-    deg(wrist),
-    0,
-    0
-  );
+  // Radius/ulna are still contained by the forearm pivot in this source GLB.
+  // V14 limits the rotation to physiologic educational ROM and preserves the
+  // downstream hand hierarchy.
+  rig.forearm.rotation.set(0,deg(forearm),0);
+  rig.wrist.rotation.set(deg(wrist),0,0);
 
   document.getElementById(
     "sfValue"
@@ -2292,6 +2259,64 @@ function muscleRegionFor(mesh){
   return "leg";
 }
 
+
+/* =========================================================
+   V15 — DETERMINISTIC ANATOMICAL LAYER MAP
+   ---------------------------------------------------------
+   Explicit named anatomy wins. Heuristics are only fallback
+   for source meshes that cannot be identified.
+========================================================= */
+const V14_LAYER_RULES = [
+  // shoulder / scapular region
+  [/deltoid/i,"shoulder",4], [/infraspinatus/i,"shoulder",3],
+  [/teres major/i,"shoulder",3], [/supraspinatus/i,"shoulder",2],
+  [/teres minor/i,"shoulder",2], [/subscapularis/i,"shoulder",1],
+
+  // anterior thorax
+  [/pectoralis major/i,"chest",5], [/serratus anterior/i,"chest",4],
+  [/pectoralis minor/i,"chest",3], [/subclavius/i,"chest",3],
+  [/external intercostal/i,"chest",2], [/(internal|innermost) intercostal/i,"chest",1],
+
+  // posterior trunk
+  [/trapezius/i,"spine",7], [/latissimus dorsi/i,"spine",6],
+  [/(rhomboid|levator scapulae)/i,"spine",5], [/(serratus posterior|splenius)/i,"spine",4],
+  [/(iliocostalis|longissimus|spinalis|erector spinae)/i,"spine",3],
+  [/(semispinalis|multifidus)/i,"spine",2],
+  [/(rotatores|interspinales|intertransversarii)/i,"spine",1],
+
+  // arm / forearm / hand
+  [/(biceps brachii|triceps brachii|brachioradialis)/i,"arm",7],
+  [/(pronator teres|flexor carpi radialis|flexor carpi ulnaris|palmaris longus|extensor carpi radialis|extensor carpi ulnaris)/i,"arm",6],
+  [/(flexor digitorum superficialis|extensor digitorum|extensor digiti minimi)/i,"arm",5],
+  [/(brachialis|coracobrachialis|supinator|abductor pollicis longus|extensor pollicis|extensor indicis)/i,"arm",4],
+  [/(flexor digitorum profundus|flexor pollicis longus|pronator quadratus)/i,"arm",3],
+  [/(opponens|abductor pollicis brevis|flexor pollicis brevis|adductor pollicis|lumbrical)/i,"arm",2],
+  [/(palmar interosse|dorsal interosse)/i,"arm",1],
+
+  // hip / thigh / leg / foot
+  [/(gluteus maximus|tensor fasciae latae)/i,"hip",6], [/gluteus medius/i,"hip",5],
+  [/(gluteus minimus|adductor longus|gracilis)/i,"hip",4],
+  [/(adductor brevis|pectineus)/i,"hip",3],
+  [/(piriformis|obturator|gemellus|quadratus femoris)/i,"hip",2],
+  [/(iliacus|psoas)/i,"hip",1],
+
+  [/(sartorius|rectus femoris|vastus medialis|vastus lateralis|gastrocnemius|tibialis anterior|fibularis longus)/i,"leg",7],
+  [/(biceps femoris|semitendinosus|semimembranosus|soleus|extensor digitorum longus|extensor hallucis longus|fibularis brevis)/i,"leg",6],
+  [/(vastus intermedius|popliteus|tibialis posterior|flexor digitorum longus|flexor hallucis longus)/i,"leg",5],
+  [/(abductor hallucis|flexor digitorum brevis)/i,"leg",4],
+  [/(quadratus plantae|lumbrical.*foot)/i,"leg",3],
+  [/(adductor hallucis|flexor hallucis brevis|flexor digiti minimi.*foot)/i,"leg",2],
+  [/(plantar interosse|dorsal interosse.*foot)/i,"leg",1]
+];
+
+function v14NamedLayer(mesh){
+  const n=getHierarchyName(mesh);
+  for(const [rx,region,depth] of V14_LAYER_RULES){
+    if(rx.test(n)) return {region,depth};
+  }
+  return null;
+}
+
 function muscleLayerFor(mesh, regionOverride=null){
   const n=getHierarchyName(mesh).toLowerCase();
   const r=regionOverride || muscleRegionFor(mesh);
@@ -2394,8 +2419,15 @@ function updateMuscleDepth(){
   (layerMeshRegistry.muscular||[]).forEach(obj=>{
     if(!obj || !obj.isMesh) return;
     if(obj.userData.hiddenIndividually){ obj.visible=false; return; }
-    const region=obj.userData.muscleRegion || muscleRegionFor(obj);
-    const d=obj.userData.muscleLayer || muscleLayerFor(obj,region);
+    if(isNonMuscleSoftTissue(obj)){
+      obj.userData.muscleRegion="connective";
+      obj.userData.muscleLayer=99;
+      obj.visible=false; // connective coverings no longer corrupt muscle-dissection layers
+      return;
+    }
+    const named=v14NamedLayer(obj);
+    const region=named?.region || obj.userData.muscleRegion || muscleRegionFor(obj);
+    const d=named?.depth || obj.userData.muscleLayer || muscleLayerFor(obj,region);
     obj.userData.muscleRegion=region; obj.userData.muscleLayer=d;
     obj.visible=layerVisibility.muscular && d<=effectiveDepthForRegion(region);
   });
@@ -2458,47 +2490,31 @@ function updateSystemButtons(){
 document
   .querySelectorAll(".systemBtn")
   .forEach(btn=>{
+    btn.addEventListener("click", async ()=>{
+      const key=btn.dataset.layer;
 
-    btn.addEventListener(
-      "click",
-      ()=>{
-
-        const key =
-          btn.dataset.layer;
-
-        if(!layerReady[key]){
-          return;
-        }
-
-        layerVisibility[key] =
-          !layerVisibility[key];
-
-        /*
-          Since rigged meshes are no longer necessarily
-          children of the original layer root, toggle
-          using userData anatomyLayer across the HUMAN tree.
-        */
-
-        // V7: toggle BOTH the GLB root and its mesh registry. In V6 the optional
-        // layer root stayed invisible, so turning individual nerve/vessel/skin meshes
-        // on could never make them render.
-        if(layers[key]) layers[key].visible=layerVisibility[key];
-        (layerMeshRegistry[key]||[]).forEach(obj=>{
-          if(obj && obj.isMesh) obj.visible=layerVisibility[key];
-        });
-        if(key==="cardiovascular" && layerVisibility[key]) updateVesselVisibility();
-
-        if(
-          key==="muscular" &&
-          layerVisibility.muscular
-        ){
-          updateMuscleDepth();
-        }
-
-        updateSystemButtons();
+      // V15: large optional GLBs are decoded only when the user requests them.
+      // This avoids Safari/iPad trying to decode nervous + cardiovascular + skin
+      // during initial page load.
+      if(!layerReady[key]){
+        if(!["nervous","cardiovascular","skin","visceral"].includes(key)) return;
+        btn.disabled=true;
+        const ok=await loadOptionalLayer(key,key);
+        btn.disabled=false;
+        if(!ok){ updateSystemButtons(); return; }
+        layerVisibility[key]=true;
+      }else{
+        layerVisibility[key]=!layerVisibility[key];
       }
-    );
 
+      if(layers[key]) layers[key].visible=layerVisibility[key];
+      (layerMeshRegistry[key]||[]).forEach(obj=>{
+        if(obj && obj.isMesh) obj.visible=layerVisibility[key];
+      });
+      if(key==="cardiovascular" && layerVisibility[key]) updateVesselVisibility();
+      if(key==="muscular" && layerVisibility.muscular) updateMuscleDepth();
+      updateSystemButtons();
+    });
   });
 
 const vesselVisibility={artery:true,vein:true};
@@ -2634,6 +2650,32 @@ function fieldHTML(
       <div class="infoZh">${zh || ""}</div>
     </div>
   `;
+}
+
+function v15HierarchyCategory(obj){
+  const n=getHierarchyName(obj).toLowerCase();
+  // The supplied muscular.glb contains explicit hierarchy groups such as
+  // "Muscles", "Fasciae", bursae and tendon sheaths.  Specific non-muscle
+  // anatomy always wins over a generic "muscular system" ancestor.
+  if(/synovial bursa|\bbursa\b/.test(n)) return "bursa";
+  if(/tendon sheath|\bsheath\b/.test(n)) return "tendon_sheath";
+  if(/\bfasciae\b|\bfascia\b|aponeuros/.test(n)) return "fascia";
+  if(/retinacul|ligament|capsule|cartilage|labrum|meniscus|interosseous membrane/.test(n)) return "connective";
+  if(/\btendon\b/.test(n) && !/tendon.*muscle/.test(n)) return "tendon";
+  return "muscle";
+}
+function isNonMuscleSoftTissue(obj){
+  return v15HierarchyCategory(obj)!=="muscle";
+}
+
+function showConnectiveTissueInfo(obj){
+  const modelName=cleanName(obj.name) || "Connective tissue";
+  document.getElementById("structureBadge").textContent="CONNECTIVE TISSUE｜結締組織";
+  document.getElementById("structureName").textContent=modelName;
+  const cat=v15HierarchyCategory(obj);
+  const zhMap={fascia:"筋膜",bursa:"滑液囊",tendon_sheath:"腱鞘",tendon:"肌腱",connective:"結締組織"};
+  document.getElementById("structureChinese").textContent=zhMap[cat] || "非肌肉軟組織";
+  document.getElementById("infoContent").innerHTML=`<div class="placeholder">此 mesh 屬於結締組織，不會再錯誤套用肌肉 O / I / A / N。<br><br>Model mesh: ${obj.name}</div>`;
 }
 
 function showMuscleInfo(obj){
@@ -2824,6 +2866,32 @@ function showBoneInfo(obj){
     );
 }
 
+
+function showSystemStructureInfo(obj,key){
+  const modelName=cleanName(obj.name) || "Anatomical structure";
+  const hierarchy=getHierarchyName(obj);
+  let badge="STRUCTURE｜解剖結構", zh="", note="";
+  if(key==="nervous"){
+    badge="NERVOUS SYSTEM｜神經";
+    zh="神經系統結構";
+    note="V15 已將此結構由 nervous.glb 的真實 hierarchy 識別。";
+  }else if(key==="cardiovascular"){
+    const t=obj.userData.vesselType || (obj.userData.vesselType=vesselTypeFor(obj));
+    badge=t==="vein" ? "VEIN｜靜脈" : t==="artery" ? "ARTERY｜動脈" : "CARDIOVASCULAR｜心血管";
+    zh=t==="vein" ? "靜脈" : t==="artery" ? "動脈" : "心血管結構";
+    note="V15 依 cardiovascular.glb hierarchy 區分 artery / vein。";
+  }else if(key==="skin"){
+    badge="SKIN｜皮膚"; zh="皮膚"; note="Body surface mesh";
+  }else{
+    badge=String(key||"structure").toUpperCase()+"｜解剖結構";
+  }
+  document.getElementById("structureBadge").textContent=badge;
+  document.getElementById("structureName").textContent=modelName;
+  document.getElementById("structureChinese").textContent=zh;
+  document.getElementById("infoContent").innerHTML=
+    `<div class="placeholder">${note}<br><br><b>Model mesh</b>: ${obj.name}<br><br><b>GLB hierarchy</b>: ${hierarchy}</div>`;
+}
+
 function selectObject(obj){
 
   highlightObject(obj);
@@ -2836,7 +2904,8 @@ function selectObject(obj){
     obj.userData.anatomyLayer===
     "muscular"
   ){
-    showMuscleInfo(obj);
+    if(isNonMuscleSoftTissue(obj)) showConnectiveTissueInfo(obj);
+    else showMuscleInfo(obj);
   }
 
   else if(
@@ -2844,6 +2913,9 @@ function selectObject(obj){
     "skeleton"
   ){
     showBoneInfo(obj);
+  }
+  else if(["nervous","cardiovascular","skin","visceral"].includes(obj.userData.anatomyLayer)){
+    showSystemStructureInfo(obj,obj.userData.anatomyLayer);
   }
 }
 
@@ -2983,7 +3055,7 @@ function resetIndividualControls(){
   document.getElementById(
     "infoContent"
   ).innerHTML=
-    `直接點擊人體。<br><br>
+    `直接點擊人體。V15 直接使用實際 GLB hierarchy；Muscles、Fasciae、Nerves、Arteries/Veins 分開處理。<br><br>
      肌肉：Origin / Insertion / Action /
      Innervation / Blood supply。<br><br>
      骨骼：Type / Articulations / Landmarks /
@@ -3238,7 +3310,7 @@ async function init(){
     */
 
     setStatus(
-      "Loading skeleton… (V12.2 auto-recovery)"
+      "Loading skeleton… (V15 Real-GLB Anatomy Engine)"
     );
 
     await loadOne(
@@ -3323,27 +3395,14 @@ async function init(){
     await sleep(250);
 
     /*
-      4–7. OPTIONAL LAYERS — V13 NON-BLOCKING RECOVERY
-      Load in parallel so one missing/slow GLB cannot prevent all later systems
-      from loading (the V12 symptom: skeleton reaches 100% then appears stuck).
+      4. V15 OPTIONAL SYSTEMS — TRUE ON-DEMAND LOADING
+      ------------------------------------------------
+      nervous.glb (~large), cardiovascular.glb and skin are NOT decoded at boot.
+      Tap the corresponding system button to load that model.  This is much more
+      reliable on iPad Safari and makes the skeleton+muscle core usable immediately.
     */
-    setStatus("Core ready · loading optional systems in parallel…","ready");
-    const optionalJobs=[
-      ["nervous","nervous system"],
-      ["cardiovascular","arteries and veins"],
-      ["visceral","viscera"],
-      ["skin","skin"]
-    ];
-    const optionalResults=await Promise.allSettled(
-      optionalJobs.map(([key,label])=>loadOptionalLayer(key,label))
-    );
-    const ok=optionalResults.filter(r=>r.status==="fulfilled" && r.value===true).length;
-    console.log(`V13 optional layers ready: ${ok}/${optionalJobs.length}`);
-
-    setStatus(
-      "Anatomy loaded · self-recovery active",
-      "ready"
-    );
+    setStatus("V15 core ready · tap Nerve / Vessels / Skin to load on demand","ready");
+    updateSystemButtons();
 
     updateSystemButtons();
 
@@ -3415,5 +3474,12 @@ init();
 
 </script>
 
+<!--
+V15 deployment:
+Keep index.html beside the models/ directory.
+Included models: skeleton.glb, muscular.glb, nervous.glb,
+cardiovascular.glb, anatomy-skin.glb.
+visceral.glb is optional and is not included in this package.
+-->
 </body>
 </html>
